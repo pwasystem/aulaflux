@@ -1,0 +1,110 @@
+[
+    {
+        "id": "7546e508-4dbd-4904-9f29-df76f675625f",
+        "curso_id": "a88dc5b5-8d37-4373-b449-a9c8b454ed98",
+        "turma_nome": "ABCD",
+        "curso_nome": "Power BI",
+        "professor_id": "d1a8e6e6-eb94-41fa-bb43-a7d389b0d6cb",
+        "professor_nome": "Luiz",
+        "data_inicio": "14/07/2025",
+        "data_final": "23/07/2025",
+        "duracao_aula": 8,
+        "dias_semana": [
+            0,
+            2
+        ],
+        "periodo": "Noite",
+        "aulas_geradas": [
+            {
+                "data": "14/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "16/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "21/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "23/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            }
+        ]
+    },
+    {
+        "id": "c92fb2cc-6afd-40fb-b23d-85e4ff9735c2",
+        "curso_id": "a3da2f88-8e5f-4994-988d-334983447e3a",
+        "turma_nome": "DEF",
+        "curso_nome": "Python",
+        "professor_id": "2b9edee2-6aa0-45b3-99f0-464eb1f4d5a1",
+        "professor_nome": "Gilberto",
+        "data_inicio": "14/07/2025",
+        "data_final": "06/08/2025",
+        "duracao_aula": 8,
+        "dias_semana": [
+            0,
+            2
+        ],
+        "periodo": "Noite",
+        "aulas_geradas": [
+            {
+                "data": "14/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "16/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "21/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "23/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "28/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "30/07/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "04/08/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            },
+            {
+                "data": "06/08/2025",
+                "periodo": "Noite",
+                "duracao_aula": 8,
+                "observacoes": ""
+            }
+        ]
+    }
+]

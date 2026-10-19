@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AulaFlux • Portal de Cursos e Agendamento</title>
+  
+  <!-- Favicon com identidade visual da pasta img -->
+  <link rel="icon" type="image/png" href="img/ico.png">
+  
+  <!-- Fontes Google (Outfit, Inter, Space Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome para Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <!-- SheetJS para Exportação Direta em Excel (.xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Marked.js para Renderização Rica de Conteúdo Markdown das Aulas -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Estilos Customizados da Aplicação -->
+  <link rel="stylesheet" href="styles.css?v=20261019">
+</head>
+<body>
+
+  <!-- ========================================================================
+       BARRA DE NAVEGAÇÃO SUPERIOR
+       ======================================================================== -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <a href="#" class="brand-link" id="brand-home-link" onclick="alternarModoPainel('portal')">
+          <img src="img/logo_b.png" alt="AF AULA FLUX" id="navbar-brand-logo" class="brand-logo">
+        </a>
+
+        <!-- Botões de Alternância de Área (Portal Aluno vs Painel Administrativo) -->
+        <div style="display: flex; gap: 0.5rem;" id="nav-mode-switch">
+          <button class="admin-nav-btn active" id="btn-nav-portal" onclick="alternarModoPainel('portal')" title="Portal do Aluno e Consulta">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Portal do Aluno</span>
+          </button>
+          
+          <button class="admin-nav-btn" id="btn-nav-admin" onclick="alternarModoPainel('admin')" style="display: none;" title="Área Administrativa e Cadastros">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Painel de Gestão</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="nav-controls">
+        <!-- Indicador de Status / Nível de Autenticação -->
+        <div id="auth-status-chip" style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; border-radius: var(--radius-full); background: var(--bg-surface); border: 1px solid var(--border-color);">
+          <i class="fa-solid fa-lock text-amber" id="auth-chip-icon"></i>
+          <span id="auth-chip-text" style="color: var(--text-secondary);">Portal do Aluno</span>
+        </div>
+
+        <!-- Alternador de Tema Claro / Escuro -->
+        <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="alternarTema()" title="Alternar Tema Claro / Escuro" aria-label="Alternar Tema">
+          <i class="fa-solid fa-sun" id="theme-toggle-icon"></i>
+        </button>
+        
+        <!-- Botão de Login / Logout -->
+        <button class="admin-nav-btn" id="btn-auth-action" onclick="acaoBotaoAuth()" title="Área Restrita / Autenticação">
+          <i class="fa-solid fa-right-to-bracket" id="btn-auth-icon"></i>
+          <span id="btn-auth-text">Fazer Login</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================================================
+       HERO BANNER
+       ======================================================================== -->
+  <header class="hero-banner">
+    <div class="hero-card">
+      <div class="hero-image-wrapper">
+        <img src="img/cabecalho.jpg" alt="AulaFlux Background" class="hero-image" onerror="this.src='img/cabeçalho.jpg'">
+        <div class="hero-overlay"></div>
+      </div>
+      <div class="hero-content">
+        <div class="hero-titles">
+          <h1 id="hero-title">Portal de Cursos & Aulas <span style="color: var(--accent-cyan);">AulaFlux</span></h1>
+          <p id="hero-desc">Consulte horários, professores e acesse as salas de aula ao vivo integradas ao Cloud Firestore.</p>
+        </div>
+        <div class="badge-tag" id="hero-badge">
+          <span class="dot"></span>
+          <span id="hero-badge-text">FIRESTORE ATIVO</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       CONTEÚDO PRINCIPAL
+       ======================================================================== -->
+  <main class="main-wrapper">
+
+    <!-- ======================================================================
+         SEÇÃO 1: PORTAL DO ALUNO (TELA INICIAL PÚBLICA)
+         ====================================================================== -->
+    <section id="secao-portal-aluno">
+      
+      <!-- Barra de Navegação Interna do Aluno (Aulas por Professor vs Todos os Cursos) -->
+      <div class="portal-nav-bar">
+        <div class="portal-nav-tabs">
+          <button class="portal-tab-btn active" id="tab-aluno-prof" onclick="alternarVisaoPublica('professores')">
+            <i class="fa-solid fa-chalkboard-user"></i>
+            <span>Aulas por Professor</span>
+          </button>
+          <button class="portal-tab-btn" id="tab-aluno-cursos" onclick="alternarVisaoPublica('todos-cursos')">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Todos os Cursos</span>
+          </button>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
+          <i class="fa-solid fa-circle-dot" style="color: var(--accent-emerald);"></i>
+          <span>Ambiente do Estudante</span>
+        </div>
+      </div>
+
+      <!-- VISÃO 1A: AULAS POR PROFESSOR (SELEÇÃO DO PROFESSOR E ACESSO À SALA) -->
+      <div id="view-aluno-professores">
+        <!-- Caixa de Seleção do Professor -->
+        <div class="prof-selector-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-user-tie" style="color: var(--accent-cyan);"></i>
+                <span>Selecione o Professor</span>
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Escolha o docente para visualizar as turmas e aulas que ele está ministrando e entrar na sala virtual.
+              </p>
+            </div>
+
+            <!-- Select Rápido -->
+            <div style="min-width: 250px;">
+              <select id="aluno-select-prof" class="form-control" onchange="selecionarProfessorAluno(this.value)">
+                <option value="">Selecione um professor...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Cards Visuais dos Professores para Seleção Rápida -->
+          <div class="prof-cards-grid" id="aluno-prof-cards-container">
+            <!-- Renderizado dinamicamente via app.js -->
+          </div>
+        </div>
+
+        <!-- Detalhes do Professor Selecionado e Lista de Aulas / Turmas -->
+        <div id="aluno-detalhes-prof-selecionado" style="display: none;">
+          <!-- Banner do Professor Ativo -->
+          <div class="selected-prof-banner">
+            <div class="selected-prof-meta">
+              <div class="selected-prof-avatar-lg" id="selected-prof-avatar">P</div>
+              <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.05em;">
+                  Professor Selecionado
+                </div>
+                <h3 id="selected-prof-nome" style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary);">Nome do Professor</h3>
+                <p id="selected-prof-area" style="font-size: 0.85rem; color: var(--text-muted);">Área de Atuação</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+              <div id="selected-prof-turmas-count" class="badge-tag">
+                <i class="fa-solid fa-chalkboard"></i> 0 Turmas
+              </div>
+              <button class="btn btn-primary" id="btn-selected-prof-sala-geral" onclick="abrirSalaVirtualProfessorSelecionado()">
+                <i class="fa-solid fa-video"></i>
+                <span>Sala Virtual do Professor</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Seção de Turmas e Aulas Ministradas -->
+          <div class="section-header">
+            <div>
+              <h3 class="section-title">
+                <i class="fa-solid fa-calendar-check" style="color: var(--accent-cyan);"></i>
+                <span>Aulas & Turmas Ministradas</span>
+              </h3>
+              <p class="section-desc">Selecione uma turma para acessar a sala de aula ou conferir o cronograma completo.</p>
+            </div>
+          </div>
+
+          <!-- Grid de Turmas do Professor -->
+          <div class="turmas-aluno-grid" id="aluno-turmas-grid">
+            <!-- Renderizado dinamicamente via app.js -->
+          </div>
+        </div>
+
+        <!-- Estado Vazio: Nenhum professor selecionado ainda -->
+        <div id="aluno-empty-state-prof" class="empty-state-card">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <h3>Nenhum Professor Selecionado</h3>
+          <p>Selecione um professor na lista ou clique em um dos cards acima para consultar as turmas ministradas e acessar o link da sala de aula ao vivo.</p>
+        </div>
+      </div>
+
+      <!-- VISÃO 1B: TODOS OS CURSOS (CONSULTA LIVRE DE CONTEÚDOS E EMENTAS) -->
+      <div id="view-aluno-todos-cursos" style="display: none;">
+        <div class="section-header" style="margin-bottom: 1.5rem;">
+          <div>
+            <h2 class="section-title">
+              <i class="fa-solid fa-graduation-cap" style="color: var(--accent-cyan);"></i>
+              <span>Todos os Cursos Disponíveis</span>
+            </h2>
+            <p class="section-desc">Consulte todas as ementas, cargas horárias e conteúdos programáticos dos cursos oferecidos na instituição.</p>
+          </div>
+
+          <!-- Barra de Pesquisa de Cursos -->
+          <div style="min-width: 280px;">
+            <input type="text" id="busca-catalogo-cursos" class="form-control" placeholder="Buscar curso ou tópicos da ementa..." oninput="filtrarCatalogoCursos()">
+          </div>
+        </div>
+
+        <div class="courses-grid" id="catalogo-cursos-grid">
+          <!-- Renderizado dinamicamente via app.js -->
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================================
+         SEÇÃO 2: PAINEL ADMINISTRATIVO (OCULTO PARA VISITANTES, SÓ PÓS-LOGIN!)
+         ====================================================================== -->
+    <section id="secao-painel-admin" style="display: none;">
+      
+      <!-- Banner Informativo do Modo Administrativo -->
+      <div class="auth-notice-banner authenticated" id="admin-banner-header" style="margin-bottom: 1.5rem;">
+        <div class="auth-notice-text">
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-emerald); font-size: 1.25rem;"></i>
+          <span id="admin-banner-text">
+            Sessão autenticada. Gerenciamento com controle de níveis integrado ao Cloud Firestore.
+          </span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary" onclick="alternarModoPainel('portal')" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-eye"></i>
+            <span>Ver Portal do Aluno</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navegação de Abas Administrativas (Controladas por Nível de Usuário) -->
+      <div class="admin-tabs" id="admin-tabs-nav" style="margin-bottom: 1.5rem;">
+        <button class="admin-tab-btn active" data-tab="tab-agendamentos" id="btn-tab-agendamentos">
+          <i class="fa-solid fa-calendar-days"></i> Agendamentos & Cronogramas
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-cursos" id="btn-tab-cursos">
+          <i class="fa-solid fa-book"></i> Cursos
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-professores" id="btn-tab-professores">
+          <i class="fa-solid fa-chalkboard-user"></i> Professores
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-feriados" id="btn-tab-feriados">
+          <i class="fa-solid fa-calendar-xmark"></i> Feriados
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-usuarios" id="btn-tab-usuarios" style="display: none;">
+          <i class="fa-solid fa-users-gear"></i> Controle de Usuários
+        </button>
+      </div>
+
+      <!-- ======================================================================
+           ABA ADMIN 1: AGENDAMENTOS & CRONOGRAMAS
+           ====================================================================== -->
+      <div class="admin-tab-content active" id="tab-agendamentos">
+        
+        <!-- Formulário de Novo Agendamento -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="color: var(--accent-cyan); font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-calendar-plus"></i> Novo Agendamento de Turma
+            </h3>
+            <span id="agenda-user-role-notice" style="font-size: 0.75rem; color: var(--text-muted);">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Cálculo automático com validação de feriados e conflitos
+            </span>
+          </div>
+
+          <form id="form-novo-agendamento">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="agenda-turma-nome"><i class="fa-solid fa-users"></i> Nome / Código da Turma:</label>
+                <input type="text" id="agenda-turma-nome" class="form-control" placeholder="Ex: ABCD, Turma Noturna 01" required>
+              </div>
+
+              <div class="form-group">
+                <label for="agenda-select-curso"><i class="fa-solid fa-book"></i> Curso:</label>
+                <select id="agenda-select-curso" class="form-control" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="agenda-select-prof"><i class="fa-solid fa-chalkboard-user"></i> Professor Responsável:</label>
+                <select id="agenda-select-prof" class="form-control" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="agenda-data-inicio"><i class="fa-regular fa-calendar"></i> Data de Início:</label>
+                <input type="date" id="agenda-data-inicio" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label for="agenda-duracao-aula"><i class="fa-regular fa-clock"></i> Duração por Aula (Horas):</label>
+                <input type="number" id="agenda-duracao-aula" class="form-control" value="8" min="1" max="12" required>
+              </div>
+
+              <div class="form-group">
+                <label for="agenda-periodo"><i class="fa-solid fa-sun"></i> Período / Turno:</label>
+                <select id="agenda-periodo" class="form-control" required>
+                  <option value="Manhã">Manhã</option>
+                  <option value="Tarde">Tarde</option>
+                  <option value="Noite" selected>Noite</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Seleção de Dias da Semana -->
+            <div style="margin-top: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">
+                  Dias da Semana em que haverá aula:
+                </label>
+                <div class="preset-days-group">
+                  <span style="font-size: 0.75rem; color: var(--text-muted); margin-right: 0.25rem;">Atalhos:</span>
+                  <button type="button" class="preset-pill-btn" onclick="aplicarPresetDias([0, 2])">Seg & Qua</button>
+                  <button type="button" class="preset-pill-btn" onclick="aplicarPresetDias([1, 3])">Ter & Qui</button>
+                  <button type="button" class="preset-pill-btn" onclick="aplicarPresetDias([0, 1, 2, 3, 4])">Seg a Sex</button>
+                  <button type="button" class="preset-pill-btn" onclick="aplicarPresetDias([5])">Apenas Sábado</button>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 1rem; background: var(--bg-primary); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                  <input type="checkbox" name="agenda_dias" value="0" checked> Segunda
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                  <input type="checkbox" name="agenda_dias" value="1"> Terça
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                  <input type="checkbox" name="agenda_dias" value="2" checked> Quarta
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                  <input type="checkbox" name="agenda_dias" value="3"> Quinta
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                  <input type="checkbox" name="agenda_dias" value="4"> Sexta
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                  <input type="checkbox" name="agenda_dias" value="5"> Sábado
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button type="reset" class="btn btn-secondary">
+                <i class="fa-solid fa-eraser"></i> Limpar
+              </button>
+              <button type="submit" class="btn btn-primary" id="btn-submit-agendamento">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Calcular e Salvar no Firestore</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Barra de Filtros e Exportação da Tabela -->
+        <div class="filter-bar-container">
+          <div class="filter-inputs-group">
+            <input type="text" id="filtro-busca-turma" class="filter-search" placeholder="Buscar turma ou curso..." oninput="filtrarAgendamentos()">
+            
+            <select id="filtro-curso" class="filter-select" onchange="filtrarAgendamentos()">
+              <option value="">Todos os Cursos</option>
+            </select>
+            
+            <select id="filtro-prof" class="filter-select" onchange="filtrarAgendamentos()">
+              <option value="">Todos os Professores</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="btn-export" onclick="exportarAgendaExcel()" title="Exportar todas as aulas detalhadas para planilha Excel">
+              <i class="fa-solid fa-file-excel"></i>
+              <span>Exportar para Excel (.xlsx)</span>
+            </button>
+            <button class="btn btn-secondary" onclick="carregarDadosFirestore()" title="Atualizar dados do Firestore" style="padding: 0.45rem 0.75rem; font-size: 0.825rem;">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabela de Agendamentos Existentes -->
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Turma</th>
+                <th>Curso</th>
+                <th>Professor</th>
+                <th>Início</th>
+                <th>Término</th>
+                <th>Turno</th>
+                <th>Aulas Geradas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-agendamentos-tbody">
+              <tr>
+                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Carregando agendamentos...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+           ABA ADMIN 2: GESTÃO DE CURSOS (SUPERADMIN & ADMIN)
+           ====================================================================== -->
+      <div class="admin-tab-content" id="tab-cursos" style="display: none;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+          <h3 style="color: var(--accent-cyan); font-size: 1.15rem; margin-bottom: 1rem;">
+            <i class="fa-solid fa-book-bookmark"></i> Cadastrar Novo Curso
+          </h3>
+          <form id="form-novo-curso" class="form-grid">
+            <div class="form-group">
+              <label for="curso-nome-input">Nome do Curso:</label>
+              <input type="text" id="curso-nome-input" class="form-control" placeholder="Ex: Power BI Analytics" required>
+            </div>
+            <div class="form-group">
+              <label for="curso-duracao-input">Duração Total (Horas):</label>
+              <input type="number" id="curso-duracao-input" class="form-control" value="40" min="1" required>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="curso-desc-input">Descrição / Ementa do Curso:</label>
+              <input type="text" id="curso-desc-input" class="form-control" placeholder="Breve resumo dos tópicos abordados...">
+            </div>
+            <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
+              <button type="submit" class="btn btn-primary" id="btn-salvar-curso">
+                <i class="fa-solid fa-plus"></i> Salvar Curso no Firestore
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome do Curso</th>
+                <th>Duração</th>
+                <th>Descrição / Ementa</th>
+                <th>Turmas Ativas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-cursos-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+           ABA ADMIN 3: GESTÃO DE PROFESSORES (SUPERADMIN & ADMIN)
+           ====================================================================== -->
+      <div class="admin-tab-content" id="tab-professores" style="display: none;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+          <h3 style="color: var(--accent-cyan); font-size: 1.15rem; margin-bottom: 1rem;">
+            <i class="fa-solid fa-chalkboard-user"></i> Cadastrar Novo Professor
+          </h3>
+          <form id="form-novo-prof" class="form-grid">
+            <div class="form-group">
+              <label for="prof-nome-input">Nome Completo:</label>
+              <input type="text" id="prof-nome-input" class="form-control" placeholder="Ex: Gilberto" required>
+            </div>
+            <div class="form-group">
+              <label for="prof-area-input">Área de Atuação:</label>
+              <input type="text" id="prof-area-input" class="form-control" placeholder="Ex: TI & Ciência de Dados" required>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="prof-link-sala-input"><i class="fa-solid fa-video"></i> Link da Sala Virtual (Google Meet / Teams / Zoom):</label>
+              <input type="url" id="prof-link-sala-input" class="form-control" placeholder="https://meet.google.com/xyz-abcd-efg">
+            </div>
+            <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
+              <button type="submit" class="btn btn-primary" id="btn-salvar-prof">
+                <i class="fa-solid fa-user-plus"></i> Salvar Professor no Firestore
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Área de Atuação</th>
+                <th>Sala Virtual (Link)</th>
+                <th>Turmas Associadas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-professores-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+           ABA ADMIN 4: GESTÃO DE FERIADOS (SUPERADMIN & ADMIN)
+           ====================================================================== -->
+      <div class="admin-tab-content" id="tab-feriados" style="display: none;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+          <h3 style="color: var(--accent-cyan); font-size: 1.15rem; margin-bottom: 1rem;">
+            <i class="fa-solid fa-calendar-xmark"></i> Inserir Feriado ou Dia Sem Aula
+          </h3>
+          <form id="form-novo-feriado" class="form-grid">
+            <div class="form-group">
+              <label for="feriado-nome-input">Nome do Feriado / Ocasião:</label>
+              <input type="text" id="feriado-nome-input" class="form-control" placeholder="Ex: 9 de Julho, Aniversário da Cidade" required>
+            </div>
+            <div class="form-group">
+              <label for="feriado-data-input">Data:</label>
+              <input type="date" id="feriado-data-input" class="form-control" required>
+            </div>
+            <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
+              <button type="submit" class="btn btn-primary" id="btn-salvar-feriado">
+                <i class="fa-solid fa-calendar-plus"></i> Salvar Feriado no Firestore
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Feriado / Ocasião</th>
+                <th>Data (DD/MM/YYYY)</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-feriados-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+           ABA ADMIN 5: CONTROLE DE USUÁRIOS & NÍVEIS (SUPERADMIN EXCLUSIVO)
+           ====================================================================== -->
+      <div class="admin-tab-content" id="tab-usuarios" style="display: none;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="color: var(--accent-amber); font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-user-shield"></i> Cadastrar Novo Usuário no Sistema
+            </h3>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">
+              <i class="fa-solid fa-lock"></i> Cadastro fechado: exclusivo para administradores
+            </span>
+          </div>
+
+          <form id="form-novo-usuario" class="form-grid">
+            <div class="form-group">
+              <label for="user-nome-input">Nome Completo:</label>
+              <input type="text" id="user-nome-input" class="form-control" placeholder="Ex: Maria Professora" required>
+            </div>
+
+            <div class="form-group">
+              <label for="user-email-input">E-mail de Login:</label>
+              <input type="email" id="user-email-input" class="form-control" placeholder="usuario@aulaflux.com" required>
+            </div>
+
+            <div class="form-group">
+              <label for="user-senha-input">Senha Inicial (mínimo 6 caracteres):</label>
+              <input type="password" id="user-senha-input" class="form-control" placeholder="******" required minlength="6">
+            </div>
+
+            <div class="form-group">
+              <label for="user-role-select">Nível de Acesso (Perfil):</label>
+              <select id="user-role-select" class="form-control" onchange="alternarVinculoProfessorUser(this.value)" required>
+                <option value="professor" selected>Professor (Agenda apenas suas próprias aulas)</option>
+                <option value="admin">Administrador (Gerencia turmas, cursos e professores)</option>
+                <option value="superadmin">Administrador Super (Acesso total e gestão de usuários)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="group-vinculo-prof">
+              <label for="user-prof-select">Vincular ao Professor Cadastrado:</label>
+              <select id="user-prof-select" class="form-control">
+                <option value="">Selecione o professor correspondente...</option>
+              </select>
+            </div>
+
+            <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+              <button type="submit" class="btn btn-primary" id="btn-salvar-usuario">
+                <i class="fa-solid fa-user-plus"></i> Cadastrar Usuário no Sistema
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tabela de Usuários Cadastrados -->
+        <div class="section-header">
+          <div>
+            <h3 class="section-title">
+              <i class="fa-solid fa-users-gear" style="color: var(--accent-cyan);"></i>
+              <span>Usuários & Permissões do Sistema</span>
+            </h3>
+            <p class="section-desc">Controle de acessos e papéis autorizados a operar no AulaFlux.</p>
+          </div>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Nível de Acesso</th>
+                <th>Professor Vinculado</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-usuarios-tbody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                  Carregando usuários...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL 1: DETALHES DO CRONOGRAMA DE AULAS (AULAS GERADAS)
+       ======================================================================== -->
+  <div class="modal-overlay" id="cronograma-modal">
+    <div class="modal-container" style="max-width: 850px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="cronograma-modal-title">Cronograma de Aulas</h3>
+          <p id="cronograma-modal-subtitle">Detalhamento das datas calculadas</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('cronograma-modal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div id="cronograma-info-tags" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+          <button class="btn-export" id="btn-export-cronograma-turma">
+            <i class="fa-solid fa-file-excel"></i> Exportar Esta Turma
+          </button>
+        </div>
+
+        <div class="admin-table-container" style="max-height: 400px; overflow-y: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">Aula</th>
+                <th>Data</th>
+                <th>Dia da Semana</th>
+                <th>Período</th>
+                <th>Duração</th>
+                <th>Observações</th>
+                <th style="width: 80px;">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="cronograma-aulas-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: EDIÇÃO DE OBSERVAÇÃO DE AULA INDIVIDUAL
+       ======================================================================== -->
+  <div class="modal-overlay" id="obs-modal">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="obs-modal-title">Observação da Aula</h3>
+          <p id="obs-modal-subtitle">Adicione ou edite anotações desta data</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('obs-modal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="obs-agendamento-id">
+        <input type="hidden" id="obs-aula-index">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="obs-textarea">Texto da Observação:</label>
+          <textarea id="obs-textarea" class="form-control" rows="5" placeholder="Ex: Prova intermediária, aula no laboratório 2, atividade prática..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="fecharModal('obs-modal')">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="salvarObservacaoAula()">
+            <i class="fa-solid fa-check"></i> Salvar Observação
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 3: EDIÇÃO DE CURSO
+       ======================================================================== -->
+  <div class="modal-overlay" id="edit-curso-modal">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3>Editar Curso</h3>
+          <p>Altere os dados do curso no Firestore</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('edit-curso-modal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form-edit-curso" style="display: flex; flex-direction: column; gap: 1rem;">
+          <input type="hidden" id="edit-curso-id">
+          <div class="form-group">
+            <label for="edit-curso-nome">Nome do Curso:</label>
+            <input type="text" id="edit-curso-nome" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-curso-duracao">Carga Horária (h):</label>
+            <input type="number" id="edit-curso-duracao" class="form-control" required min="1">
+          </div>
+          <div class="form-group">
+            <label for="edit-curso-desc">Descrição / Ementa:</label>
+            <input type="text" id="edit-curso-desc" class="form-control">
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="fecharModal('edit-curso-modal')">Cancelar</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Atualizar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 4: EDIÇÃO DE PROFESSOR
+       ======================================================================== -->
+  <div class="modal-overlay" id="edit-prof-modal">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3>Editar Professor</h3>
+          <p>Altere os dados do professor no Firestore</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('edit-prof-modal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form-edit-prof" style="display: flex; flex-direction: column; gap: 1rem;">
+          <input type="hidden" id="edit-prof-id">
+          <div class="form-group">
+            <label for="edit-prof-nome">Nome do Professor:</label>
+            <input type="text" id="edit-prof-nome" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-prof-area">Área de Atuação:</label>
+            <input type="text" id="edit-prof-area" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-prof-link-sala"><i class="fa-solid fa-video"></i> Link da Sala Virtual (Meet / Teams / Zoom):</label>
+            <input type="url" id="edit-prof-link-sala" class="form-control" placeholder="https://meet.google.com/xyz-abcd-efg">
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="fecharModal('edit-prof-modal')">Cancelar</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Atualizar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 5: LOGIN RESTRITO (SEM CADASTRO ABERTO)
+       ======================================================================== -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-container" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="login-modal-title">Acesso Restrito AulaFlux</h3>
+          <p id="login-modal-subtitle">Painel exclusivo para docentes e administradores</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('login-modal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="font-size: 0.8rem; color: var(--text-muted); background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.6rem;">
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-cyan); font-size: 1rem;"></i>
+          <span>O cadastro de novas contas é fechado e gerenciado exclusivamente pela administração escolar.</span>
+        </div>
+
+        <form id="form-auth-exec" onsubmit="event.preventDefault(); submeterAuth(event);" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <label for="auth-email" style="margin: 0;">E-mail de Acesso:</label>
+              <button type="button" onclick="preencherLoginSuperadmin()" style="background: none; border: none; color: var(--accent-cyan); font-size: 0.75rem; cursor: pointer; text-decoration: underline;">
+                Preencher Admin Padrão
+              </button>
+            </div>
+            <input type="email" id="auth-email" class="form-control" placeholder="usuario@aulaflux.com" required>
+          </div>
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <label for="auth-senha" style="margin: 0;">Senha:</label>
+              <button type="button" onclick="enviarRecuperacaoSenha()" style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline;">
+                Esqueci minha senha
+              </button>
+            </div>
+            <input type="password" id="auth-senha" class="form-control" placeholder="Digite sua senha" required minlength="6">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="entrarComoAdminDireto()" style="font-size: 0.8rem; border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Acessar diretamente com perfil Superadmin">
+              <i class="fa-solid fa-bolt"></i> Acesso Rápido Admin
+            </button>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary" onclick="fecharModal('login-modal')">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="btn-auth-submit">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span id="btn-auth-submit-label">Entrar</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 6: SALA DE AULA VIRTUAL (ACESSO DO ALUNO)
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-sala-aula">
+    <div class="modal-container" style="max-width: 540px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="modal-sala-titulo"><i class="fa-solid fa-video text-cyan"></i> Sala de Aula Virtual</h3>
+          <p id="modal-sala-subtitulo">Ambiente ao vivo para interação e aula</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('modal-sala-aula')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="virtual-room-details">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+            <div>
+              <span class="badge-tag" id="modal-sala-tag-curso">Curso</span>
+              <h4 id="modal-sala-turma-nome" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 0.35rem;">Nome da Turma</h4>
+              <p id="modal-sala-prof-nome" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem;">Professor Responsável</p>
+            </div>
+            <div id="modal-sala-turno-badge" class="badge-periodo noite">Noite</div>
+          </div>
+
+          <div>
+            <label style="font-size: 0.775rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Link Direto de Conexão:</label>
+            <div class="virtual-room-link-box">
+              <span id="modal-sala-link-text">https://meet.google.com/...</span>
+              <button class="btn btn-secondary" onclick="copiarLinkSalaModal()" title="Copiar Link" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+            <a href="#" target="_blank" id="modal-sala-btn-abrir" class="btn-acessar-sala">
+              <i class="fa-solid fa-door-open"></i>
+              <span>Abrir Sala de Aula Virtual Agora</span>
+            </a>
+            <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-sala-aula')">
+              Fechar Janela
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 7: GERENCIAR CONTEÚDO DAS AULAS (ADMIN / GESTÃO DO CURSO)
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-gerenciar-aulas">
+    <div class="modal-container" style="max-width: 920px; max-height: 92vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="modal-aulas-titulo"><i class="fa-solid fa-layer-group text-cyan"></i> Conteúdo das Aulas do Curso</h3>
+          <p id="modal-aulas-subtitulo">Gerencie vídeos YouTube, infográficos, mapas mentais, PDFs, markdown e quiz</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('modal-gerenciar-aulas')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; padding: 1.5rem; flex: 1;">
+        <!-- Cabeçalho com Botão Nova Aula e Lista de Aulas Existentes -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h4 style="font-size: 1.1rem; color: var(--text-primary);">Aulas Cadastradas (<span id="modal-aulas-contagem">0</span>)</h4>
+          <button class="btn btn-primary" onclick="iniciarCadastroNovaAula()" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-plus"></i> Adicionar Nova Aula
+          </button>
+        </div>
+
+        <div id="modal-aulas-lista" class="aulas-admin-list" style="margin-bottom: 1.5rem;">
+          <!-- Renderizado via app.js -->
+        </div>
+
+        <!-- Formulário de Cadastro/Edição de Aula -->
+        <div id="modal-aula-form-wrapper" style="display: none; background: var(--bg-surface); border: 1px solid var(--accent-cyan-border, var(--border-color)); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+            <h4 id="form-aula-titulo-modo" style="font-size: 1.15rem; color: var(--accent-cyan); font-weight: 700;">
+              <i class="fa-solid fa-file-pen"></i> Cadastrar Conteúdo da Aula
+            </h4>
+            <button class="btn btn-secondary" onclick="cancelarEdicaoAula()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+              Cancelar
+            </button>
+          </div>
+
+          <form id="form-aula-conteudo" onsubmit="event.preventDefault(); salvarConteudoAulaForm();">
+            <input type="hidden" id="form-aula-id">
+            <input type="hidden" id="form-aula-curso-id">
+
+            <!-- Linha 1: Título e Ordem -->
+            <div class="form-grid" style="margin-bottom: 1rem;">
+              <div class="form-group" style="grid-column: span 8;">
+                <label for="form-aula-titulo">Título da Aula *</label>
+                <input type="text" id="form-aula-titulo" class="form-control" placeholder="Ex: Aula 01 - Fundamentos e Modelagem" required>
+              </div>
+              <div class="form-group" style="grid-column: span 4;">
+                <label for="form-aula-ordem">Ordem / Sequência</label>
+                <input type="number" id="form-aula-ordem" class="form-control" value="1" min="1" required>
+              </div>
+            </div>
+
+            <!-- Item 1: Link YouTube -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label for="form-aula-youtube">
+                <i class="fa-brands fa-youtube text-rose"></i> 1. Link do Vídeo no YouTube
+              </label>
+              <input type="url" id="form-aula-youtube" class="form-control" placeholder="Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ ou https://youtu.be/...">
+              <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">Cole a URL completa do vídeo ou embed do YouTube.</small>
+            </div>
+
+            <!-- Item 2 & 3: Infográfico e Mapa Mental (Tratamento Canvas Base64 Otimizado) -->
+            <div class="form-grid" style="margin-bottom: 1.25rem;">
+              <!-- 2. Infográfico -->
+              <div class="form-group" style="grid-column: span 6;">
+                <label for="form-aula-infografico-file">
+                  <i class="fa-solid fa-chart-pie text-cyan"></i> 2. Imagem: Infográfico da Aula
+                </label>
+                <input type="file" id="form-aula-infografico-file" class="form-control" accept="image/*" onchange="tratarUploadImagemCanvas(this, 'infografico')">
+                <input type="hidden" id="form-aula-infografico-base64">
+                <div id="preview-infografico-container" class="image-canvas-preview-box" style="margin-top: 0.5rem; display: none;">
+                  <img id="preview-infografico-img" src="" alt="Infográfico da Aula">
+                  <div class="image-canvas-info">
+                    <span id="preview-infografico-size" class="badge-tag">0 KB</span>
+                    <button type="button" class="btn btn-secondary" onclick="removerImagemAula('infografico')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Remover</button>
+                  </div>
+                </div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Otimizada automaticamente via Canvas para caber no Firestore como Base64.</small>
+              </div>
+
+              <!-- 3. Mapa Mental -->
+              <div class="form-group" style="grid-column: span 6;">
+                <label for="form-aula-mapamental-file">
+                  <i class="fa-solid fa-diagram-project text-emerald"></i> 3. Imagem: Mapa Mental da Aula
+                </label>
+                <input type="file" id="form-aula-mapamental-file" class="form-control" accept="image/*" onchange="tratarUploadImagemCanvas(this, 'mapamental')">
+                <input type="hidden" id="form-aula-mapamental-base64">
+                <div id="preview-mapamental-container" class="image-canvas-preview-box" style="margin-top: 0.5rem; display: none;">
+                  <img id="preview-mapamental-img" src="" alt="Mapa Mental da Aula">
+                  <div class="image-canvas-info">
+                    <span id="preview-mapamental-size" class="badge-tag">0 KB</span>
+                    <button type="button" class="btn btn-secondary" onclick="removerImagemAula('mapamental')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Remover</button>
+                  </div>
+                </div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Comprimida via Canvas (máx 850px, JPEG otimizado) para persistência ultrarrápida.</small>
+              </div>
+            </div>
+
+            <!-- Item 4: PDF Google Drive (com assistente de upload GAS) -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label for="form-aula-pdf-link">
+                <i class="fa-solid fa-file-pdf text-rose"></i> 4. Link do Arquivo PDF (Google Drive)
+              </label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="url" id="form-aula-pdf-link" class="form-control" placeholder="https://drive.google.com/file/d/..." style="flex: 1;">
+                <button type="button" class="btn btn-secondary" onclick="abrirAssistenteUploadGas('pdf')" title="Enviar arquivo PDF para pasta do Curso no Google Drive">
+                  <i class="fa-brands fa-google-drive text-emerald"></i> Upload via GAS
+                </button>
+              </div>
+              <small style="color: var(--text-muted); font-size: 0.75rem;">Pasta destino automática: <code>AulaFlux / [Curso] / [Aula] / PDFs</code>.</small>
+            </div>
+
+            <!-- Item 5: Conteúdo Markdown -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label for="form-aula-markdown" style="margin-bottom: 0;">
+                  <i class="fa-solid fa-code text-cyan"></i> 5. Conteúdo da Aula (Texto em Markdown)
+                </label>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button type="button" class="btn btn-secondary" id="btn-md-edit-mode" onclick="alternarAbaMarkdownForm('edit')" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                    <i class="fa-solid fa-pen"></i> Editar
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="btn-md-preview-mode" onclick="alternarAbaMarkdownForm('preview')" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                    <i class="fa-solid fa-eye"></i> Visualizar Formatado
+                  </button>
+                </div>
+              </div>
+              <textarea id="form-aula-markdown" class="form-control" rows="8" placeholder="# Introdução à Aula&#10;&#10;Nesta aula você aprenderá:&#10;- Conceito A&#10;- Conceito B"></textarea>
+              <div id="form-aula-markdown-preview" class="markdown-preview-pane markdown-body" style="display: none;"></div>
+            </div>
+
+            <!-- Item 6: Quiz com Cadastro de 10 Questões -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label style="margin-bottom: 0;">
+                  <i class="fa-solid fa-circle-question text-amber"></i> 6. Quiz Avaliativo da Aula (10 Questões)
+                </label>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button type="button" class="btn btn-secondary" onclick="preencherQuizModeloExemplo()" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" title="Preencher com 10 questões modelo">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gerar Modelo
+                  </button>
+                  <button type="button" class="btn btn-secondary" onclick="limparTodasQuestoesQuiz()" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">
+                    <i class="fa-solid fa-eraser"></i> Limpar
+                  </button>
+                </div>
+              </div>
+              <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 0.75rem;">
+                Cadastre as 10 perguntas de múltipla escolha com 4 alternativas (A, B, C, D) e indique a opção correta.
+              </small>
+              <div id="quiz-questoes-builder-container" class="quiz-builder-list">
+                <!-- 10 blocos gerados dinamicamente via JS -->
+              </div>
+            </div>
+
+            <!-- Item 7: Link ZIP Google Drive -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label for="form-aula-zip-link">
+                <i class="fa-solid fa-file-zipper text-amber"></i> 7. Link do Material em Arquivo ZIP (Google Drive)
+              </label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="url" id="form-aula-zip-link" class="form-control" placeholder="https://drive.google.com/file/d/..." style="flex: 1;">
+                <button type="button" class="btn btn-secondary" onclick="abrirAssistenteUploadGas('zip')" title="Enviar arquivo ZIP para o Drive via Google Apps Script">
+                  <i class="fa-brands fa-google-drive text-emerald"></i> Upload ZIP via GAS
+                </button>
+              </div>
+            </div>
+
+            <!-- Item 8: Link Envio Drive do Professor -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label for="form-aula-drive-prof-link">
+                <i class="fa-solid fa-cloud-arrow-up text-cyan"></i> 8. Link para Envio de Arquivos / Tarefas ao Drive do Professor
+              </label>
+              <input type="url" id="form-aula-drive-prof-link" class="form-control" placeholder="https://drive.google.com/drive/folders/... ou link de entrega">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">Espaço compartilhado do docente para recebimento de trabalhos e listas dos alunos.</small>
+            </div>
+
+            <!-- Botões de Ação do Formulário -->
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button type="button" class="btn btn-secondary" onclick="cancelarEdicaoAula()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="btn-salvar-aula-conteudo">
+                <i class="fa-solid fa-check"></i> Salvar Aula no Curso
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 8: AMBIENTE DE AULA / SALA DE ESTUDOS DO ALUNO
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-conteudo-aula">
+    <div class="modal-container" style="max-width: 1040px; max-height: 94vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+            <span class="badge-tag" id="aluno-aula-tag-curso">Curso</span>
+            <span class="badge-tag" style="background: rgba(14,165,233,0.15); color: var(--accent-cyan);" id="aluno-aula-tag-ordem">Aula 01</span>
+          </div>
+          <h3 id="aluno-aula-titulo" style="font-size: 1.35rem; color: var(--text-primary);">Título da Aula</h3>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('modal-conteudo-aula')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Abas de Navegação do Conteúdo da Aula -->
+      <div class="aula-aluno-nav-tabs">
+        <button class="aula-tab-btn active" id="tab-btn-video" onclick="navegarAbaAulaAluno('video')">
+          <i class="fa-brands fa-youtube text-rose"></i> Vídeo da Aula
+        </button>
+        <button class="aula-tab-btn" id="tab-btn-conteudo" onclick="navegarAbaAulaAluno('conteudo')">
+          <i class="fa-solid fa-book-open text-cyan"></i> Conteúdo (Markdown)
+        </button>
+        <button class="aula-tab-btn" id="tab-btn-visuais" onclick="navegarAbaAulaAluno('visuais')">
+          <i class="fa-solid fa-images text-emerald"></i> Infográfico & Mapa Mental
+        </button>
+        <button class="aula-tab-btn" id="tab-btn-materiais" onclick="navegarAbaAulaAluno('materiais')">
+          <i class="fa-solid fa-folder-arrow-down text-amber"></i> Materiais & Downloads
+        </button>
+        <button class="aula-tab-btn" id="tab-btn-quiz" onclick="navegarAbaAulaAluno('quiz')">
+          <i class="fa-solid fa-circle-question text-cyan"></i> Quiz de 10 Questões
+        </button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; padding: 1.5rem; flex: 1;">
+        
+        <!-- SEÇÃO 1: VÍDEO YOUTUBE -->
+        <div id="secao-aluno-video" class="secao-aula-aluno">
+          <div class="video-responsive-container" id="aluno-video-wrapper">
+            <!-- Iframe YouTube injetado dinamicamente -->
+          </div>
+          <div id="aluno-video-empty" class="empty-state-card" style="display: none; padding: 2rem;">
+            <i class="fa-brands fa-youtube text-rose"></i>
+            <h4>Nenhum vídeo vinculado para esta aula</h4>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2: CONTEÚDO MARKDOWN -->
+        <div id="secao-aluno-conteudo" class="secao-aula-aluno" style="display: none;">
+          <div class="markdown-body" id="aluno-markdown-content">
+            <!-- Conteúdo formatado com marked.js -->
+          </div>
+        </div>
+
+        <!-- SEÇÃO 3: INFOGRÁFICO E MAPA MENTAL -->
+        <div id="secao-aluno-visuais" class="secao-aula-aluno" style="display: none;">
+          <div class="visuals-grid">
+            <!-- Card Infográfico -->
+            <div class="visual-card" id="card-aluno-infografico">
+              <div class="visual-card-header">
+                <h5><i class="fa-solid fa-chart-pie text-cyan"></i> Infográfico Explicativo</h5>
+                <button class="btn btn-secondary" onclick="ampliarImagemVisual('infografico')" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                  <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
+                </button>
+              </div>
+              <div class="visual-card-body">
+                <img id="img-aluno-infografico" src="" alt="Infográfico da Aula" onclick="ampliarImagemVisual('infografico')">
+              </div>
+            </div>
+
+            <!-- Card Mapa Mental -->
+            <div class="visual-card" id="card-aluno-mapamental">
+              <div class="visual-card-header">
+                <h5><i class="fa-solid fa-diagram-project text-emerald"></i> Mapa Mental Sintético</h5>
+                <button class="btn btn-secondary" onclick="ampliarImagemVisual('mapamental')" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                  <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
+                </button>
+              </div>
+              <div class="visual-card-body">
+                <img id="img-aluno-mapamental" src="" alt="Mapa Mental da Aula" onclick="ampliarImagemVisual('mapamental')">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 4: MATERIAIS, DOWNLOADS E ENTREGA -->
+        <div id="secao-aluno-materiais" class="secao-aula-aluno" style="display: none;">
+          <div class="downloads-cards-grid">
+            <!-- Download PDF Google Drive -->
+            <div class="drive-material-card">
+              <div class="drive-material-icon pdf">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div class="drive-material-info">
+                <h4>Apostila / Slides em PDF</h4>
+                <p>Material oficial da aula disponibilizado no Google Drive.</p>
+                <a href="#" target="_blank" id="btn-download-pdf" class="btn btn-primary" style="margin-top: 0.5rem; display: inline-flex;">
+                  <i class="fa-solid fa-download"></i> Baixar Arquivo PDF
+                </a>
+              </div>
+            </div>
+
+            <!-- Download ZIP Google Drive -->
+            <div class="drive-material-card">
+              <div class="drive-material-icon zip">
+                <i class="fa-solid fa-file-zipper"></i>
+              </div>
+              <div class="drive-material-info">
+                <h4>Pacote de Exercícios & Fontes (ZIP)</h4>
+                <p>Arquivos de apoio, bases de dados e códigos da aula compactados.</p>
+                <a href="#" target="_blank" id="btn-download-zip" class="btn btn-primary" style="margin-top: 0.5rem; display: inline-flex;">
+                  <i class="fa-solid fa-file-arrow-down"></i> Baixar Arquivo ZIP
+                </a>
+              </div>
+            </div>
+
+            <!-- Envio de Arquivos para o Drive do Professor -->
+            <div class="drive-material-card">
+              <div class="drive-material-icon prof">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div class="drive-material-info">
+                <h4>Entrega de Tarefas para o Professor</h4>
+                <p>Envie suas atividades e resoluções diretamente para a pasta do docente.</p>
+                <a href="#" target="_blank" id="btn-envio-drive-prof" class="btn btn-secondary" style="margin-top: 0.5rem; display: inline-flex; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                  <i class="fa-solid fa-upload"></i> Acessar Pasta de Envio
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 5: QUIZ DE 10 QUESTÕES -->
+        <div id="secao-aluno-quiz" class="secao-aula-aluno" style="display: none;">
+          <!-- Etapa 1: Bloqueio do Quiz até preencher Nome Completo -->
+          <div id="quiz-gate-bloqueio" class="quiz-gate-container">
+            <div class="quiz-gate-icon">
+              <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <h3>Identifique-se para Iniciar o Quiz</h3>
+            <p>O quiz avaliativo contém 10 questões sobre a aula. Digite seu nome completo para desbloquear o questionário e registrar sua nota vinculada a esta aula.</p>
+            
+            <div style="max-width: 450px; margin: 1.5rem auto 0; display: flex; flex-direction: column; gap: 0.75rem;">
+              <input type="text" id="quiz-aluno-nome-input" class="form-control" placeholder="Digite seu nome completo (ex: Maria Silva Santos)" required>
+              <button class="btn btn-primary" onclick="desbloquearQuizAluno()" style="padding: 0.75rem;">
+                <i class="fa-solid fa-unlock"></i> Desbloquear Quiz da Aula
+              </button>
+            </div>
+          </div>
+
+          <!-- Etapa 2: Formulário das 10 Questões (Desbloqueado) -->
+          <div id="quiz-area-perguntas" style="display: none;">
+            <div class="quiz-student-header">
+              <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Estudante Conectado:</span>
+                <h4 id="quiz-aluno-nome-exibicao" style="color: var(--accent-cyan); font-weight: 700; margin: 0;">Nome do Aluno</h4>
+              </div>
+              <div class="quiz-badge-progresso" id="quiz-contador-respondidas">0 / 10 Respondidas</div>
+            </div>
+
+            <form id="form-quiz-submissao" onsubmit="event.preventDefault(); submeterQuizAlunoFinal();">
+              <div id="quiz-questoes-aluno-lista" class="quiz-questoes-list">
+                <!-- 10 questões geradas via app.js -->
+              </div>
+
+              <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="submit" class="btn btn-primary" id="btn-enviar-quiz-aluno" style="padding: 0.75rem 1.5rem;">
+                  <i class="fa-solid fa-paper-plane"></i> Finalizar e Registrar Respostas no Firestore
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Etapa 3: Resultado e Feedback Pós-Envio -->
+          <div id="quiz-resultado-container" style="display: none;" class="quiz-result-card">
+            <!-- Feedback dinâmico pós-envio -->
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 9: LIGHTBOX ZOOM DE IMAGEM (INFOGRÁFICO / MAPA MENTAL)
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-zoom-imagem" onclick="fecharModal('modal-zoom-imagem')">
+    <div class="lightbox-container" onclick="event.stopPropagation()">
+      <div class="lightbox-header">
+        <h4 id="lightbox-titulo">Visualização em Alta Resolução</h4>
+        <button class="modal-close-btn" onclick="fecharModal('modal-zoom-imagem')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightbox-img" src="" alt="Imagem Ampliada">
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 10: ASSISTENTE DE UPLOAD VIA GOOGLE APPS SCRIPT (GAS)
+       ======================================================================== -->
+  <div class="modal-overlay" id="modal-upload-gas">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3><i class="fa-brands fa-google-drive text-emerald"></i> Upload para Google Drive (GAS)</h3>
+          <p id="modal-gas-subtitulo">Envio automático para pasta organizada do Curso e Aula</p>
+        </div>
+        <button class="modal-close-btn" onclick="fecharModal('modal-upload-gas')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form-upload-gas" onsubmit="event.preventDefault(); executarUploadGasDrive();">
+          <input type="hidden" id="gas-tipo-destino" value="pdf">
+          
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="gas-arquivo-input">Selecione o arquivo local:</label>
+            <input type="file" id="gas-arquivo-input" class="form-control" required>
+            <small style="color: var(--text-muted); font-size: 0.75rem;" id="gas-formato-dica">Formatos suportados: PDF ou ZIP</small>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label>Pasta Destino no Google Drive:</label>
+            <div style="background: var(--bg-surface-2); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);" id="gas-caminho-pasta-preview">
+              AulaFlux / [Curso] / [Aula] / Arquivos
+            </div>
+          </div>
+
+          <div id="gas-upload-progresso" style="display: none; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-cyan); font-size: 0.85rem;">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <span>Enviando arquivo para o Google Apps Script...</span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-upload-gas')">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-confirmar-upload-gas">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Iniciar Upload
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Notificações Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Rodapé -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>&copy; 2026 AulaFlux • Sistema de Gestão de Cursos, Salas Virtuais & Agendamento</p>
+      <p style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);">
+        Cloud Firestore + Firebase Auth
+      </p>
+    </div>
+  </footer>
+
+  <!-- Firebase JS SDK (Compat v9.23.0) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Configuração do Firebase -->
+  <script src="config.js?v=20261019"></script>
+
+  <!-- Lógica da Aplicação -->
+  <script src="app.js?v=20261019"></script>
+</body>
+</html>

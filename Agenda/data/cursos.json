@@ -1,0 +1,12 @@
+[
+    {
+        "id": "a88dc5b5-8d37-4373-b449-a9c8b454ed98",
+        "nome": "Power BI",
+        "duracao_horas": 32
+    },
+    {
+        "id": "a3da2f88-8e5f-4994-988d-334983447e3a",
+        "nome": "Python",
+        "duracao_horas": 60
+    }
+]
