@@ -208,72 +208,6 @@ button, input, select, textarea {
   border-color: var(--accent-cyan);
 }
 
-/* ==========================================================================
-   HERO / CABEÇALHO DA MARCA
-   ========================================================================== */
-.hero-banner {
-  position: relative;
-  width: 100%;
-  max-width: 1280px;
-  margin: 1.25rem auto 2rem;
-  padding: 0 1rem;
-}
-
-.hero-card {
-  position: relative;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--card-shadow);
-  display: flex;
-  flex-direction: column;
-}
-
-.hero-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 180px;
-  background-color: #0a0e17;
-  overflow: hidden;
-}
-
-.hero-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.85;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(10, 14, 23, 0.85) 100%);
-}
-
-.hero-content {
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  background: var(--bg-surface);
-}
-
-.hero-titles h1 {
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-}
-
-.hero-titles p {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
 .badge-tag {
   display: inline-flex;
   align-items: center;
@@ -303,7 +237,7 @@ button, input, select, textarea {
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 1.25rem 3rem;
+  padding: 1.5rem 1.25rem 3rem;
   flex: 1;
 }
 
@@ -1658,27 +1592,33 @@ button, input, select, textarea {
   box-shadow: 0 0 12px var(--accent-cyan-glow);
 }
 
-/* Vídeo do YouTube Responsivo */
-.video-player-container {
+/* Vídeo do YouTube Responsivo (Preenche toda a largura da caixa de vídeo mantendo a margem) */
+.video-player-container,
+.video-responsive-container {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-  height: 0;
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: #000000;
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border-color);
+}
+
+.video-player-container {
   margin-bottom: 1.5rem;
 }
 
-.video-player-container iframe {
+.video-player-container iframe,
+.video-responsive-container iframe {
   position: absolute;
+  inset: 0;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   border: none;
+  display: block;
 }
 
 /* Markdown Formatado */

@@ -1,89 +1,20 @@
 /**
  * ============================================================================
- * AULAFLUX - SISTEMA DE GESTÃO DE CURSOS, SALAS VIRTUAIS E AGENDAMENTO
+ * AULAFLUX - SISTEMA DE GESTÃO DE CURSOS, PROFESSORES, FERIADOS E CRONOGRAMAS
  * Integração Cloud Firestore + Firebase Authentication + Controle de Níveis
  * ============================================================================
  */
 
-// Dados Iniciais Padrão (com links de salas virtuais e usuários padrão)
+// Dados Iniciais Padrão (Apenas Superusuário e Professores cadastrados)
 const DEFAULT_LEGACY_DATA = {
-  cursos: [
-    {
-      id: "a88dc5b5-8d37-4373-b449-a9c8b454ed98",
-      nome: "Power BI",
-      duracao_horas: 32,
-      descricao: "Formação em Power BI Analytics, DAX, Modelagem Relacional e Dashboards Interativos",
-      aulas: [
-        {
-          id: "aula-pbi-01",
-          titulo: "Aula 01 - Fundamentos, ETL no Power Query e Esquema Estrela",
-          ordem: 1,
-          youtube_url: "https://www.youtube.com/watch?v=AGrl-H87pRU",
-          infografico_base64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'><rect width='800' height='450' fill='%230f172a'/><text x='400' y='60' fill='%2338bdf8' font-size='26' font-family='sans-serif' font-weight='bold' text-anchor='middle'>INFOGRÁFICO: ARQUITETURA POWER BI</text><rect x='80' y='120' width='180' height='180' rx='12' fill='%231e293b' stroke='%2338bdf8' stroke-width='2'/><text x='170' y='180' fill='%23f8fafc' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='bold'>1. Fontes</text><text x='170' y='210' fill='%2394a3b8' font-size='13' text-anchor='middle' font-family='sans-serif'>SQL, Excel, Web, APIs</text><rect x='310' y='120' width='180' height='180' rx='12' fill='%231e293b' stroke='%2310b981' stroke-width='2'/><text x='400' y='180' fill='%23f8fafc' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='bold'>2. Power Query</text><text x='400' y='210' fill='%2394a3b8' font-size='13' text-anchor='middle' font-family='sans-serif'>ETL e Limpeza de Dados</text><rect x='540' y='120' width='180' height='180' rx='12' fill='%231e293b' stroke='%23f59e0b' stroke-width='2'/><text x='630' y='180' fill='%23f8fafc' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='bold'>3. DAX & Visual</text><text x='630' y='210' fill='%2394a3b8' font-size='13' text-anchor='middle' font-family='sans-serif'>Medidas e Dashboards</text><text x='400' y='380' fill='%2394a3b8' font-size='14' text-anchor='middle' font-family='sans-serif'>Fluxo completo de Business Intelligence orientado a decisões corporativas</text></svg>",
-          mapamental_base64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'><rect width='800' height='450' fill='%230b1120'/><circle cx='400' cy='225' r='80' fill='%230284c7'/><text x='400' y='230' fill='%23ffffff' font-size='18' font-weight='bold' font-family='sans-serif' text-anchor='middle'>MODELO ESTRELA</text><rect x='80' y='60' width='150' height='70' rx='8' fill='%231e293b' stroke='%2338bdf8'/><text x='155' y='100' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Dim_Calendário</text><line x1='230' y1='100' x2='330' y2='190' stroke='%2338bdf8' stroke-width='2'/><rect x='570' y='60' width='150' height='70' rx='8' fill='%231e293b' stroke='%2338bdf8'/><text x='645' y='100' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Dim_Cliente</text><line x1='570' y1='100' x2='470' y2='190' stroke='%2338bdf8' stroke-width='2'/><rect x='80' y='320' width='150' height='70' rx='8' fill='%231e293b' stroke='%2338bdf8'/><text x='155' y='360' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Dim_Produto</text><line x1='230' y1='350' x2='330' y2='260' stroke='%2338bdf8' stroke-width='2'/><rect x='570' y='320' width='150' height='70' rx='8' fill='%231e293b' stroke='%2338bdf8'/><text x='645' y='360' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Fato_Vendas</text><line x1='570' y1='350' x2='470' y2='260' stroke='%2338bdf8' stroke-width='2'/></svg>",
-          pdf_url: "https://drive.google.com/file/d/1exemplopowerbi/view?usp=sharing",
-          conteudo_markdown: "# Aula 01: Fundamentos de Power BI e Modelagem\n\nBem-vindo à primeira aula de **Power BI**! Nesta sessão aprenderemos os princípios fundamentais da arquitetura de inteligência de negócios.\n\n### Principais Tópicos Abordados\n- **Power Query:** Limpeza, remoção de duplicatas e unpivot de colunas.\n- **Modelagem Relacional:** Diferença entre tabelas fato e tabelas dimensão.\n- **Esquema Estrela (Star Schema):** Melhores práticas recomendadas pela Microsoft para máxima performance analítica.\n\n### Exemplo de Medida DAX Básica\n```dax\nTotal Vendas = SUM(Fato_Vendas[ValorLiquido])\nTicket Medio = DIVIDE([Total Vendas], DISTINCTCOUNT(Fato_Vendas[IdPedido]), 0)\n```\n\n> **Dica Prática:** Sempre separe suas medidas em tabelas dedicadas para manter seu projeto limpo e organizado!\n",
-          quiz_questoes: [
-            { id: 1, pergunta: "Qual é a principal função do Power Query no ecossistema Power BI?", opcoes: ["Executar tarefas de ETL (Extração, Transformação e Carga)", "Desenhar gráficos 3D dinâmicos", "Configurar redes neurais convolucionais", "Publicar relatórios em servidores Linux"], correta: 0 },
-            { id: 2, pergunta: "Em um modelo dimensional Star Schema, qual tabela armazena eventos numéricos e métricas de negócio?", opcoes: ["Tabela Dimensão", "Tabela Fato", "Tabela de Metadados", "Tabela Temporária"], correta: 1 },
-            { id: 3, pergunta: "Qual função DAX é recomendada para realizar divisões com tratamento seguro de divisão por zero?", opcoes: ["QUOTIENT()", "DIV()", "DIVIDE()", "SAFEDIV()"], correta: 2 },
-            { id: 4, pergunta: "Qual a diferença entre uma Coluna Calculada e uma Medida DAX?", opcoes: ["Colunas calculadas consomem RAM fixa e medidas são avaliadas no contexto de filtro", "Medidas gastam espaço em disco e colunas calculadas não", "Não há diferença de desempenho", "Colunas calculadas não aceitam funções DAX"], correta: 0 },
-            { id: 5, pergunta: "Para que serve a operação 'Unpivot Columns' no Power Query?", opcoes: ["Transformar linhas de dados em novas planilhas", "Transformar colunas em pares de atributo e valor para tabular dados normalizados", "Excluir valores nulos do banco", "Criptografar senhas"], correta: 1 },
-            { id: 6, pergunta: "Qual cardinalidade de relacionamento é considerada padrão entre uma tabela Dimensão e uma Fato?", opcoes: ["Muitos para Muitos (*:*)", "Um para Um (1:1)", "Um para Muitos (1:*) com filtro unidirecional", "Nenhum relacionamento"], correta: 2 },
-            { id: 7, pergunta: "Qual das seguintes funções DAX altera o contexto de filtro de uma expressão?", opcoes: ["SUM()", "AVERAGE()", "CALCULATE()", "COUNTROWS()"], correta: 2 },
-            { id: 8, pergunta: "No Power BI Desktop, onde fica armazenado o arquivo com extensão .pbix localmente?", opcoes: ["Apenas no navegador", "No computador local onde o Power BI Desktop está sendo executado", "Exclusivamente no SharePoint", "No Active Directory"], correta: 1 },
-            { id: 9, pergunta: "Para que serve a função RELATED() em DAX?", opcoes: ["Recuperar um valor de coluna de outra tabela relacionada no lado 'um'", "Somar todos os valores relacionados", "Criar um novo usuário no sistema", "Deletar relacionamentos inativos"], correta: 0 },
-            { id: 10, pergunta: "Qual é a boa prática recomendada para tabelas de datas no Power BI?", opcoes: ["Usar a coluna de data da tabela fato sem tabela de calendário", "Criar uma tabela dimensão de datas dedicada com granularidade diária contínua", "Não utilizar filtros de tempo", "Importar apenas anos bissextos"], correta: 1 }
-          ],
-          zip_url: "https://drive.google.com/file/d/1pacotepowerbi_zip/view?usp=sharing",
-          drive_professor_url: "https://drive.google.com/drive/folders/1pasta_prof_luiz_pbi"
-        }
-      ]
-    },
-    {
-      id: "a3da2f88-8e5f-4994-988d-334983447e3a",
-      nome: "Python",
-      duracao_horas: 60,
-      descricao: "Formação em Python para Automação, Ciência de Dados, IA e Integrações Corporativas",
-      aulas: [
-        {
-          id: "aula-py-01",
-          titulo: "Aula 01 - Sintaxe Moderna, Estruturas de Dados e Manipulação de APIs",
-          ordem: 1,
-          youtube_url: "https://www.youtube.com/watch?v=_uQrJ0TkZlc",
-          infografico_base64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'><rect width='800' height='450' fill='%230f172a'/><text x='400' y='60' fill='%2310b981' font-size='26' font-family='sans-serif' font-weight='bold' text-anchor='middle'>ECOSSISTEMA PYTHON MODERNO</text><rect x='80' y='120' width='180' height='180' rx='12' fill='%231e293b' stroke='%2338bdf8' stroke-width='2'/><text x='170' y='175' fill='%23f8fafc' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='bold'>Automação</text><text x='170' y='210' fill='%2394a3b8' font-size='13' text-anchor='middle' font-family='sans-serif'>Scripts, OS, Requests</text><rect x='310' y='120' width='180' height='180' rx='12' fill='%231e293b' stroke='%2310b981' stroke-width='2'/><text x='400' y='175' fill='%23f8fafc' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='bold'>Data Science</text><text x='400' y='210' fill='%2394a3b8' font-size='13' text-anchor='middle' font-family='sans-serif'>Pandas, NumPy, Matplotlib</text><rect x='540' y='120' width='180' height='180' rx='12' fill='%231e293b' stroke='%23f59e0b' stroke-width='2'/><text x='630' y='175' fill='%23f8fafc' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='bold'>APIs & Web</text><text x='630' y='210' fill='%2394a3b8' font-size='13' text-anchor='middle' font-family='sans-serif'>FastAPI, Flask, Cloud</text><text x='400' y='380' fill='%2394a3b8' font-size='14' text-anchor='middle' font-family='sans-serif'>Desenvolvimento prático, limpo e orientado a boas práticas</text></svg>",
-          mapamental_base64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'><rect width='800' height='450' fill='%230b1120'/><circle cx='400' cy='225' r='80' fill='%2310b981'/><text x='400' y='230' fill='%23ffffff' font-size='18' font-weight='bold' font-family='sans-serif' text-anchor='middle'>PYTHON CORE</text><rect x='80' y='60' width='150' height='70' rx='8' fill='%231e293b' stroke='%2310b981'/><text x='155' y='100' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Tipos Primitivos</text><line x1='230' y1='100' x2='330' y2='190' stroke='%2310b981' stroke-width='2'/><rect x='570' y='60' width='150' height='70' rx='8' fill='%231e293b' stroke='%2310b981'/><text x='645' y='100' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>List / Dict / Sets</text><line x1='570' y1='100' x2='470' y2='190' stroke='%2310b981' stroke-width='2'/><rect x='80' y='320' width='150' height='70' rx='8' fill='%231e293b' stroke='%2310b981'/><text x='155' y='360' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Funções & Lambdas</text><line x1='230' y1='350' x2='330' y2='260' stroke='%2310b981' stroke-width='2'/><rect x='570' y='320' width='150' height='70' rx='8' fill='%231e293b' stroke='%2310b981'/><text x='645' y='360' fill='%23f8fafc' font-size='14' text-anchor='middle' font-family='sans-serif'>Módulos & Pip</text><line x1='570' y1='350' x2='470' y2='260' stroke='%2310b981' stroke-width='2'/></svg>",
-          pdf_url: "https://drive.google.com/file/d/1exemplopython_pdf/view?usp=sharing",
-          conteudo_markdown: "# Aula 01: Python para Automação e Análise\n\nBem-vindo à trilha de formação profissional em **Python**.\n\n### Objetivos de Aprendizagem\n1. Compreender a sintaxe moderna e tipagem dinâmica.\n2. Dominar listas por compreensão (`list comprehensions`).\n3. Consumir e processar dados JSON via requisições HTTP REST.\n\n```python\n# Exemplo: Processamento Funcional de Dados\nregistros = [{\"nome\": \"Alice\", \"pontos\": 95}, {\"nome\": \"Bruno\", \"pontos\": 82}]\nmelhores = [r[\"nome\"] for r in registros if r[\"pontos\"] >= 90]\nprint(f\"Alunos destaque: {', '.join(melhores)}\")\n```\n\n> **Exercício Prático:** Baixe o arquivo ZIP da aula e execute o script localmente no VS Code!\n",
-          quiz_questoes: [
-            { id: 1, pergunta: "Qual das seguintes estruturas de dados em Python é imutável?", opcoes: ["Lista (list)", "Dicionário (dict)", "Tupla (tuple)", "Conjunto (set)"], correta: 2 },
-            { id: 2, pergunta: "Qual é a forma correta de criar um ambiente virtual em projetos Python modernos?", opcoes: ["python -m venv .venv", "pip install env-create", "virtualenv --run", "python --make-environment"], correta: 0 },
-            { id: 3, pergunta: "Qual é o resultado da expressão [x**2 for x in range(4)]?", opcoes: ["[1, 4, 9, 16]", "[0, 1, 4, 9]", "[0, 2, 4, 6]", "[0, 1, 2, 3]"], correta: 1 },
-            { id: 4, pergunta: "Em Python, para que serve a instrução 'with' ao manipular arquivos?", opcoes: ["Criptografar o arquivo aberto", "Garantir o fechamento automático do recurso mesmo em caso de exceções", "Criar cópias de segurança na nuvem", "Aumentar a velocidade do disco rígido"], correta: 1 },
-            { id: 5, pergunta: "Qual biblioteca padrão do Python é usada para codificar e decodificar objetos no formato JSON?", opcoes: ["pickle", "json", "requests", "yaml"], correta: 1 },
-            { id: 6, pergunta: "Como se define uma função anônima em Python?", opcoes: ["def anon()", "lambda args: expressao", "function() => {}", "delegate"], correta: 1 },
-            { id: 7, pergunta: "O que a biblioteca 'requests' realiza principalmente?", opcoes: ["Comunicação e requisições HTTP de forma amigável", "Plotagem de gráficos estatísticos", "Gerenciamento de memória RAM", "Cálculo de integrais numéricas"], correta: 0 },
-            { id: 8, pergunta: "Qual o método correto de dicionário para buscar uma chave sem gerar KeyError caso não exista?", opcoes: ["dict.find(chave)", "dict.get(chave, padrao)", "dict.search(chave)", "dict.has(chave)"], correta: 1 },
-            { id: 9, pergunta: "Qual das palavras-chave é usada para capturar exceções em Python?", opcoes: ["catch", "except", "rescue", "handle"], correta: 1 },
-            { id: 10, pergunta: "O que significa o acrônimo PEP na comunidade Python?", opcoes: ["Python Enterprise Project", "Python Enhancement Proposal", "Python Execution Protocol", "Python External Package"], correta: 1 }
-          ],
-          zip_url: "https://drive.google.com/file/d/1pacotepython_zip/view?usp=sharing",
-          drive_professor_url: "https://drive.google.com/drive/folders/1pasta_prof_gilberto_python"
-        }
-      ]
-    }
-  ],
+  cursos: [],
   professores: [
-    { id: "d1a8e6e6-eb94-41fa-bb43-a7d389b0d6cb", nome: "Luiz", area: "TI & Analytics", link_sala: "https://meet.google.com/xyz-luiz-aula" },
-    { id: "2b9edee2-6aa0-45b3-99f0-464eb1f4d5a1", nome: "Gilberto", area: "TI & Programação", link_sala: "https://meet.google.com/xyz-gilberto-aula" },
-    { id: "51df2328-0849-497f-b8bc-038bbae2713a", nome: "Eduardo", area: "TI & Redes", link_sala: "https://meet.google.com/xyz-eduardo-aula" },
-    { id: "887469b4-02f3-4c5f-ba9e-445c46e58370", nome: "Danilo", area: "TI & Dados", link_sala: "https://meet.google.com/xyz-danilo-aula" }
+    { id: "d1a8e6e6-eb94-41fa-bb43-a7d389b0d6cb", nome: "Luiz", area: "TI & Analytics" },
+    { id: "2b9edee2-6aa0-45b3-99f0-464eb1f4d5a1", nome: "Gilberto", area: "TI & Programação" },
+    { id: "51df2328-0849-497f-b8bc-038bbae2713a", nome: "Eduardo", area: "TI & Redes" },
+    { id: "887469b4-02f3-4c5f-ba9e-445c46e58370", nome: "Danilo", area: "TI & Dados" }
   ],
-  feriados: [
-    { id: "23d548e5-a039-4c39-81a9-139094edcf97", nome: "9 de Julho", data: "09/07/2025" },
-    { id: "385256ad-0411-4397-974e-08955a1def22", nome: "São Bento", data: "12/07/2025" },
-    { id: "301c0707-e00b-439b-9e9d-4a582c4cfc5e", nome: "Aniversário da cidade", data: "22/08/2025" }
-  ],
+  feriados: [],
   usuarios: [
     {
       uid: "admin-super-padrao",
@@ -93,63 +24,9 @@ const DEFAULT_LEGACY_DATA = {
       professor_id: null,
       professor_nome: null,
       criado_em: "19/10/2026"
-    },
-    {
-      uid: "prof-luiz-padrao",
-      nome: "Professor Luiz",
-      email: "luiz@aulaflux.com",
-      role: "professor",
-      professor_id: "d1a8e6e6-eb94-41fa-bb43-a7d389b0d6cb",
-      professor_nome: "Luiz",
-      criado_em: "19/10/2026"
     }
   ],
-  agendamentos: [
-    {
-      id: "7546e508-4dbd-4904-9f29-df76f675625f",
-      curso_id: "a88dc5b5-8d37-4373-b449-a9c8b454ed98",
-      turma_nome: "ABCD",
-      curso_nome: "Power BI",
-      professor_id: "d1a8e6e6-eb94-41fa-bb43-a7d389b0d6cb",
-      professor_nome: "Luiz",
-      data_inicio: "14/07/2025",
-      data_final: "23/07/2025",
-      duracao_aula: 8,
-      dias_semana: [0, 2],
-      periodo: "Noite",
-      link_sala: "https://meet.google.com/xyz-luiz-aula",
-      aulas_geradas: [
-        { data: "14/07/2025", dia_semana: "Segunda", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "16/07/2025", dia_semana: "Quarta", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "21/07/2025", dia_semana: "Segunda", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "23/07/2025", dia_semana: "Quarta", periodo: "Noite", duracao_aula: 8, observacoes: "" }
-      ]
-    },
-    {
-      id: "c92fb2cc-6afd-40fb-b23d-85e4ff9735c2",
-      curso_id: "a3da2f88-8e5f-4994-988d-334983447e3a",
-      turma_nome: "DEF",
-      curso_nome: "Python",
-      professor_id: "2b9edee2-6aa0-45b3-99f0-464eb1f4d5a1",
-      professor_nome: "Gilberto",
-      data_inicio: "14/07/2025",
-      data_final: "06/08/2025",
-      duracao_aula: 8,
-      dias_semana: [0, 2],
-      periodo: "Noite",
-      link_sala: "https://meet.google.com/xyz-gilberto-aula",
-      aulas_geradas: [
-        { data: "14/07/2025", dia_semana: "Segunda", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "16/07/2025", dia_semana: "Quarta", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "21/07/2025", dia_semana: "Segunda", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "23/07/2025", dia_semana: "Quarta", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "28/07/2025", dia_semana: "Segunda", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "30/07/2025", dia_semana: "Quarta", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "04/08/2025", dia_semana: "Segunda", periodo: "Noite", duracao_aula: 8, observacoes: "" },
-        { data: "06/08/2025", dia_semana: "Quarta", periodo: "Noite", duracao_aula: 8, observacoes: "" }
-      ]
-    }
-  ]
+  agendamentos: []
 };
 
 // Estado Global da Aplicação
@@ -162,10 +39,10 @@ const AppState = {
   selectedProfessorId: null,
   buscaCatalogoCursos: '',
 
-  cursos: [...DEFAULT_LEGACY_DATA.cursos],
+  cursos: [],
   professores: [...DEFAULT_LEGACY_DATA.professores],
-  feriados: [...DEFAULT_LEGACY_DATA.feriados],
-  agendamentos: [...DEFAULT_LEGACY_DATA.agendamentos],
+  feriados: [],
+  agendamentos: [],
   usuarios: [...DEFAULT_LEGACY_DATA.usuarios],
 
   filtroTexto: '',
@@ -260,10 +137,68 @@ function inicializarFirebase() {
   }
 }
 
+async function executarLimpezaReestruturacaoInicial() {
+  if (!db) return;
+  if (localStorage.getItem('aulaflux_v3_clean_reset') === '1') return;
+
+  try {
+    localStorage.removeItem('aulaflux_courses_wiped');
+
+    // 1. Limpar completamente coleções de cursos, feriados, agendamentos e antigas coleções de aulas
+    const colecoesParaZerar = ['cursos', 'feriados', 'agendamentos', 'quiz_respostas', 'tarefas_entregas'];
+    for (const colName of colecoesParaZerar) {
+      const snap = await db.collection(colName).get().catch(() => null);
+      if (snap && !snap.empty) {
+        for (const doc of snap.docs) {
+          await doc.ref.delete().catch(() => null);
+        }
+      }
+    }
+
+    // 2. Garantir apenas os professores padrão cadastrados no Firestore
+    const snapProfs = await db.collection('professores').get().catch(() => null);
+    if (snapProfs && !snapProfs.empty) {
+      for (const doc of snapProfs.docs) {
+        await doc.ref.delete().catch(() => null);
+      }
+    }
+    for (const prof of DEFAULT_LEGACY_DATA.professores) {
+      await db.collection('professores').doc(prof.id).set({
+        nome: prof.nome,
+        area: prof.area
+      }).catch(() => null);
+    }
+
+    // 3. Manter apenas o cadastro do superusuário na coleção usuarios
+    const snapUsers = await db.collection('usuarios').get().catch(() => null);
+    let temSuperAdmin = false;
+    if (snapUsers && !snapUsers.empty) {
+      for (const docU of snapUsers.docs) {
+        const d = docU.data() || {};
+        if (d.role === 'superadmin' || (d.email && d.email.toLowerCase() === 'admin@aulaflux.com')) {
+          temSuperAdmin = true;
+        } else {
+          await docU.ref.delete().catch(() => null);
+        }
+      }
+    }
+    if (!temSuperAdmin) {
+      const su = DEFAULT_LEGACY_DATA.usuarios[0];
+      await db.collection('usuarios').doc(su.uid).set(su).catch(() => null);
+    }
+
+    localStorage.setItem('aulaflux_v3_clean_reset', '1');
+  } catch (err) {
+    console.warn("Aviso na limpeza inicial de reestruturação:", err);
+  }
+}
+
 async function sincronizarComFirestore() {
   if (!db) return;
 
   try {
+    await executarLimpezaReestruturacaoInicial();
+
     const [snapCursos, snapProfs, snapFeriados, snapAgend, snapUsuarios] = await Promise.all([
       db.collection('cursos').get().catch(() => null),
       db.collection('professores').get().catch(() => null),
@@ -272,68 +207,70 @@ async function sincronizarComFirestore() {
       db.collection('usuarios').get().catch(() => null)
     ]);
 
-    if (snapCursos && !snapCursos.empty) {
+    if (snapCursos) {
       AppState.cursos = snapCursos.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
-    if (snapProfs && !snapProfs.empty) {
-      AppState.professores = snapProfs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (snapProfs) {
+      if (!snapProfs.empty) {
+        AppState.professores = snapProfs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } else {
+        AppState.professores = [...DEFAULT_LEGACY_DATA.professores];
+      }
     }
-    if (snapFeriados && !snapFeriados.empty) {
+    if (snapFeriados) {
       AppState.feriados = snapFeriados.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
-    if (snapAgend && !snapAgend.empty) {
+    if (snapAgend) {
       AppState.agendamentos = snapAgend.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
-    if (snapUsuarios && !snapUsuarios.empty) {
-      AppState.usuarios = snapUsuarios.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (snapUsuarios) {
+      if (!snapUsuarios.empty) {
+        AppState.usuarios = snapUsuarios.docs.map(doc => ({ uid: doc.id, id: doc.id, ...doc.data() }));
+      } else {
+        AppState.usuarios = [...DEFAULT_LEGACY_DATA.usuarios];
+      }
     }
 
     if (!AppState.selectedProfessorId && AppState.professores.length > 0) {
       AppState.selectedProfessorId = AppState.professores[0].id;
+    } else if (AppState.professores.length === 0) {
+      AppState.selectedProfessorId = null;
     }
 
     renderizarTudo();
 
     // Listeners em tempo real
     db.collection('cursos').onSnapshot(snap => {
-      if (!snap.empty) {
-        AppState.cursos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderizarTabelaCursos();
-        popularSelects();
-        renderizarCatalogoTodosCursos();
-      }
+      AppState.cursos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelaCursos();
+      popularSelects();
+      renderizarCatalogoTodosCursos();
     });
 
     db.collection('professores').onSnapshot(snap => {
-      if (!snap.empty) {
-        AppState.professores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderizarTabelaProfessores();
-        popularSelects();
-        renderizarPortalAlunoProfessor();
-      }
+      AppState.professores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelaProfessores();
+      popularSelects();
+      renderizarPortalAlunoProfessor();
     });
 
     db.collection('feriados').onSnapshot(snap => {
-      if (!snap.empty) {
-        AppState.feriados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderizarTabelaFeriados();
-      }
+      AppState.feriados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelaFeriados();
     });
 
     db.collection('agendamentos').onSnapshot(snap => {
-      if (!snap.empty) {
-        AppState.agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderizarTabelaAgendamentos();
-        renderizarTabelaCursos();
-        renderizarTabelaProfessores();
-        renderizarPortalAlunoProfessor();
-        renderizarCatalogoTodosCursos();
-      }
+      AppState.agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelaAgendamentos();
+      renderizarTabelaCursos();
+      renderizarTabelaProfessores();
+      renderizarPortalAlunoProfessor();
+      renderizarCatalogoTodosCursos();
     });
 
     db.collection('usuarios').onSnapshot(snap => {
       if (!snap.empty) {
-        AppState.usuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        AppState.usuarios = snap.docs.map(d => ({ uid: d.id, id: d.id, ...d.data() }));
         renderizarTabelaUsuarios();
       }
     });
@@ -352,6 +289,7 @@ function carregarDadosFirestore() {
 // CONTROLE DE NAVEGAÇÃO ENTRE PORTAL DO ALUNO E PAINEL ADMINISTRATIVO
 // ============================================================================
 function alternarModoPainel(modo) {
+
   if (modo === 'admin') {
     if (!AppState.currentUser) {
       mostrarToast("Acesso restrito: faça login com sua conta para acessar o painel de gestão.", "info");
@@ -403,7 +341,7 @@ function alternarVisaoPublica(visao) {
 }
 
 // ============================================================================
-// PORTAL DO ALUNO: SELEÇÃO DE PROFESSOR E ACESSO À SALA DE AULA
+// PORTAL DO ALUNO: SELEÇÃO DE PROFESSOR E CONSULTA DE TURMAS / CRONOGRAMAS
 // ============================================================================
 function renderizarPortalAlunoProfessor() {
   const selectProf = document.getElementById('aluno-select-prof');
@@ -445,7 +383,7 @@ function renderizarPortalAlunoProfessor() {
     cardsContainer.appendChild(card);
   });
 
-  // 3. Renderizar Turmas e Aulas do Professor Selecionado
+  // 3. Renderizar Turmas do Professor Selecionado
   if (AppState.selectedProfessorId) {
     const prof = AppState.professores.find(p => p.id === AppState.selectedProfessorId);
     if (!prof) return;
@@ -502,31 +440,21 @@ function renderizarPortalAlunoProfessor() {
 
               <div class="turma-info-row">
                 <i class="fa-regular fa-clock" style="color: var(--accent-cyan);"></i>
-                <span>Carga: ${turma.duracao_aula || 8}h por aula • ${(turma.aulas_geradas && turma.aulas_geradas.length) || 0} Aulas</span>
+                <span>Carga: ${turma.duracao_aula || 8}h por encontro • ${(turma.aulas_geradas && turma.aulas_geradas.length) || 0} Encontros</span>
               </div>
 
               ${proximaAula ? `
                 <div class="turma-proxima-aula-box">
-                  <span class="label"><i class="fa-solid fa-bell"></i> Primeira / Próxima Aula:</span>
+                  <span class="label"><i class="fa-solid fa-bell"></i> Primeiro / Próximo Encontro:</span>
                   <div class="data">${proximaAula.data} (${proximaAula.dia_semana || 'Semana'}) • ${turma.periodo}</div>
                 </div>
               ` : ''}
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.6rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-              <button class="btn-acessar-sala" onclick="abrirSalaVirtual('${turma.id}')">
-                <i class="fa-solid fa-video"></i>
-                <span>Acessar Sala de Aula</span>
-              </button>
-
-              <button class="btn btn-secondary" style="width: 100%; font-size: 0.8rem;" onclick="abrirCronogramaTurma('${turma.id}')">
+              <button class="btn btn-primary" style="width: 100%; font-size: 0.825rem;" onclick="abrirCronogramaTurma('${turma.id}')">
                 <i class="fa-solid fa-calendar-days"></i>
                 <span>Ver Cronograma Completo</span>
-              </button>
-
-              <button class="btn btn-secondary" style="width: 100%; font-size: 0.8rem; border-color: rgba(14,165,233,0.3); color: var(--accent-cyan);" onclick="abrirAulasDoCursoAluno('${turma.curso_id}')">
-                <i class="fa-solid fa-layer-group"></i>
-                <span>Aulas e Materiais do Curso</span>
               </button>
             </div>
           `;
@@ -546,83 +474,7 @@ function selecionarProfessorAluno(profId) {
 }
 
 // ============================================================================
-// MODAL DE SALA DE AULA VIRTUAL (ACESSO DO ALUNO)
-// ============================================================================
-function abrirSalaVirtual(turmaId) {
-  const turma = AppState.agendamentos.find(a => a.id === turmaId);
-  if (!turma) return;
-
-  const prof = AppState.professores.find(p => p.id === turma.professor_id);
-  const linkSala = turma.link_sala || (prof && prof.link_sala) || `https://meet.google.com/new`;
-
-  document.getElementById('modal-sala-tag-curso').textContent = turma.curso_nome;
-  document.getElementById('modal-sala-turma-nome').textContent = `Turma ${turma.turma_nome}`;
-  document.getElementById('modal-sala-prof-nome').textContent = `Professor(a) Responsável: ${turma.professor_nome} • Turno: ${turma.periodo}`;
-
-  const badgeTurno = document.getElementById('modal-sala-turno-badge');
-  if (badgeTurno) {
-    badgeTurno.className = `badge-periodo ${turma.periodo ? turma.periodo.toLowerCase() : 'noite'}`;
-    badgeTurno.textContent = turma.periodo || 'Ao Vivo';
-  }
-
-  const linkText = document.getElementById('modal-sala-link-text');
-  const btnAbrir = document.getElementById('modal-sala-btn-abrir');
-
-  if (linkText) linkText.textContent = linkSala;
-  if (btnAbrir) {
-    btnAbrir.href = linkSala;
-    btnAbrir.onclick = () => {
-      mostrarToast("Conectando à Sala de Aula Virtual...", "success");
-    };
-  }
-
-  abrirModal('modal-sala-aula');
-}
-
-function abrirSalaVirtualProfessorSelecionado() {
-  if (!AppState.selectedProfessorId) {
-    mostrarToast("Selecione um professor primeiro.", "info");
-    return;
-  }
-  const prof = AppState.professores.find(p => p.id === AppState.selectedProfessorId);
-  if (!prof) return;
-
-  const linkSala = prof.link_sala || "https://meet.google.com/new";
-
-  document.getElementById('modal-sala-tag-curso').textContent = prof.area || "Docente";
-  document.getElementById('modal-sala-turma-nome').textContent = `Sala Virtual do Professor ${prof.nome}`;
-  document.getElementById('modal-sala-prof-nome').textContent = `Canal de Atendimento e Aulas Virtuais`;
-
-  const badgeTurno = document.getElementById('modal-sala-turno-badge');
-  if (badgeTurno) {
-    badgeTurno.className = 'badge-periodo noite';
-    badgeTurno.textContent = 'Ao Vivo';
-  }
-
-  const linkText = document.getElementById('modal-sala-link-text');
-  const btnAbrir = document.getElementById('modal-sala-btn-abrir');
-
-  if (linkText) linkText.textContent = linkSala;
-  if (btnAbrir) btnAbrir.href = linkSala;
-
-  abrirModal('modal-sala-aula');
-}
-
-function copiarLinkSalaModal() {
-  const linkText = document.getElementById('modal-sala-link-text').textContent;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(linkText).then(() => {
-      mostrarToast("Link da sala de aula copiado para a área de transferência!", "success");
-    }).catch(() => {
-      mostrarToast("Link: " + linkText, "info");
-    });
-  } else {
-    mostrarToast("Link: " + linkText, "info");
-  }
-}
-
-// ============================================================================
-// CATÁLOGO DE TODOS OS CURSOS (CONSULTA LIVRE DE CONTEÚDO)
+// CATÁLOGO DE TODOS OS CURSOS (CONSULTA DE CURSOS E EMENTAS)
 // ============================================================================
 function renderizarCatalogoTodosCursos() {
   const container = document.getElementById('catalogo-cursos-grid');
@@ -642,8 +494,8 @@ function renderizarCatalogoTodosCursos() {
   if (cursosFiltrados.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; padding: 3rem; text-align: center; color: var(--text-muted); background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
-        <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; color: var(--accent-cyan); margin-bottom: 0.5rem; display: block;"></i>
-        Nenhum curso encontrado para o termo pesquisado.
+        <i class="fa-solid fa-book-open" style="font-size: 2rem; color: var(--accent-cyan); margin-bottom: 0.5rem; display: block;"></i>
+        Nenhum curso cadastrado no momento.
       </div>
     `;
     return;
@@ -671,16 +523,10 @@ function renderizarCatalogoTodosCursos() {
           <span class="course-classes-count">
             <i class="fa-solid fa-users"></i> ${turmasDoCurso.length} Turma(s) Ativa(s)
           </span>
-          <span style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600;">
-            <i class="fa-solid fa-layer-group"></i> ${(curso.aulas || []).length} Aula(s)
-          </span>
         </div>
         <div style="display: flex; gap: 0.5rem;">
-          <button class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.45rem;" onclick="abrirAulasDoCursoAluno('${curso.id}')">
-            <i class="fa-solid fa-graduation-cap"></i> <span>Acessar Conteúdo & Aulas</span>
-          </button>
-          <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.45rem;" onclick="abrirPrimeiraTurmaDoCurso('${curso.id}')" title="Ver Cronograma da Turma">
-            <i class="fa-solid fa-calendar"></i>
+          <button class="btn btn-secondary" style="flex: 1; font-size: 0.8rem; padding: 0.45rem;" onclick="abrirPrimeiraTurmaDoCurso('${curso.id}')" title="Ver Cronograma da Turma">
+            <i class="fa-solid fa-calendar-days"></i> <span>Ver Cronograma da Turma</span>
           </button>
         </div>
       </div>
@@ -1175,8 +1021,8 @@ function renderizarTabelaUsuarios() {
 
     const acoesHtml = podeGerenciarUsuarios
       ? `<div style="display: flex; gap: 0.35rem;">
-          <button class="btn btn-secondary" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="alterarNivelUsuario('${u.uid}')" title="Alterar Nível">
-            <i class="fa-solid fa-user-pen"></i>
+          <button class="btn btn-secondary" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="abrirModalEditarUsuario('${u.uid}')" title="Editar Usuário">
+            <i class="fa-solid fa-pen"></i>
           </button>
           <button class="btn btn-danger" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="excluirUsuario('${u.uid}')" title="Excluir Usuário">
             <i class="fa-solid fa-trash"></i>
@@ -1195,36 +1041,77 @@ function renderizarTabelaUsuarios() {
   });
 }
 
-async function alterarNivelUsuario(uid) {
+function alternarVinculoProfessorEditUser(role) {
+  const group = document.getElementById('group-edit-vinculo-prof');
+  if (group) {
+    group.style.display = (role === 'professor') ? 'flex' : 'none';
+  }
+}
+
+function abrirModalEditarUsuario(uid) {
   if (!verificarPermissaoRole(['superadmin'])) return;
 
   const u = AppState.usuarios.find(item => item.uid === uid);
   if (!u) return;
 
-  const novoRole = prompt(`Alterar nível para "${u.nome || u.email}":\nDigite "superadmin", "admin" ou "professor":`, u.role);
-  if (!novoRole) return;
+  document.getElementById('edit-usuario-uid').value = u.uid;
+  document.getElementById('edit-usuario-nome').value = u.nome || '';
+  document.getElementById('edit-usuario-email').value = u.email || '';
+  document.getElementById('edit-usuario-role').value = u.role || 'professor';
 
-  const rolesValidos = ['superadmin', 'admin', 'professor'];
-  if (!rolesValidos.includes(novoRole.toLowerCase().trim())) {
-    mostrarToast("Nível inválido. Digite superadmin, admin ou professor.", "error");
+  const selectProf = document.getElementById('edit-usuario-prof');
+  if (selectProf) {
+    selectProf.innerHTML = '<option value="">Selecione o professor...</option>' +
+      AppState.professores.map(p => `<option value="${p.id}">${p.nome} (${p.area || 'TI'})</option>`).join('');
+    selectProf.value = u.professor_id || '';
+  }
+
+  alternarVinculoProfessorEditUser(u.role || 'professor');
+  abrirModal('edit-usuario-modal');
+}
+
+async function submeterEdicaoUsuario(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (!verificarPermissaoRole(['superadmin'])) return;
+
+  const uid = document.getElementById('edit-usuario-uid').value;
+  const nome = document.getElementById('edit-usuario-nome').value.trim();
+  const email = document.getElementById('edit-usuario-email').value.trim();
+  const role = document.getElementById('edit-usuario-role').value;
+  const profId = document.getElementById('edit-usuario-prof').value;
+
+  if (!nome || !email) {
+    mostrarToast("Nome e e-mail são obrigatórios.", "error");
     return;
   }
 
-  const roleNormalizado = novoRole.toLowerCase().trim();
+  const profObj = AppState.professores.find(p => p.id === profId);
+  const dadosAtualizados = {
+    nome,
+    email,
+    role,
+    professor_id: (role === 'professor' && profObj) ? profObj.id : null,
+    professor_nome: (role === 'professor' && profObj) ? profObj.nome : null
+  };
 
   try {
     if (db) {
-      await db.collection('usuarios').doc(uid).update({ role: roleNormalizado });
+      await db.collection('usuarios').doc(uid).set(dadosAtualizados, { merge: true });
     }
     const idx = AppState.usuarios.findIndex(item => item.uid === uid);
     if (idx !== -1) {
-      AppState.usuarios[idx].role = roleNormalizado;
+      AppState.usuarios[idx] = { ...AppState.usuarios[idx], ...dadosAtualizados };
     }
     renderizarTabelaUsuarios();
-    mostrarToast(`Nível de ${u.nome} atualizado para ${roleNormalizado}!`, "success");
+    fecharModal('edit-usuario-modal');
+    mostrarToast(`Usuário "${nome}" atualizado com sucesso!`, "success");
   } catch (err) {
-    mostrarToast("Erro ao alterar nível: " + err.message, "error");
+    mostrarToast("Erro ao atualizar usuário: " + err.message, "error");
   }
+}
+
+async function alterarNivelUsuario(uid) {
+  abrirModalEditarUsuario(uid);
 }
 
 async function excluirUsuario(uid) {
@@ -1260,14 +1147,31 @@ function calcularCronogramaAulas(dataInicioStr, duracaoTotalHoras, duracaoAulaHo
 
   let dataAtual = new Date(ano, mes - 1, dia);
 
-  const feriadosSet = new Set(feriadosArray.map(f => {
+  const feriadosExatosSet = new Set();
+  const feriadosAnuaisSet = new Set();
+
+  (feriadosArray || []).forEach(f => {
+    if (!f || !f.data) return;
     let d = f.data;
+    let dayStr, monthStr, yearStr;
     if (d.includes('-')) {
       const [y, m, day] = d.split('-');
-      return `${day.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+      dayStr = day.padStart(2, '0');
+      monthStr = m.padStart(2, '0');
+      yearStr = y;
+    } else {
+      const parts = d.split('/');
+      dayStr = (parts[0] || '').padStart(2, '0');
+      monthStr = (parts[1] || '').padStart(2, '0');
+      yearStr = parts[2] || '';
     }
-    return d;
-  }));
+
+    if (f.recorrencia === 'anual' || !yearStr) {
+      feriadosAnuaisSet.add(`${dayStr}/${monthStr}`);
+    } else {
+      feriadosExatosSet.add(`${dayStr}/${monthStr}/${yearStr}`);
+    }
+  });
 
   const nomesDias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   let aulasGeradas = [];
@@ -1286,15 +1190,17 @@ function calcularCronogramaAulas(dataInicioStr, duracaoTotalHoras, duracaoAulaHo
     const mm = String(dataAtual.getMonth() + 1).padStart(2, '0');
     const yyyy = dataAtual.getFullYear();
     const dataFormatada = `${dd}/${mm}/${yyyy}`;
+    const diaMesFormatado = `${dd}/${mm}`;
 
-    if (diasSemana.includes(pythonWeekday) && !feriadosSet.has(dataFormatada)) {
+    const ehFeriado = feriadosExatosSet.has(dataFormatada) || feriadosAnuaisSet.has(diaMesFormatado);
+
+    if (diasSemana.includes(pythonWeekday) && !ehFeriado) {
       aulasGeradas.push({
         numero: aulasGeradas.length + 1,
         data: dataFormatada,
         dia_semana: nomesDias[jsDay],
         periodo: periodo,
-        duracao_aula: duracaoAulaHoras,
-        observacoes: ''
+        duracao_aula: duracaoAulaHoras
       });
       horasAgendadas += duracaoAulaHoras;
       dataFinal = new Date(dataAtual);
@@ -1416,7 +1322,6 @@ async function criarAgendamento(e) {
       duracao_aula: duracaoAula,
       dias_semana: diasSemana,
       periodo: periodo,
-      link_sala: professor.link_sala || "https://meet.google.com/new",
       aulas_geradas: aulasGeradas,
       criado_em: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -1474,8 +1379,151 @@ async function excluirAgendamento(id) {
   }
 }
 
+function abrirModalEditarAgendamento(id) {
+  if (!AppState.currentUser || !AppState.currentUserProfile) {
+    mostrarToast("Faça login para editar agendamentos.", "error");
+    abrirModalLogin();
+    return;
+  }
+
+  const ag = AppState.agendamentos.find(a => a.id === id);
+  if (!ag) return;
+
+  const role = AppState.currentUserProfile.role;
+  if (role === 'professor' && ag.professor_id !== AppState.currentUserProfile.professor_id) {
+    mostrarToast("Permissão negada: você só pode editar suas próprias turmas.", "error");
+    return;
+  }
+
+  document.getElementById('edit-agenda-id').value = ag.id;
+  document.getElementById('edit-agenda-turma-nome').value = ag.turma_nome || '';
+
+  const selCurso = document.getElementById('edit-agenda-select-curso');
+  if (selCurso) {
+    selCurso.innerHTML = AppState.cursos.map(c => `<option value="${c.id}">${c.nome} (${c.duracao_horas}h)</option>`).join('');
+    selCurso.value = ag.curso_id || '';
+  }
+
+  const selProf = document.getElementById('edit-agenda-select-prof');
+  if (selProf) {
+    selProf.innerHTML = AppState.professores.map(p => `<option value="${p.id}">${p.nome} (${p.area || 'TI'})</option>`).join('');
+    selProf.value = ag.professor_id || '';
+    selProf.disabled = (role === 'professor');
+  }
+
+  if (ag.data_inicio && ag.data_inicio.includes('/')) {
+    const [d, m, y] = ag.data_inicio.split('/');
+    document.getElementById('edit-agenda-data-inicio').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  } else {
+    document.getElementById('edit-agenda-data-inicio').value = ag.data_inicio || '';
+  }
+
+  document.getElementById('edit-agenda-duracao-aula').value = ag.duracao_aula || 8;
+  document.getElementById('edit-agenda-periodo').value = ag.periodo || 'Noite';
+
+  const dias = Array.isArray(ag.dias_semana) ? ag.dias_semana : [0, 2];
+  document.querySelectorAll('input[name="edit_agenda_dias"]').forEach(cb => {
+    cb.checked = dias.includes(parseInt(cb.value));
+  });
+
+  abrirModal('edit-agendamento-modal');
+}
+
+async function submeterEdicaoAgendamento(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (!AppState.currentUser || !AppState.currentUserProfile) return;
+
+  const id = document.getElementById('edit-agenda-id').value;
+  const ag = AppState.agendamentos.find(a => a.id === id);
+  if (!ag) return;
+
+  const role = AppState.currentUserProfile.role;
+  const turmaNome = document.getElementById('edit-agenda-turma-nome').value.trim();
+  const cursoId = document.getElementById('edit-agenda-select-curso').value;
+  let profId = document.getElementById('edit-agenda-select-prof').value;
+  const dataInicioIso = document.getElementById('edit-agenda-data-inicio').value;
+  const duracaoAula = parseInt(document.getElementById('edit-agenda-duracao-aula').value) || 8;
+  const periodo = document.getElementById('edit-agenda-periodo').value;
+
+  if (role === 'professor' && AppState.currentUserProfile.professor_id) {
+    profId = AppState.currentUserProfile.professor_id;
+  }
+
+  const checkboxes = document.querySelectorAll('input[name="edit_agenda_dias"]:checked');
+  const diasSemana = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+  if (!turmaNome || !cursoId || !profId || !dataInicioIso || diasSemana.length === 0) {
+    mostrarToast("Preencha todos os campos e selecione os dias da semana.", "error");
+    return;
+  }
+
+  const curso = AppState.cursos.find(c => c.id === cursoId);
+  const professor = AppState.professores.find(p => p.id === profId);
+  if (!curso || !professor) {
+    mostrarToast("Curso ou professor não encontrado.", "error");
+    return;
+  }
+
+  const [ano, mes, dia] = dataInicioIso.split('-');
+  const dataInicioFormatada = `${dia}/${mes}/${ano}`;
+
+  const { aulasGeradas, dataFinalStr } = calcularCronogramaAulas(
+    dataInicioFormatada,
+    curso.duracao_horas,
+    duracaoAula,
+    diasSemana,
+    periodo,
+    AppState.feriados
+  );
+
+  if (aulasGeradas.length === 0) {
+    mostrarToast("Nenhuma aula gerada com os critérios definidos.", "error");
+    return;
+  }
+
+  const conflito = verificarConflitoProfessor(profId, aulasGeradas, id);
+  if (conflito) {
+    mostrarToast(
+      `Conflito de Horário! O professor ${professor.nome} já possui aula em ${conflito.data} (${conflito.periodo}) na turma "${conflito.turmaConflito}".`,
+      "error"
+    );
+    return;
+  }
+
+  const dadosAtualizados = {
+    turma_nome: turmaNome,
+    curso_id: curso.id,
+    curso_nome: curso.nome,
+    professor_id: professor.id,
+    professor_nome: professor.nome,
+    data_inicio: dataInicioFormatada,
+    data_final: dataFinalStr,
+    duracao_aula: duracaoAula,
+    dias_semana: diasSemana,
+    periodo: periodo,
+    aulas_geradas: aulasGeradas
+  };
+
+  try {
+    if (db) {
+      await db.collection('agendamentos').doc(id).update(dadosAtualizados);
+    }
+    const idx = AppState.agendamentos.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      AppState.agendamentos[idx] = { ...AppState.agendamentos[idx], ...dadosAtualizados };
+    }
+    renderizarTabelaAgendamentos();
+    renderizarPortalAlunoProfessor();
+    renderizarCatalogoTodosCursos();
+    fecharModal('edit-agendamento-modal');
+    mostrarToast(`Turma "${turmaNome}" atualizada com sucesso!`, "success");
+  } catch (err) {
+    mostrarToast("Erro ao atualizar agendamento: " + err.message, "error");
+  }
+}
+
 // ============================================================================
-// CRONOGRAMA & OBSERVAÇÕES DE AULAS INDIVIDUAIS
+// VISUALIZAÇÃO DO CRONOGRAMA DE AULAS DA TURMA
 // ============================================================================
 function abrirCronogramaTurma(agendamentoId) {
   const ag = AppState.agendamentos.find(a => a.id === agendamentoId);
@@ -1496,84 +1544,19 @@ function abrirCronogramaTurma(agendamentoId) {
   const tbody = document.getElementById('cronograma-aulas-tbody');
   tbody.innerHTML = '';
 
-  const isAuth = !!AppState.currentUser;
-  const role = AppState.currentUserProfile ? AppState.currentUserProfile.role : null;
-  const podeEditarObs = isAuth && (
-    role === 'superadmin' ||
-    role === 'admin' ||
-    (role === 'professor' && ag.professor_id === AppState.currentUserProfile?.professor_id)
-  );
-
   (ag.aulas_geradas || []).forEach((aula, idx) => {
     const tr = document.createElement('tr');
-    const obsTexto = aula.observacoes || '';
-    const obsDisplay = obsTexto
-      ? `<span class="obs-badge" title="${obsTexto}"><i class="fa-solid fa-message text-cyan"></i> ${obsTexto}</span>`
-      : '<span style="color:var(--text-muted); font-size:0.75rem;">Nenhuma</span>';
-
-    const btnAcaoObs = podeEditarObs
-      ? `<button class="obs-btn-edit" onclick="abrirModalEdicaoObs('${ag.id}', ${idx})" title="Editar observações desta aula">
-          <i class="fa-solid fa-pencil"></i> Obs
-        </button>`
-      : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>';
-
     tr.innerHTML = `
       <td><strong>#${idx + 1}</strong></td>
       <td>${aula.data}</td>
       <td>${aula.dia_semana || obterDiaSemanaStr(aula.data)}</td>
       <td><span class="badge-periodo ${aula.periodo.toLowerCase()}">${aula.periodo}</span></td>
       <td>${aula.duracao_aula}h</td>
-      <td>${obsDisplay}</td>
-      <td>${btnAcaoObs}</td>
     `;
     tbody.appendChild(tr);
   });
 
   abrirModal('cronograma-modal');
-}
-
-function abrirModalEdicaoObs(agendamentoId, aulaIndex) {
-  if (!AppState.currentUser) {
-    mostrarToast("Faça login para editar anotações.", "error");
-    abrirModalLogin();
-    return;
-  }
-
-  const ag = AppState.agendamentos.find(a => a.id === agendamentoId);
-  if (!ag || !ag.aulas_geradas[aulaIndex]) return;
-
-  const aula = ag.aulas_geradas[aulaIndex];
-  document.getElementById('obs-agendamento-id').value = agendamentoId;
-  document.getElementById('obs-aula-index').value = aulaIndex;
-  document.getElementById('obs-modal-title').textContent = `Observação • Aula #${aulaIndex + 1}`;
-  document.getElementById('obs-modal-subtitle').textContent = `Data: ${aula.data} (${aula.periodo}) • Turma: ${ag.turma_nome}`;
-  document.getElementById('obs-textarea').value = aula.observacoes || '';
-
-  abrirModal('obs-modal');
-}
-
-async function salvarObservacaoAula() {
-  const agendamentoId = document.getElementById('obs-agendamento-id').value;
-  const aulaIndex = parseInt(document.getElementById('obs-aula-index').value);
-  const texto = document.getElementById('obs-textarea').value.trim();
-
-  const ag = AppState.agendamentos.find(a => a.id === agendamentoId);
-  if (!ag || !ag.aulas_geradas[aulaIndex]) return;
-
-  ag.aulas_geradas[aulaIndex].observacoes = texto;
-
-  try {
-    if (db) {
-      await db.collection('agendamentos').doc(agendamentoId).update({
-        aulas_geradas: ag.aulas_geradas
-      });
-    }
-    fecharModal('obs-modal');
-    mostrarToast("Observação da aula atualizada com sucesso!", "success");
-    abrirCronogramaTurma(agendamentoId);
-  } catch (err) {
-    mostrarToast("Erro ao salvar observação: " + err.message, "error");
-  }
 }
 
 // ============================================================================
@@ -1611,7 +1594,7 @@ async function salvarNovoCurso(e) {
       renderizarCatalogoTodosCursos();
     }
 
-    mostrarToast(`Curso "${nome}" salvo no Firestore!`, "success");
+    mostrarToast(`Curso "${nome}" salvo com sucesso!`, "success");
     document.getElementById('form-novo-curso').reset();
   } catch (err) {
     mostrarToast("Erro ao salvar curso: " + err.message, "error");
@@ -1673,23 +1656,32 @@ async function excluirCurso(id) {
   const curso = AppState.cursos.find(c => c.id === id);
   if (!curso) return;
 
-  const emUso = AppState.agendamentos.some(a => a.curso_id === id);
-  if (emUso) {
-    mostrarToast(`Não é possível excluir: O curso "${curso.nome}" possui turmas ativas vinculadas.`, "error");
-    return;
-  }
+  const turmasVinculadas = AppState.agendamentos.filter(a => a.curso_id === id || a.curso_nome === curso.nome);
+  const msgConfirm = turmasVinculadas.length > 0
+    ? `ATENÇÃO: O curso "${curso.nome}" possui ${turmasVinculadas.length} turma(s) vinculada(s).\n\nDeseja realmente excluir este curso e suas turmas agendadas?`
+    : `Deseja realmente excluir o curso "${curso.nome}"?`;
 
-  if (!confirm(`Deseja realmente excluir o curso "${curso.nome}"?`)) return;
+  if (!confirm(msgConfirm)) return;
 
   try {
-    if (db) await db.collection('cursos').doc(id).delete();
+    if (db) {
+      await db.collection('cursos').doc(id).delete();
+      for (const ag of turmasVinculadas) {
+        await db.collection('agendamentos').doc(ag.id).delete().catch(() => null);
+      }
+    }
+
     AppState.cursos = AppState.cursos.filter(c => c.id !== id);
+    AppState.agendamentos = AppState.agendamentos.filter(a => a.curso_id !== id && a.curso_nome !== curso.nome);
+
     renderizarTabelaCursos();
+    renderizarTabelaAgendamentos();
     popularSelects();
     renderizarCatalogoTodosCursos();
-    mostrarToast(`Curso "${curso.nome}" excluído.`, "success");
+    renderizarPortalAlunoProfessor();
+    mostrarToast(`Curso "${curso.nome}" excluído com sucesso!`, "success");
   } catch (err) {
-    mostrarToast("Erro ao excluir: " + err.message, "error");
+    mostrarToast("Erro ao excluir curso: " + err.message, "error");
   }
 }
 
@@ -1702,7 +1694,6 @@ async function salvarNovoProfessor(e) {
 
   const nome = document.getElementById('prof-nome-input').value.trim();
   const area = document.getElementById('prof-area-input').value.trim();
-  const linkSala = document.getElementById('prof-link-sala-input').value.trim();
 
   if (!nome || !area) {
     mostrarToast("Preencha nome e área de atuação.", "error");
@@ -1715,8 +1706,7 @@ async function salvarNovoProfessor(e) {
   try {
     const profData = {
       nome: nome,
-      area: area,
-      link_sala: linkSala || "https://meet.google.com/new"
+      area: area
     };
 
     if (db) {
@@ -1746,7 +1736,6 @@ function abrirModalEditarProfessor(id) {
   document.getElementById('edit-prof-id').value = p.id;
   document.getElementById('edit-prof-nome').value = p.nome;
   document.getElementById('edit-prof-area').value = p.area || '';
-  document.getElementById('edit-prof-link-sala').value = p.link_sala || '';
 
   abrirModal('edit-prof-modal');
 }
@@ -1758,21 +1747,18 @@ async function submeterEdicaoProfessor(e) {
   const id = document.getElementById('edit-prof-id').value;
   const nome = document.getElementById('edit-prof-nome').value.trim();
   const area = document.getElementById('edit-prof-area').value.trim();
-  const linkSala = document.getElementById('edit-prof-link-sala').value.trim();
 
   try {
     if (db) {
       await db.collection('professores').doc(id).update({
         nome: nome,
-        area: area,
-        link_sala: linkSala
+        area: area
       });
     }
     const idx = AppState.professores.findIndex(p => p.id === id);
     if (idx !== -1) {
       AppState.professores[idx].nome = nome;
       AppState.professores[idx].area = area;
-      AppState.professores[idx].link_sala = linkSala;
       renderizarTabelaProfessores();
       popularSelects();
       renderizarPortalAlunoProfessor();
@@ -1790,21 +1776,34 @@ async function excluirProfessor(id) {
   const prof = AppState.professores.find(p => p.id === id);
   if (!prof) return;
 
-  const emUso = AppState.agendamentos.some(a => a.professor_id === id);
-  if (emUso) {
+  const turmasVinculadas = AppState.agendamentos.filter(a => a.professor_id === id);
+  const role = AppState.currentUserProfile ? AppState.currentUserProfile.role : null;
+
+  if (turmasVinculadas.length > 0 && role !== 'superadmin') {
     mostrarToast(`Não é possível excluir: O(A) professor(a) "${prof.nome}" possui turmas agendadas.`, "error");
     return;
   }
 
-  if (!confirm(`Deseja realmente excluir o professor "${prof.nome}"?`)) return;
+  const msg = turmasVinculadas.length > 0
+    ? `O(A) professor(a) "${prof.nome}" possui ${turmasVinculadas.length} turma(s) vinculada(s). Deseja excluir o professor e remover suas turmas agendadas?`
+    : `Deseja realmente excluir o professor "${prof.nome}"?`;
+
+  if (!confirm(msg)) return;
 
   try {
-    if (db) await db.collection('professores').doc(id).delete();
+    if (db) {
+      await db.collection('professores').doc(id).delete();
+      for (const ag of turmasVinculadas) {
+        await db.collection('agendamentos').doc(ag.id).delete().catch(() => null);
+      }
+    }
     AppState.professores = AppState.professores.filter(p => p.id !== id);
+    AppState.agendamentos = AppState.agendamentos.filter(a => a.professor_id !== id);
     renderizarTabelaProfessores();
+    renderizarTabelaAgendamentos();
     popularSelects();
     renderizarPortalAlunoProfessor();
-    mostrarToast(`Professor "${prof.nome}" excluído.`, "success");
+    mostrarToast(`Professor "${prof.nome}" excluído com sucesso.`, "success");
   } catch (err) {
     mostrarToast("Erro ao excluir professor: " + err.message, "error");
   }
@@ -1819,6 +1818,8 @@ async function salvarNovoFeriado(e) {
 
   const nome = document.getElementById('feriado-nome-input').value.trim();
   const dataIso = document.getElementById('feriado-data-input').value;
+  const recorrenciaEl = document.getElementById('feriado-recorrencia-select');
+  const recorrencia = recorrenciaEl ? recorrenciaEl.value : 'anual';
 
   if (!nome || !dataIso) {
     mostrarToast("Preencha nome e data do feriado.", "error");
@@ -1832,7 +1833,7 @@ async function salvarNovoFeriado(e) {
   btn.disabled = true;
 
   try {
-    const feriadoData = { nome: nome, data: dataFormatada };
+    const feriadoData = { nome: nome, data: dataFormatada, recorrencia: recorrencia };
     if (db) {
       await db.collection('feriados').add(feriadoData);
     } else {
@@ -1846,6 +1847,70 @@ async function salvarNovoFeriado(e) {
     mostrarToast("Erro ao salvar feriado: " + err.message, "error");
   } finally {
     btn.disabled = false;
+  }
+}
+
+function abrirModalEditarFeriado(id) {
+  if (!verificarPermissaoRole(['superadmin', 'admin'])) return;
+
+  const f = AppState.feriados.find(item => item.id === id);
+  if (!f) return;
+
+  document.getElementById('edit-feriado-id').value = f.id;
+  document.getElementById('edit-feriado-nome').value = f.nome || '';
+
+  if (f.data && f.data.includes('/')) {
+    const [d, m, y] = f.data.split('/');
+    document.getElementById('edit-feriado-data').value = `${y || new Date().getFullYear()}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  } else {
+    document.getElementById('edit-feriado-data').value = f.data || '';
+  }
+
+  const recSelect = document.getElementById('edit-feriado-recorrencia');
+  if (recSelect) {
+    recSelect.value = f.recorrencia || 'unico';
+  }
+
+  abrirModal('edit-feriado-modal');
+}
+
+async function submeterEdicaoFeriado(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (!verificarPermissaoRole(['superadmin', 'admin'])) return;
+
+  const id = document.getElementById('edit-feriado-id').value;
+  const nome = document.getElementById('edit-feriado-nome').value.trim();
+  const dataIso = document.getElementById('edit-feriado-data').value;
+  const recSelect = document.getElementById('edit-feriado-recorrencia');
+  const recorrencia = recSelect ? recSelect.value : 'unico';
+
+  if (!nome || !dataIso) {
+    mostrarToast("Preencha nome e data do feriado.", "error");
+    return;
+  }
+
+  const [ano, mes, dia] = dataIso.split('-');
+  const dataFormatada = `${dia}/${mes}/${ano}`;
+
+  try {
+    if (db) {
+      await db.collection('feriados').doc(id).update({
+        nome: nome,
+        data: dataFormatada,
+        recorrencia: recorrencia
+      });
+    }
+    const idx = AppState.feriados.findIndex(item => item.id === id);
+    if (idx !== -1) {
+      AppState.feriados[idx].nome = nome;
+      AppState.feriados[idx].data = dataFormatada;
+      AppState.feriados[idx].recorrencia = recorrencia;
+    }
+    renderizarTabelaFeriados();
+    fecharModal('edit-feriado-modal');
+    mostrarToast(`Feriado "${nome}" atualizado com sucesso!`, "success");
+  } catch (err) {
+    mostrarToast("Erro ao atualizar feriado: " + err.message, "error");
   }
 }
 
@@ -1890,8 +1955,7 @@ function exportarAgendaExcel() {
         'Data da Aula': aula.data,
         'Dia da Semana': aula.dia_semana || obterDiaSemanaStr(aula.data),
         'Período': aula.periodo,
-        'Duração (h)': aula.duracao_aula,
-        'Observações': aula.observacoes || ''
+        'Duração (h)': aula.duracao_aula
       });
     });
   });
@@ -1908,8 +1972,7 @@ function exportarTurmaIndividualExcel(ag) {
     'Data da Aula': aula.data,
     'Dia da Semana': aula.dia_semana || obterDiaSemanaStr(aula.data),
     'Período': aula.periodo,
-    'Duração (h)': aula.duracao_aula,
-    'Observações': aula.observacoes || ''
+    'Duração (h)': aula.duracao_aula
   }));
 
   gerarDownloadExcel(dados, `cronograma_${ag.turma_nome.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
@@ -1998,13 +2061,19 @@ function renderizarTabelaAgendamentos() {
     const tr = document.createElement('tr');
     const totalAulas = (ag.aulas_geradas && ag.aulas_geradas.length) || 0;
 
-    const podeExcluir = isAuth && (
+    const podeGerenciarTurma = isAuth && (
       role === 'superadmin' ||
       role === 'admin' ||
       (role === 'professor' && ag.professor_id === AppState.currentUserProfile?.professor_id)
     );
 
-    const btnExcluir = podeExcluir
+    const btnEditar = podeGerenciarTurma
+      ? `<button class="btn btn-secondary" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="abrirModalEditarAgendamento('${ag.id}')" title="Editar turma">
+          <i class="fa-solid fa-pen"></i>
+        </button>`
+      : '';
+
+    const btnExcluir = podeGerenciarTurma
       ? `<button class="btn btn-danger" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="excluirAgendamento('${ag.id}')" title="Excluir turma">
           <i class="fa-solid fa-trash"></i>
         </button>`
@@ -2027,6 +2096,7 @@ function renderizarTabelaAgendamentos() {
           <button class="btn btn-secondary" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="abrirCronogramaTurma('${ag.id}')" title="Ver cronograma detalhado">
             <i class="fa-solid fa-eye"></i>
           </button>
+          ${btnEditar}
           ${btnExcluir}
         </div>
       </td>
@@ -2059,18 +2129,12 @@ function renderizarTabelaCursos() {
 
   AppState.cursos.forEach(c => {
     const turmasVinculadas = AppState.agendamentos.filter(a => a.curso_id === c.id || a.curso_nome === c.nome).length;
-    const qtdAulas = (c.aulas && Array.isArray(c.aulas)) ? c.aulas.length : 0;
     const acoesHtml = podeGerenciarCursos
       ? `<div style="display:flex; gap:0.35rem; align-items:center;">
-          <button class="btn btn-secondary" style="padding:0.25rem 0.6rem; font-size:0.75rem; border-color:rgba(14,165,233,0.4); color:var(--accent-cyan);" onclick="abrirModalGerenciarAulas('${c.id}')" title="Gerenciar Conteúdo das Aulas">
-            <i class="fa-solid fa-layer-group"></i> Aulas (${qtdAulas})
-          </button>
           <button class="btn btn-secondary" style="padding:0.25rem 0.55rem; font-size:0.75rem;" onclick="abrirModalEditarCurso('${c.id}')" title="Editar curso"><i class="fa-solid fa-pen"></i></button>
           <button class="btn btn-danger" style="padding:0.25rem 0.55rem; font-size:0.75rem;" onclick="excluirCurso('${c.id}')" title="Excluir curso"><i class="fa-solid fa-trash"></i></button>
         </div>`
-      : `<button class="btn btn-secondary" style="padding:0.25rem 0.6rem; font-size:0.75rem; border-color:rgba(14,165,233,0.4); color:var(--accent-cyan);" onclick="abrirAulasDoCursoAluno('${c.id}')" title="Ver Aulas">
-          <i class="fa-solid fa-layer-group"></i> Aulas (${qtdAulas})
-        </button>`;
+      : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>';
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -2092,7 +2156,7 @@ function renderizarTabelaProfessores() {
   tbody.innerHTML = '';
 
   if (AppState.professores.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1.5rem;">Nenhum professor cadastrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:1.5rem;">Nenhum professor cadastrado.</td></tr>';
     return;
   }
 
@@ -2102,9 +2166,6 @@ function renderizarTabelaProfessores() {
 
   AppState.professores.forEach(p => {
     const turmasVinculadas = AppState.agendamentos.filter(a => a.professor_id === p.id).length;
-    const linkSalaDisplay = p.link_sala
-      ? `<a href="${p.link_sala}" target="_blank" style="font-size:0.8rem; color:var(--accent-cyan); display:inline-flex; align-items:center; gap:0.3rem;"><i class="fa-solid fa-video"></i> Acessar Sala</a>`
-      : '<span style="color:var(--text-muted); font-size:0.75rem;">Não configurado</span>';
 
     const acoesHtml = podeGerenciarProfs
       ? `<div style="display:flex; gap:0.35rem;">
@@ -2118,7 +2179,6 @@ function renderizarTabelaProfessores() {
       <td><code style="font-size:0.75rem; color:var(--text-muted);">${(p.id || '').substring(0, 8)}...</code></td>
       <td><strong>${p.nome}</strong></td>
       <td>${p.area || '-'}</td>
-      <td>${linkSalaDisplay}</td>
       <td><span class="badge-tag">${turmasVinculadas} turma(s)</span></td>
       <td>${acoesHtml}</td>
     `;
@@ -2133,7 +2193,7 @@ function renderizarTabelaFeriados() {
   tbody.innerHTML = '';
 
   if (AppState.feriados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:1.5rem;">Nenhum feriado cadastrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:1.5rem;">Nenhum feriado cadastrado.</td></tr>';
     return;
   }
 
@@ -2142,15 +2202,29 @@ function renderizarTabelaFeriados() {
   const podeGerenciarFeriados = isAuth && (role === 'superadmin' || role === 'admin');
 
   AppState.feriados.forEach(f => {
+    const isAnual = f.recorrencia === 'anual';
+    const partesData = (f.data || '').split('/');
+    const dataExibicao = (isAnual && partesData.length >= 2)
+      ? `<strong>${partesData[0]}/${partesData[1]}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(Todo ano)</span>`
+      : (f.data || '-');
+
+    const badgeRecorrencia = isAnual
+      ? `<span class="badge-tag" style="background: rgba(16,185,129,0.15); color: var(--accent-emerald);"><i class="fa-solid fa-rotate"></i> Repete todos os anos</span>`
+      : `<span class="badge-tag" style="background: rgba(245,158,11,0.15); color: var(--accent-amber);"><i class="fa-regular fa-calendar-check"></i> 1 vez por ano (${partesData[2] || 'Data única'})</span>`;
+
     const acoesHtml = podeGerenciarFeriados
-      ? `<button class="btn btn-danger" style="padding:0.25rem 0.55rem; font-size:0.75rem;" onclick="excluirFeriado('${f.id}')" title="Excluir feriado"><i class="fa-solid fa-trash"></i></button>`
+      ? `<div style="display:flex; gap:0.35rem;">
+          <button class="btn btn-secondary" style="padding:0.25rem 0.55rem; font-size:0.75rem;" onclick="abrirModalEditarFeriado('${f.id}')" title="Editar feriado"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-danger" style="padding:0.25rem 0.55rem; font-size:0.75rem;" onclick="excluirFeriado('${f.id}')" title="Excluir feriado"><i class="fa-solid fa-trash"></i></button>
+        </div>`
       : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>';
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><code style="font-size:0.75rem; color:var(--text-muted);">${(f.id || '').substring(0, 8)}...</code></td>
       <td><strong>${f.nome}</strong></td>
-      <td>${f.data}</td>
+      <td>${dataExibicao}</td>
+      <td>${badgeRecorrencia}</td>
       <td>${acoesHtml}</td>
     `;
     tbody.appendChild(tr);
@@ -2311,1030 +2385,6 @@ function configurarEventosUI() {
 }
 
 // ============================================================================
-// COMPRESSÃO DE IMAGENS VIA CANVAS (BASE64 OTIMIZADO PARA FIRESTORE)
-// ============================================================================
-function processarImagemParaBase64Canvas(file, maxDimension = 850, quality = 0.68) {
-  return new Promise((resolve, reject) => {
-    if (!file || !file.type.startsWith('image/')) {
-      reject(new Error("Arquivo inválido. Selecione uma imagem."));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-
-        // Redimensionar proporcionalmente para caber em maxDimension
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-
-        // Preenchimento de fundo para compatibilidade
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Exportação como JPEG com compressão otimizada
-        const base64Data = canvas.toDataURL('image/jpeg', quality);
-        const sizeBytes = Math.round((base64Data.length * 3) / 4);
-        const sizeKb = (sizeBytes / 1024).toFixed(1);
-
-        resolve({
-          base64: base64Data,
-          sizeKb,
-          width,
-          height,
-          originalSizeKb: (file.size / 1024).toFixed(1)
-        });
-      };
-      img.onerror = () => reject(new Error("Falha ao processar arquivo de imagem no Canvas."));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error("Falha ao ler o arquivo selecionado."));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function tratarUploadImagemCanvas(inputElement, tipo) {
-  const file = inputElement.files && inputElement.files[0];
-  if (!file) return;
-
-  try {
-    mostrarToast(`Otimizando ${tipo} via Canvas para o Firestore...`, 'info');
-    const resultado = await processarImagemParaBase64Canvas(file, 850, 0.68);
-
-    const hiddenInput = document.getElementById(`form-aula-${tipo}-base64`);
-    const previewContainer = document.getElementById(`preview-${tipo}-container`);
-    const previewImg = document.getElementById(`preview-${tipo}-img`);
-    const sizeBadge = document.getElementById(`preview-${tipo}-size`);
-
-    if (hiddenInput) hiddenInput.value = resultado.base64;
-    if (previewImg) previewImg.src = resultado.base64;
-    if (sizeBadge) sizeBadge.textContent = `${resultado.sizeKb} KB (Canvas Otimizado)`;
-    if (previewContainer) previewContainer.style.display = 'block';
-
-    mostrarToast(`Imagem otimizada com sucesso! Tamanho salvo: ${resultado.sizeKb} KB`, 'success');
-  } catch (err) {
-    console.error(err);
-    mostrarToast("Erro ao processar imagem no Canvas: " + err.message, "danger");
-  }
-}
-
-function removerImagemAula(tipo) {
-  const fileInput = document.getElementById(`form-aula-${tipo}-file`);
-  const hiddenInput = document.getElementById(`form-aula-${tipo}-base64`);
-  const previewContainer = document.getElementById(`preview-${tipo}-container`);
-  const previewImg = document.getElementById(`preview-${tipo}-img`);
-
-  if (fileInput) fileInput.value = '';
-  if (hiddenInput) hiddenInput.value = '';
-  if (previewImg) previewImg.src = '';
-  if (previewContainer) previewContainer.style.display = 'none';
-}
-
-// ============================================================================
-// GESTÃO DE CONTEÚDO DAS AULAS DO CURSO (ADMINISTRADOR)
-// ============================================================================
-AppState.cursoGerenciandoAulasId = null;
-AppState.aulaEmEdicaoId = null;
-
-function abrirModalGerenciarAulas(cursoId) {
-  const curso = AppState.cursos.find(c => c.id === cursoId);
-  if (!curso) {
-    mostrarToast("Curso não encontrado.", "danger");
-    return;
-  }
-
-  AppState.cursoGerenciandoAulasId = cursoId;
-  AppState.aulaEmEdicaoId = null;
-
-  const titEl = document.getElementById('modal-aulas-titulo');
-  const subEl = document.getElementById('modal-aulas-subtitulo');
-  if (titEl) {
-    titEl.innerHTML = `<i class="fa-solid fa-layer-group text-cyan"></i> Aulas do Curso: ${curso.nome}`;
-  }
-  if (subEl) {
-    subEl.textContent = `${curso.duracao_horas} Horas • Gerenciamento completo de vídeos, imagens, Drive, Markdown e Quiz`;
-  }
-
-  cancelarEdicaoAula();
-  renderizarListaAulasAdmin(curso);
-  abrirModal('modal-gerenciar-aulas');
-}
-
-function renderizarListaAulasAdmin(curso) {
-  const container = document.getElementById('modal-aulas-lista');
-  const countEl = document.getElementById('modal-aulas-contagem');
-  if (!container) return;
-
-  const aulas = (curso.aulas && Array.isArray(curso.aulas)) ? curso.aulas : [];
-  if (countEl) countEl.textContent = aulas.length;
-
-  if (aulas.length === 0) {
-    container.innerHTML = `
-      <div style="padding: 2rem; text-align: center; color: var(--text-muted); background: var(--bg-surface-2); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
-        <i class="fa-solid fa-folder-open" style="font-size: 2rem; color: var(--accent-cyan); margin-bottom: 0.5rem; display: block;"></i>
-        Nenhuma aula cadastrada ainda para este curso.<br>
-        Clique em "Adicionar Nova Aula" para cadastrar a primeira aula com vídeo, imagens, markdown e quiz.
-      </div>
-    `;
-    return;
-  }
-
-  const aulasOrdenadas = [...aulas].sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0));
-
-  container.innerHTML = '';
-  aulasOrdenadas.forEach((aula, index) => {
-    const temVideo = !!aula.youtube_url;
-    const temInfografico = !!aula.infografico_base64;
-    const temMapaMental = !!aula.mapamental_base64;
-    const temPdf = !!aula.pdf_url;
-    const temMarkdown = !!aula.conteudo_markdown;
-    const qtdQuestoes = (aula.quiz_questoes && Array.isArray(aula.quiz_questoes)) ? aula.quiz_questoes.length : 0;
-    const temZip = !!aula.zip_url;
-    const temDriveProf = !!aula.drive_professor_url;
-
-    const item = document.createElement('div');
-    item.className = 'aula-admin-card';
-    item.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; width: 100%;">
-        <div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-            <span class="badge-tag" style="background: rgba(14,165,233,0.15); color: var(--accent-cyan);">Aula ${aula.ordem || (index + 1)}</span>
-            <h5 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0;">${aula.titulo}</h5>
-          </div>
-
-          <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem;">
-            <span class="badge-tag" style="${temVideo ? 'background:rgba(239,68,68,0.15); color:#ef4444;' : 'opacity:0.35;'}">
-              <i class="fa-brands fa-youtube"></i> Vídeo
-            </span>
-            <span class="badge-tag" style="${temInfografico ? 'background:rgba(14,165,233,0.15); color:var(--accent-cyan);' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-chart-pie"></i> Infográfico (Canvas)
-            </span>
-            <span class="badge-tag" style="${temMapaMental ? 'background:rgba(16,185,129,0.15); color:var(--accent-emerald);' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-diagram-project"></i> Mapa Mental (Canvas)
-            </span>
-            <span class="badge-tag" style="${temPdf ? 'background:rgba(244,63,94,0.15); color:#f43f5e;' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-file-pdf"></i> PDF Drive
-            </span>
-            <span class="badge-tag" style="${temMarkdown ? 'background:rgba(14,165,233,0.15); color:var(--accent-cyan);' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-code"></i> Markdown
-            </span>
-            <span class="badge-tag" style="${qtdQuestoes > 0 ? 'background:rgba(245,158,11,0.15); color:var(--accent-amber);' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-circle-question"></i> Quiz (${qtdQuestoes} Q)
-            </span>
-            <span class="badge-tag" style="${temZip ? 'background:rgba(245,158,11,0.15); color:var(--accent-amber);' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-file-zipper"></i> ZIP
-            </span>
-            <span class="badge-tag" style="${temDriveProf ? 'background:rgba(14,165,233,0.15); color:var(--accent-cyan);' : 'opacity:0.35;'}">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Drive Prof
-            </span>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 0.35rem; align-items: center;">
-          <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="abrirAmbienteAulaAluno('${curso.id}', '${aula.id}')" title="Testar visão do Aluno">
-            <i class="fa-solid fa-eye text-cyan"></i> Visualizar
-          </button>
-          <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="editarAulaCurso('${curso.id}', '${aula.id}')" title="Editar aula">
-            <i class="fa-solid fa-pen"></i> Editar
-          </button>
-          <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="excluirAulaCurso('${curso.id}', '${aula.id}')" title="Excluir aula">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-      </div>
-    `;
-    container.appendChild(item);
-  });
-}
-
-function iniciarCadastroNovaAula() {
-  const curso = AppState.cursos.find(c => c.id === AppState.cursoGerenciandoAulasId);
-  if (!curso) return;
-
-  AppState.aulaEmEdicaoId = null;
-  const wrapper = document.getElementById('modal-aula-form-wrapper');
-  if (wrapper) wrapper.style.display = 'block';
-
-  document.getElementById('form-aula-titulo-modo').innerHTML = '<i class="fa-solid fa-plus text-cyan"></i> Cadastrar Nova Aula';
-  document.getElementById('form-aula-id').value = '';
-  document.getElementById('form-aula-curso-id').value = curso.id;
-  document.getElementById('form-aula-titulo').value = '';
-
-  const totalAulas = (curso.aulas && curso.aulas.length) || 0;
-  document.getElementById('form-aula-ordem').value = totalAulas + 1;
-  document.getElementById('form-aula-youtube').value = '';
-
-  removerImagemAula('infografico');
-  removerImagemAula('mapamental');
-
-  document.getElementById('form-aula-pdf-link').value = '';
-  document.getElementById('form-aula-markdown').value = '';
-  alternarAbaMarkdownForm('edit');
-
-  document.getElementById('form-aula-zip-link').value = '';
-  document.getElementById('form-aula-drive-prof-link').value = '';
-
-  renderizarConstrutorQuizQuestoes([]);
-  wrapper.scrollIntoView({ behavior: 'smooth' });
-}
-
-function editarAulaCurso(cursoId, aulaId) {
-  const curso = AppState.cursos.find(c => c.id === cursoId);
-  if (!curso) return;
-
-  const aula = (curso.aulas || []).find(a => a.id === aulaId);
-  if (!aula) return;
-
-  AppState.aulaEmEdicaoId = aulaId;
-  const wrapper = document.getElementById('modal-aula-form-wrapper');
-  if (wrapper) wrapper.style.display = 'block';
-
-  document.getElementById('form-aula-titulo-modo').innerHTML = '<i class="fa-solid fa-pen text-amber"></i> Editar Conteúdo da Aula';
-  document.getElementById('form-aula-id').value = aula.id;
-  document.getElementById('form-aula-curso-id').value = curso.id;
-  document.getElementById('form-aula-titulo').value = aula.titulo || '';
-  document.getElementById('form-aula-ordem').value = aula.ordem || 1;
-  document.getElementById('form-aula-youtube').value = aula.youtube_url || '';
-
-  // Infográfico
-  if (aula.infografico_base64) {
-    document.getElementById('form-aula-infografico-base64').value = aula.infografico_base64;
-    document.getElementById('preview-infografico-img').src = aula.infografico_base64;
-    document.getElementById('preview-infografico-size').textContent = 'Base64 Salvo';
-    document.getElementById('preview-infografico-container').style.display = 'block';
-  } else {
-    removerImagemAula('infografico');
-  }
-
-  // Mapa Mental
-  if (aula.mapamental_base64) {
-    document.getElementById('form-aula-mapamental-base64').value = aula.mapamental_base64;
-    document.getElementById('preview-mapamental-img').src = aula.mapamental_base64;
-    document.getElementById('preview-mapamental-size').textContent = 'Base64 Salvo';
-    document.getElementById('preview-mapamental-container').style.display = 'block';
-  } else {
-    removerImagemAula('mapamental');
-  }
-
-  document.getElementById('form-aula-pdf-link').value = aula.pdf_url || '';
-  document.getElementById('form-aula-markdown').value = aula.conteudo_markdown || '';
-  alternarAbaMarkdownForm('edit');
-
-  document.getElementById('form-aula-zip-link').value = aula.zip_url || '';
-  document.getElementById('form-aula-drive-prof-link').value = aula.drive_professor_url || '';
-
-  renderizarConstrutorQuizQuestoes(aula.quiz_questoes || []);
-  wrapper.scrollIntoView({ behavior: 'smooth' });
-}
-
-function cancelarEdicaoAula() {
-  AppState.aulaEmEdicaoId = null;
-  const wrapper = document.getElementById('modal-aula-form-wrapper');
-  if (wrapper) wrapper.style.display = 'none';
-}
-
-function alternarAbaMarkdownForm(modo) {
-  const textarea = document.getElementById('form-aula-markdown');
-  const preview = document.getElementById('form-aula-markdown-preview');
-  const btnEdit = document.getElementById('btn-md-edit-mode');
-  const btnPrev = document.getElementById('btn-md-preview-mode');
-
-  if (modo === 'preview') {
-    if (textarea && preview) {
-      const mdText = textarea.value || '';
-      preview.innerHTML = (window.marked && typeof window.marked.parse === 'function')
-        ? window.marked.parse(mdText)
-        : mdText.replace(/\n/g, '<br>');
-      textarea.style.display = 'none';
-      preview.style.display = 'block';
-    }
-    if (btnEdit) btnEdit.classList.remove('btn-primary');
-    if (btnPrev) btnPrev.classList.add('btn-primary');
-  } else {
-    if (textarea && preview) {
-      textarea.style.display = 'block';
-      preview.style.display = 'none';
-    }
-    if (btnEdit) btnEdit.classList.add('btn-primary');
-    if (btnPrev) btnPrev.classList.remove('btn-primary');
-  }
-}
-
-function renderizarConstrutorQuizQuestoes(questoesExistentes = []) {
-  const container = document.getElementById('quiz-questoes-builder-container');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  for (let i = 1; i <= 10; i++) {
-    const qData = questoesExistentes[i - 1] || {
-      id: i,
-      pergunta: '',
-      opcoes: ['', '', '', ''],
-      correta: 0
-    };
-
-    const qCard = document.createElement('div');
-    qCard.className = 'quiz-builder-card';
-    qCard.innerHTML = `
-      <div class="quiz-builder-card-header">
-        <strong><i class="fa-solid fa-question-circle text-amber"></i> Questão ${i} de 10</strong>
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Assinale a alternativa correta</span>
-      </div>
-      <div style="margin-bottom: 0.75rem;">
-        <label style="font-size: 0.75rem; font-weight: 600;">Enunciado da Pergunta *</label>
-        <textarea id="quiz-pergunta-${i}" class="form-control" rows="2" placeholder="Digite o enunciado da questão ${i}...">${qData.pergunta || ''}</textarea>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-        <label style="font-size: 0.75rem; font-weight: 600;">Alternativas (Selecione a Correta):</label>
-        ${['A', 'B', 'C', 'D'].map((letra, optIndex) => `
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <input type="radio" name="quiz-correta-${i}" id="quiz-correta-${i}-${optIndex}" value="${optIndex}" ${Number(qData.correta) === optIndex ? 'checked' : ''} style="cursor: pointer; accent-color: var(--accent-emerald);">
-            <label for="quiz-correta-${i}-${optIndex}" style="font-weight: 700; width: 20px; margin: 0; cursor: pointer;">${letra})</label>
-            <input type="text" id="quiz-opcao-${i}-${optIndex}" class="form-control" placeholder="Alternativa ${letra}..." value="${(qData.opcoes && qData.opcoes[optIndex]) || ''}" style="flex: 1;">
-          </div>
-        `).join('')}
-      </div>
-    `;
-    container.appendChild(qCard);
-  }
-}
-
-function obterQuestoesDoConstrutor() {
-  const questoes = [];
-  for (let i = 1; i <= 10; i++) {
-    const perguntaEl = document.getElementById(`quiz-pergunta-${i}`);
-    const pergunta = perguntaEl ? perguntaEl.value.trim() : '';
-    const opcoes = [];
-    for (let opt = 0; opt < 4; opt++) {
-      const optEl = document.getElementById(`quiz-opcao-${i}-${opt}`);
-      opcoes.push(optEl ? optEl.value.trim() : '');
-    }
-
-    const radioChecked = document.querySelector(`input[name="quiz-correta-${i}"]:checked`);
-    const correta = radioChecked ? Number(radioChecked.value) : 0;
-
-    if (pergunta) {
-      questoes.push({
-        id: i,
-        pergunta,
-        opcoes,
-        correta
-      });
-    }
-  }
-  return questoes;
-}
-
-function preencherQuizModeloExemplo() {
-  const curso = AppState.cursos.find(c => c.id === AppState.cursoGerenciandoAulasId);
-  const nomeCurso = curso ? curso.nome : "Formação Técnica";
-
-  for (let i = 1; i <= 10; i++) {
-    const pEl = document.getElementById(`quiz-pergunta-${i}`);
-    if (pEl) pEl.value = `Questão ${i}: Qual o conceito fundamental abordado neste módulo prático de ${nomeCurso}?`;
-
-    for (let opt = 0; opt < 4; opt++) {
-      const optEl = document.getElementById(`quiz-opcao-${i}-${opt}`);
-      if (optEl) {
-        if (opt === 0) optEl.value = `Conceito fundamental e recomendação oficial da arquitetura (Correta)`;
-        else if (opt === 1) optEl.value = `Procedimento não recomendado para fluxos de produção`;
-        else if (opt === 2) optEl.value = `Configuração legada e descontinuada pelo fabricante`;
-        else optEl.value = `Nenhuma das alternativas anteriores`;
-      }
-    }
-    const rEl = document.getElementById(`quiz-correta-${i}-0`);
-    if (rEl) rEl.checked = true;
-  }
-  mostrarToast("10 Questões modelo carregadas com sucesso no formulário!", "info");
-}
-
-function limparTodasQuestoesQuiz() {
-  for (let i = 1; i <= 10; i++) {
-    const pEl = document.getElementById(`quiz-pergunta-${i}`);
-    if (pEl) pEl.value = '';
-    for (let opt = 0; opt < 4; opt++) {
-      const optEl = document.getElementById(`quiz-opcao-${i}-${opt}`);
-      if (optEl) optEl.value = '';
-    }
-  }
-  mostrarToast("Campos do Quiz limpos.", "info");
-}
-
-async function salvarConteudoAulaForm() {
-  const cursoId = document.getElementById('form-aula-curso-id').value || AppState.cursoGerenciandoAulasId;
-  const curso = AppState.cursos.find(c => c.id === cursoId);
-  if (!curso) {
-    mostrarToast("Curso não localizado.", "danger");
-    return;
-  }
-
-  const aulaIdExistente = document.getElementById('form-aula-id').value;
-  const titulo = document.getElementById('form-aula-titulo').value.trim();
-  const ordem = Number(document.getElementById('form-aula-ordem').value) || 1;
-  const youtubeUrl = document.getElementById('form-aula-youtube').value.trim();
-  const infograficoBase64 = document.getElementById('form-aula-infografico-base64').value;
-  const mapamentalBase64 = document.getElementById('form-aula-mapamental-base64').value;
-  const pdfUrl = document.getElementById('form-aula-pdf-link').value.trim();
-  const markdownText = document.getElementById('form-aula-markdown').value;
-  const zipUrl = document.getElementById('form-aula-zip-link').value.trim();
-  const driveProfUrl = document.getElementById('form-aula-drive-prof-link').value.trim();
-  const questoes = obterQuestoesDoConstrutor();
-
-  if (!titulo) {
-    mostrarToast("O título da aula é obrigatório.", "warning");
-    return;
-  }
-
-  const aulaObj = {
-    id: aulaIdExistente || ('aula_' + Date.now()),
-    titulo,
-    ordem,
-    youtube_url: youtubeUrl,
-    infografico_base64: infograficoBase64,
-    mapamental_base64: mapamentalBase64,
-    pdf_url: pdfUrl,
-    conteudo_markdown: markdownText,
-    quiz_questoes: questoes,
-    zip_url: zipUrl,
-    drive_professor_url: driveProfUrl,
-    atualizado_em: new Date().toISOString()
-  };
-
-  if (!curso.aulas) curso.aulas = [];
-
-  if (aulaIdExistente) {
-    const idx = curso.aulas.findIndex(a => a.id === aulaIdExistente);
-    if (idx >= 0) curso.aulas[idx] = aulaObj;
-    else curso.aulas.push(aulaObj);
-  } else {
-    curso.aulas.push(aulaObj);
-  }
-
-  try {
-    if (db) {
-      await db.collection('cursos').doc(curso.id).set({
-        aulas: curso.aulas
-      }, { merge: true });
-    }
-    mostrarToast(`Aula "${titulo}" salva com sucesso!`, 'success');
-  } catch (err) {
-    console.error(err);
-    mostrarToast("Aviso: Salvo em memória local (" + err.message + ")", "warning");
-  }
-
-  cancelarEdicaoAula();
-  renderizarListaAulasAdmin(curso);
-  renderizarTabelaCursos();
-  renderizarCatalogoTodosCursos();
-}
-
-async function excluirAulaCurso(cursoId, aulaId) {
-  const curso = AppState.cursos.find(c => c.id === cursoId);
-  if (!curso || !curso.aulas) return;
-
-  if (!confirm("Deseja realmente excluir esta aula e todo seu conteúdo?")) return;
-
-  curso.aulas = curso.aulas.filter(a => a.id !== aulaId);
-
-  try {
-    if (db) {
-      await db.collection('cursos').doc(curso.id).set({
-        aulas: curso.aulas
-      }, { merge: true });
-    }
-    mostrarToast("Aula excluída com sucesso.", "success");
-  } catch (err) {
-    console.error(err);
-    mostrarToast("Aula removida localmente.", "info");
-  }
-
-  renderizarListaAulasAdmin(curso);
-  renderizarTabelaCursos();
-  renderizarCatalogoTodosCursos();
-}
-
-// ============================================================================
-// AMBIENTE DE APRENDIZAGEM DO ALUNO (PLAYER DE AULA)
-// ============================================================================
-AppState.alunoAulaAtual = null;
-AppState.alunoCursoAtual = null;
-AppState.alunoQuizNome = localStorage.getItem('aulaflux_aluno_nome') || '';
-
-function abrirAulasDoCursoAluno(cursoId) {
-  const curso = AppState.cursos.find(c => c.id === cursoId);
-  if (!curso) {
-    mostrarToast("Curso não encontrado.", "danger");
-    return;
-  }
-
-  const aulas = curso.aulas || [];
-  if (aulas.length === 0) {
-    mostrarToast("Nenhuma aula cadastrada ainda para este curso.", "info");
-    return;
-  }
-
-  abrirAmbienteAulaAluno(curso.id, aulas[0].id);
-}
-
-function extrairIdYoutube(url) {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-}
-
-function abrirAmbienteAulaAluno(cursoId, aulaId) {
-  const curso = AppState.cursos.find(c => c.id === cursoId);
-  if (!curso) return;
-
-  const aula = (curso.aulas || []).find(a => a.id === aulaId) || (curso.aulas && curso.aulas[0]);
-  if (!aula) {
-    mostrarToast("Conteúdo de aula não encontrado.", "info");
-    return;
-  }
-
-  AppState.alunoCursoAtual = curso;
-  AppState.alunoAulaAtual = aula;
-
-  // Header do modal
-  const tagCurso = document.getElementById('aluno-aula-tag-curso');
-  const tagOrdem = document.getElementById('aluno-aula-tag-ordem');
-  const titEl = document.getElementById('aluno-aula-titulo');
-
-  if (tagCurso) tagCurso.textContent = curso.nome;
-  if (tagOrdem) tagOrdem.textContent = `Aula ${aula.ordem || 1}`;
-  if (titEl) titEl.textContent = aula.titulo;
-
-  // 1. VÍDEO DO YOUTUBE
-  const ytWrapper = document.getElementById('aluno-video-wrapper');
-  const ytEmpty = document.getElementById('aluno-video-empty');
-  const ytId = extrairIdYoutube(aula.youtube_url);
-
-  if (ytId && ytWrapper) {
-    ytWrapper.innerHTML = `
-      <iframe src="https://www.youtube.com/embed/${ytId}?rel=0&autoplay=0" title="${aula.titulo}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    `;
-    ytWrapper.style.display = 'block';
-    if (ytEmpty) ytEmpty.style.display = 'none';
-  } else {
-    if (ytWrapper) {
-      ytWrapper.innerHTML = '';
-      ytWrapper.style.display = 'none';
-    }
-    if (ytEmpty) ytEmpty.style.display = 'flex';
-  }
-
-  // 2. CONTEÚDO MARKDOWN
-  const mdEl = document.getElementById('aluno-markdown-content');
-  if (mdEl) {
-    const rawMd = aula.conteudo_markdown || "# Sem conteúdo textual\n\nNenhum resumo em markdown foi cadastrado para esta aula ainda.";
-    mdEl.innerHTML = (window.marked && typeof window.marked.parse === 'function')
-      ? window.marked.parse(rawMd)
-      : rawMd.replace(/\n/g, '<br>');
-  }
-
-  // 3. INFOGRÁFICO E MAPA MENTAL
-  const imgInfo = document.getElementById('img-aluno-infografico');
-  const cardInfo = document.getElementById('card-aluno-infografico');
-  if (aula.infografico_base64 && imgInfo) {
-    imgInfo.src = aula.infografico_base64;
-    if (cardInfo) cardInfo.style.display = 'block';
-  } else if (cardInfo) {
-    cardInfo.style.display = 'none';
-  }
-
-  const imgMapa = document.getElementById('img-aluno-mapamental');
-  const cardMapa = document.getElementById('card-aluno-mapamental');
-  if (aula.mapamental_base64 && imgMapa) {
-    imgMapa.src = aula.mapamental_base64;
-    if (cardMapa) cardMapa.style.display = 'block';
-  } else if (cardMapa) {
-    cardMapa.style.display = 'none';
-  }
-
-  // 4. DOWNLOADS E MATERIAIS
-  const btnPdf = document.getElementById('btn-download-pdf');
-  if (btnPdf) {
-    if (aula.pdf_url) {
-      btnPdf.href = aula.pdf_url;
-      btnPdf.style.display = 'inline-flex';
-    } else {
-      btnPdf.style.display = 'none';
-    }
-  }
-
-  const btnZip = document.getElementById('btn-download-zip');
-  if (btnZip) {
-    if (aula.zip_url) {
-      btnZip.href = aula.zip_url;
-      btnZip.style.display = 'inline-flex';
-    } else {
-      btnZip.style.display = 'none';
-    }
-  }
-
-  const btnDriveProf = document.getElementById('btn-envio-drive-prof');
-  if (btnDriveProf) {
-    if (aula.drive_professor_url) {
-      btnDriveProf.href = aula.drive_professor_url;
-      btnDriveProf.style.display = 'inline-flex';
-    } else {
-      btnDriveProf.style.display = 'none';
-    }
-  }
-
-  // 5. QUIZ DE 10 QUESTÕES
-  const gateBloqueio = document.getElementById('quiz-gate-bloqueio');
-  const areaPerguntas = document.getElementById('quiz-area-perguntas');
-  const containerResultado = document.getElementById('quiz-resultado-container');
-  const inputNomeAluno = document.getElementById('quiz-aluno-nome-input');
-
-  if (containerResultado) containerResultado.style.display = 'none';
-
-  if (AppState.alunoQuizNome) {
-    if (inputNomeAluno) inputNomeAluno.value = AppState.alunoQuizNome;
-    desbloquearQuizAluno();
-  } else {
-    if (gateBloqueio) gateBloqueio.style.display = 'block';
-    if (areaPerguntas) areaPerguntas.style.display = 'none';
-  }
-
-  navegarAbaAulaAluno(ytId ? 'video' : 'conteudo');
-  abrirModal('modal-conteudo-aula');
-}
-
-function navegarAbaAulaAluno(abaNome) {
-  const abas = ['video', 'conteudo', 'visuais', 'materiais', 'quiz'];
-  abas.forEach(aba => {
-    const btn = document.getElementById(`tab-btn-${aba}`);
-    const secao = document.getElementById(`secao-aluno-${aba}`);
-    if (btn) btn.classList.toggle('active', aba === abaNome);
-    if (secao) secao.style.display = (aba === abaNome) ? 'block' : 'none';
-  });
-}
-
-function desbloquearQuizAluno() {
-  const inputNome = document.getElementById('quiz-aluno-nome-input');
-  const nome = inputNome ? inputNome.value.trim() : AppState.alunoQuizNome;
-
-  if (!nome || nome.length < 3) {
-    mostrarToast("Por favor, digite seu nome completo para liberar o quiz.", "warning");
-    if (inputNome) inputNome.focus();
-    return;
-  }
-
-  AppState.alunoQuizNome = nome;
-  localStorage.setItem('aulaflux_aluno_nome', nome);
-
-  const gateBloqueio = document.getElementById('quiz-gate-bloqueio');
-  const areaPerguntas = document.getElementById('quiz-area-perguntas');
-  const nomeExibicao = document.getElementById('quiz-aluno-nome-exibicao');
-
-  if (gateBloqueio) gateBloqueio.style.display = 'none';
-  if (areaPerguntas) areaPerguntas.style.display = 'block';
-  if (nomeExibicao) nomeExibicao.textContent = nome;
-
-  const aula = AppState.alunoAulaAtual;
-  const questoes = (aula && aula.quiz_questoes && Array.isArray(aula.quiz_questoes)) ? aula.quiz_questoes : [];
-
-  renderizarQuestoesQuizAluno(questoes);
-}
-
-function renderizarQuestoesQuizAluno(questoes) {
-  const container = document.getElementById('quiz-questoes-aluno-lista');
-  if (!container) return;
-
-  if (questoes.length === 0) {
-    container.innerHTML = `
-      <div style="padding: 2.5rem; text-align: center; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
-        <i class="fa-solid fa-circle-info" style="font-size: 2rem; color: var(--accent-cyan); margin-bottom: 0.5rem; display: block;"></i>
-        Nenhuma questão cadastrada para esta aula ainda.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = '';
-  questoes.forEach((q, idx) => {
-    const qNum = idx + 1;
-    const card = document.createElement('div');
-    card.className = 'quiz-question-box';
-    card.id = `quiz-box-q-${qNum}`;
-    card.innerHTML = `
-      <div class="quiz-question-title">
-        <span class="quiz-q-num">${qNum}</span>
-        <p style="margin: 0; font-weight: 600; color: var(--text-primary); font-size: 1rem;">${q.pergunta}</p>
-      </div>
-      <div class="quiz-options-list">
-        ${(q.opcoes || []).map((opcao, optIndex) => `
-          <label class="quiz-option-label" id="label-q-${qNum}-opt-${optIndex}">
-            <input type="radio" name="aluno_resposta_${qNum}" value="${optIndex}" onchange="atualizarContadorQuizRespondidas()">
-            <span class="quiz-option-letter">${['A', 'B', 'C', 'D'][optIndex]}</span>
-            <span class="quiz-option-text">${opcao}</span>
-          </label>
-        `).join('')}
-      </div>
-    `;
-    container.appendChild(card);
-  });
-
-  atualizarContadorQuizRespondidas();
-}
-
-function atualizarContadorQuizRespondidas() {
-  const aula = AppState.alunoAulaAtual;
-  const total = (aula && aula.quiz_questoes && aula.quiz_questoes.length) || 10;
-  let respondidas = 0;
-
-  for (let i = 1; i <= total; i++) {
-    const checked = document.querySelector(`input[name="aluno_resposta_${i}"]:checked`);
-    if (checked) respondidas++;
-  }
-
-  const badge = document.getElementById('quiz-contador-respondidas');
-  if (badge) {
-    badge.textContent = `${respondidas} / ${total} Respondidas`;
-    if (respondidas === total) {
-      badge.style.background = 'rgba(16,185,129,0.2)';
-      badge.style.color = 'var(--accent-emerald)';
-    } else {
-      badge.style.background = 'rgba(14,165,233,0.15)';
-      badge.style.color = 'var(--accent-cyan)';
-    }
-  }
-}
-
-async function submeterQuizAlunoFinal() {
-  const curso = AppState.alunoCursoAtual;
-  const aula = AppState.alunoAulaAtual;
-  const nomeAluno = AppState.alunoQuizNome;
-
-  if (!curso || !aula || !nomeAluno) {
-    mostrarToast("Identifique-se para enviar o quiz.", "warning");
-    return;
-  }
-
-  const questoes = aula.quiz_questoes || [];
-  if (questoes.length === 0) {
-    mostrarToast("Nenhuma questão para avaliar.", "info");
-    return;
-  }
-
-  let acertos = 0;
-  const respostasDetalhes = [];
-
-  questoes.forEach((q, idx) => {
-    const qNum = idx + 1;
-    const checked = document.querySelector(`input[name="aluno_resposta_${qNum}"]:checked`);
-    const marcadaIndex = checked ? Number(checked.value) : null;
-    const corretaIndex = Number(q.correta);
-    const acertou = marcadaIndex === corretaIndex;
-
-    if (acertou) acertos++;
-
-    respostasDetalhes.push({
-      numero: qNum,
-      pergunta: q.pergunta,
-      resposta_aluno: marcadaIndex !== null ? q.opcoes[marcadaIndex] : 'Em branco',
-      resposta_correta: q.opcoes[corretaIndex],
-      acertou
-    });
-
-    for (let opt = 0; opt < 4; opt++) {
-      const lbl = document.getElementById(`label-q-${qNum}-opt-${opt}`);
-      if (lbl) {
-        if (opt === corretaIndex) {
-          lbl.style.background = 'rgba(16,185,129,0.2)';
-          lbl.style.borderColor = 'var(--accent-emerald)';
-        } else if (opt === marcadaIndex && !acertou) {
-          lbl.style.background = 'rgba(239,68,68,0.2)';
-          lbl.style.borderColor = '#ef4444';
-        }
-      }
-    }
-  });
-
-  const total = questoes.length;
-  const percentual = Math.round((acertos / total) * 100);
-  const aprovado = percentual >= 70;
-
-  const resultadoDoc = {
-    aluno_nome: nomeAluno,
-    curso_id: curso.id,
-    curso_nome: curso.nome,
-    aula_id: aula.id,
-    aula_titulo: aula.titulo,
-    acertos,
-    total,
-    percentual,
-    aprovado,
-    criado_em: firebase.firestore.FieldValue.serverTimestamp(),
-    data_formatada: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR')
-  };
-
-  try {
-    if (db) {
-      await db.collection('quiz_respostas').add(resultadoDoc);
-    }
-  } catch (err) {
-    console.warn("Aviso ao gravar quiz_respostas no Firestore:", err);
-  }
-
-  const containerResultado = document.getElementById('quiz-resultado-container');
-  if (containerResultado) {
-    containerResultado.innerHTML = `
-      <div style="text-align: center; padding: 2rem 1rem;">
-        <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2.25rem; background: ${aprovado ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; color: ${aprovado ? 'var(--accent-emerald)' : '#ef4444'};">
-          <i class="fa-solid ${aprovado ? 'fa-award' : 'fa-triangle-exclamation'}"></i>
-        </div>
-        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
-          ${aprovado ? 'Parabéns, Desempenho Excelente!' : 'Quiz Concluído! Revise o Conteúdo'}
-        </h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-          Aluno(a): <strong style="color: var(--text-primary);">${nomeAluno}</strong> • Aula: <strong style="color: var(--accent-cyan);">${aula.titulo}</strong>
-        </p>
-
-        <div style="display: flex; justify-content: center; gap: 2rem; margin: 1.5rem 0;">
-          <div style="background: var(--bg-surface-2); padding: 1rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Acertos</span>
-            <strong style="font-size: 1.75rem; color: var(--accent-emerald);">${acertos} / ${total}</strong>
-          </div>
-          <div style="background: var(--bg-surface-2); padding: 1rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Aproveitamento</span>
-            <strong style="font-size: 1.75rem; color: ${aprovado ? 'var(--accent-cyan)' : 'var(--accent-amber)'};">${percentual}%</strong>
-          </div>
-        </div>
-
-        <p style="font-size: 0.85rem; color: var(--accent-emerald);">
-          <i class="fa-solid fa-cloud-arrow-up"></i> Resultado registrado com sucesso no Firebase Cloud Firestore!
-        </p>
-
-        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 0.75rem;">
-          <button class="btn btn-secondary" onclick="navegarAbaAulaAluno('conteudo')">
-            <i class="fa-solid fa-book-open"></i> Revisar Material da Aula
-          </button>
-        </div>
-      </div>
-    `;
-    containerResultado.style.display = 'block';
-    containerResultado.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  mostrarToast(`Quiz registrado! Sua pontuação: ${acertos}/${total} (${percentual}%)`, aprovado ? 'success' : 'info');
-}
-
-function ampliarImagemVisual(tipo) {
-  const aula = AppState.alunoAulaAtual;
-  if (!aula) return;
-
-  const src = (tipo === 'infografico') ? aula.infografico_base64 : aula.mapamental_base64;
-  if (!src) return;
-
-  const modalImg = document.getElementById('lightbox-img');
-  const modalTitulo = document.getElementById('lightbox-titulo');
-
-  if (modalImg) modalImg.src = src;
-  if (modalTitulo) {
-    modalTitulo.textContent = (tipo === 'infografico')
-      ? `Infográfico Explicativo: ${aula.titulo}`
-      : `Mapa Mental Sintético: ${aula.titulo}`;
-  }
-
-  abrirModal('modal-zoom-imagem');
-}
-
-// ============================================================================
-// UPLOAD PARA O GOOGLE DRIVE VIA GOOGLE APPS SCRIPT (GAS)
-// ============================================================================
-let gasDestinoTipoAtual = 'pdf';
-
-function abrirAssistenteUploadGas(tipo) {
-  gasDestinoTipoAtual = tipo;
-  const curso = AppState.cursos.find(c => c.id === AppState.cursoGerenciandoAulasId);
-  const cursoNome = curso ? curso.nome : "Curso";
-  const aulaTitulo = document.getElementById('form-aula-titulo').value.trim() || "Aula";
-
-  const pathPreview = document.getElementById('gas-caminho-pasta-preview');
-  if (pathPreview) {
-    pathPreview.textContent = `AulaFlux / ${cursoNome} / ${aulaTitulo} / ${tipo === 'pdf' ? 'PDFs' : 'ZIPs'}`;
-  }
-
-  const tipEl = document.getElementById('gas-formato-dica');
-  if (tipEl) {
-    tipEl.textContent = (tipo === 'pdf') ? "Selecione um arquivo .pdf para upload" : "Selecione um arquivo compactado .zip para upload";
-  }
-
-  const progEl = document.getElementById('gas-upload-progresso');
-  if (progEl) progEl.style.display = 'none';
-
-  abrirModal('modal-upload-gas');
-}
-
-async function executarUploadGasDrive() {
-  const inputEl = document.getElementById('gas-arquivo-input');
-  const file = inputEl && inputEl.files && inputEl.files[0];
-  if (!file) {
-    mostrarToast("Selecione um arquivo local para upload.", "warning");
-    return;
-  }
-
-  const curso = AppState.cursos.find(c => c.id === AppState.cursoGerenciandoAulasId);
-  const cursoNome = curso ? curso.nome : "Curso Geral";
-  const aulaTitulo = document.getElementById('form-aula-titulo').value.trim() || "Aula 01";
-  const pastaDestino = `AulaFlux/${cursoNome}/${aulaTitulo}/${gasDestinoTipoAtual === 'pdf' ? 'PDFs' : 'ZIPs'}`;
-
-  const progEl = document.getElementById('gas-upload-progresso');
-  const btnUpload = document.getElementById('btn-confirmar-upload-gas');
-
-  if (progEl) progEl.style.display = 'block';
-  if (btnUpload) btnUpload.disabled = true;
-
-  try {
-    mostrarToast("Lendo arquivo e enviando para o Google Apps Script...", "info");
-
-    const base64Data = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        const b64 = result.split(',')[1];
-        resolve(b64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    const gasUrl = (typeof GOOGLE_GAS_UPLOAD_URL !== 'undefined') ? GOOGLE_GAS_UPLOAD_URL : '';
-
-    if (!gasUrl || gasUrl.includes('macros/s/...')) {
-      const simuladoUrl = `https://drive.google.com/drive/folders/aulaflux-${encodeURIComponent(cursoNome)}?file=${encodeURIComponent(file.name)}`;
-      if (gasDestinoTipoAtual === 'pdf') {
-        document.getElementById('form-aula-pdf-link').value = simuladoUrl;
-      } else {
-        document.getElementById('form-aula-zip-link').value = simuladoUrl;
-      }
-      mostrarToast(`Upload processado para a pasta "${pastaDestino}" no Drive! Link preenchido.`, "success");
-      fecharModal('modal-upload-gas');
-      return;
-    }
-
-    const response = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify({
-        fileName: file.name,
-        mimeType: file.type || 'application/octet-stream',
-        base64Data: base64Data,
-        courseName: cursoNome,
-        lessonName: aulaTitulo,
-        folderType: gasDestinoTipoAtual === 'pdf' ? 'PDFs' : 'ZIPs'
-      })
-    });
-
-    const data = await response.json();
-    if (data && data.fileUrl) {
-      if (gasDestinoTipoAtual === 'pdf') {
-        document.getElementById('form-aula-pdf-link').value = data.fileUrl;
-      } else {
-        document.getElementById('form-aula-zip-link').value = data.fileUrl;
-      }
-      mostrarToast(`Arquivo enviado ao Google Drive com sucesso! Link inserido no cadastro.`, "success");
-      fecharModal('modal-upload-gas');
-    } else {
-      throw new Error((data && data.error) || "Falha na resposta do GAS.");
-    }
-  } catch (err) {
-    console.error(err);
-    mostrarToast("Aviso: " + err.message + ". Consulte o guia gas/README.md para configurar o endpoint GAS.", "warning");
-    const driveFolderSimulado = `https://drive.google.com/drive/folders/aulaflux-${encodeURIComponent(file.name)}`;
-    if (gasDestinoTipoAtual === 'pdf') {
-      document.getElementById('form-aula-pdf-link').value = driveFolderSimulado;
-    } else {
-      document.getElementById('form-aula-zip-link').value = driveFolderSimulado;
-    }
-    fecharModal('modal-upload-gas');
-  } finally {
-    if (progEl) progEl.style.display = 'none';
-    if (btnUpload) btnUpload.disabled = false;
-  }
-}
-
-// ============================================================================
 // EXPORTAÇÕES GLOBAIS NO OBJETO WINDOW
 // ============================================================================
 window.AppState = AppState;
@@ -3343,26 +2393,28 @@ window.alternarTema = alternarTema;
 window.alternarModoPainel = alternarModoPainel;
 window.alternarVisaoPublica = alternarVisaoPublica;
 window.selecionarProfessorAluno = selecionarProfessorAluno;
-window.abrirSalaVirtual = abrirSalaVirtual;
-window.abrirSalaVirtualProfessorSelecionado = abrirSalaVirtualProfessorSelecionado;
-window.copiarLinkSalaModal = copiarLinkSalaModal;
 window.filtrarCatalogoCursos = filtrarCatalogoCursos;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.alternarVinculoProfessorUser = alternarVinculoProfessorUser;
+window.alternarVinculoProfessorEditUser = alternarVinculoProfessorEditUser;
+window.abrirModalEditarUsuario = abrirModalEditarUsuario;
+window.submeterEdicaoUsuario = submeterEdicaoUsuario;
 window.alterarNivelUsuario = alterarNivelUsuario;
 window.excluirUsuario = excluirUsuario;
 window.acaoBotaoAuth = acaoBotaoAuth;
 window.abrirModalLogin = abrirModalLogin;
 window.abrirCronogramaTurma = abrirCronogramaTurma;
-window.abrirModalEdicaoObs = abrirModalEdicaoObs;
-window.salvarObservacaoAula = salvarObservacaoAula;
 window.abrirModalEditarCurso = abrirModalEditarCurso;
 window.submeterEdicaoCurso = submeterEdicaoCurso;
 window.excluirCurso = excluirCurso;
 window.abrirModalEditarProfessor = abrirModalEditarProfessor;
 window.submeterEdicaoProfessor = submeterEdicaoProfessor;
 window.excluirProfessor = excluirProfessor;
+window.abrirModalEditarFeriado = abrirModalEditarFeriado;
+window.submeterEdicaoFeriado = submeterEdicaoFeriado;
 window.excluirFeriado = excluirFeriado;
+window.abrirModalEditarAgendamento = abrirModalEditarAgendamento;
+window.submeterEdicaoAgendamento = submeterEdicaoAgendamento;
 window.excluirAgendamento = excluirAgendamento;
 window.exportarAgendaExcel = exportarAgendaExcel;
 window.carregarDadosFirestore = carregarDadosFirestore;
@@ -3372,28 +2424,6 @@ window.abrirPrimeiraTurmaDoCurso = abrirPrimeiraTurmaDoCurso;
 window.abrirModal = abrirModal;
 window.fecharModal = fecharModal;
 window.mostrarToast = mostrarToast;
-
-// Exportações das novas funcionalidades de Aulas, Canvas Base64, Quiz e GAS
-window.abrirModalGerenciarAulas = abrirModalGerenciarAulas;
-window.iniciarCadastroNovaAula = iniciarCadastroNovaAula;
-window.editarAulaCurso = editarAulaCurso;
-window.excluirAulaCurso = excluirAulaCurso;
-window.cancelarEdicaoAula = cancelarEdicaoAula;
-window.salvarConteudoAulaForm = salvarConteudoAulaForm;
-window.alternarAbaMarkdownForm = alternarAbaMarkdownForm;
-window.preencherQuizModeloExemplo = preencherQuizModeloExemplo;
-window.limparTodasQuestoesQuiz = limparTodasQuestoesQuiz;
-window.tratarUploadImagemCanvas = tratarUploadImagemCanvas;
-window.removerImagemAula = removerImagemAula;
-window.abrirAulasDoCursoAluno = abrirAulasDoCursoAluno;
-window.abrirAmbienteAulaAluno = abrirAmbienteAulaAluno;
-window.navegarAbaAulaAluno = navegarAbaAulaAluno;
-window.desbloquearQuizAluno = desbloquearQuizAluno;
-window.atualizarContadorQuizRespondidas = atualizarContadorQuizRespondidas;
-window.submeterQuizAlunoFinal = submeterQuizAlunoFinal;
-window.ampliarImagemVisual = ampliarImagemVisual;
-window.abrirAssistenteUploadGas = abrirAssistenteUploadGas;
-window.executarUploadGasDrive = executarUploadGasDrive;
 window.enviarRecuperacaoSenha = enviarRecuperacaoSenha;
 window.preencherLoginSuperadmin = preencherLoginSuperadmin;
 window.entrarComoAdminDireto = entrarComoAdminDireto;
