@@ -2,18 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Alunos podem enviar respostas do Quiz das aulas (criação pública sem necessidade de login)
-    match /quiz_respostas/{respostaId} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if request.auth != null;
-    }
-
-    // Leitura pública geral dos cursos, aulas, professores, feriados e agendamentos
-    // Criação, edição e exclusão de cadastros exigem usuário autenticado (Firebase Auth)
+    // Leitura e gravação geral dos cursos, professores, feriados, usuários e agendamentos
     match /{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if true;
     }
   }
 }

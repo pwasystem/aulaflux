@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Digital • Aula 2: Análise de Dados & IA</title>
+    <!-- Tailwind CSS para design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para visualização interativa de gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font-Awesome para ícones expressivos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fontes Inter e Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 320px; }
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.08);
+        }
+        .tab-active {
+            background-color: rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+            color: #818cf8;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .filter-btn-active {
+            background-color: #6366f1;
+            color: #ffffff;
+            border-color: #6366f1;
+        }
+        .filter-btn-inactive {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-500/30 selection:text-white">
+
+    <!-- NAVIGATION_BAR -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-gray-800 shadow-lg">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 gap-4">
+                <div class="font-black text-xs md:text-sm tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-indigo-400"></i> Marketing Digital • Aula 2
+                </div>
+                <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold text-gray-400">
+                    <a href="#analise" class="hover:text-indigo-400 transition-colors">1. Níveis de Análise</a>
+                    <a href="#algoritmos" class="hover:text-indigo-400 transition-colors">2. Algoritmos & ML</a>
+                    <a href="#bi-churn" class="hover:text-indigo-400 transition-colors">3. BI & Tendências</a>
+                    <a href="#ferramentas" class="hover:text-indigo-400 transition-colors">4. Ferramentas IA</a>
+                </div>
+                <!-- Indicador de progresso global baseado no desafio final -->
+                <div class="bg-gray-900/60 px-4 py-2 rounded-xl border border-gray-800 text-center min-w-[130px] sm:min-w-[180px]">
+                    <div class="text-[9px] uppercase text-indigo-300 font-bold tracking-wider mb-1">Seu Progresso</div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-white" id="progress-percent">0%</span>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TOAST_NOTIFICATION_SYSTEM -->
+    <div id="toast" class="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl border border-white/10 flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-12 opacity-0 pointer-events-none">
+        <span class="text-indigo-400 text-lg" id="toast-icon"><i class="fa-solid fa-circle-info"></i></span>
+        <span class="text-xs font-semibold" id="toast-message">Mensagem do Sistema</span>
+    </div>
+
+    <!-- MAIN_HEADER -->
+    <header id="analise" class="relative overflow-hidden bg-slate-950 py-16 px-6 border-b border-gray-900">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/30 via-transparent to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-4 text-center lg:text-left">
+                <span class="bg-indigo-500/20 text-indigo-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-indigo-500/30">Módulo 2 • Análise de Dados e Inteligência de Mercado</span>
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">Análise de Dados & <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Inteligência de Mercado</span></h1>
+                <p class="text-gray-400 text-sm md:text-base font-light leading-relaxed">
+                    Saia do "achismo" e tome decisões com base em evidências! A **Análise de Dados** permite inspecionar, transformar e modelar informações do consumidor para antecipar tendências, prever comportamentos e otimizar campanhas de marketing em tempo real.
+                </p>
+                <div class="p-4 bg-slate-900/80 rounded-2xl border border-gray-800 text-xs text-indigo-300 space-y-1">
+                    <strong class="text-white block"><i class="fa-solid fa-lightbulb text-indigo-400 mr-1.5"></i> Qual o superpoder dos dados?</strong>
+                    A combinação de Machine Learning e Big Data transforma dados brutos em decisões precisas, aumentando as vendas e prevenindo o cancelamento de clientes!
+                </div>
+            </div>
+
+            <!-- Card de Destaque da Análise -->
+            <div class="glass-card p-6 rounded-3xl space-y-4">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-indigo-400"></i> Por que abandonar a intuição?
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-rose-400 block"><i class="fa-solid fa-circle-xmark mr-1"></i> Decisão por Intuição</span>
+                        <p class="text-[11px] text-gray-400">Baseada em palpites. Alto risco de desperdício de dinheiro em anúncios e perda de clientes.</p>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-emerald-400 block"><i class="fa-solid fa-chart-pie mr-1"></i> Decisão Orientada a Dados</span>
+                        <p class="text-[11px] text-gray-400">Apoiada por evidências históricas e algoritmos preditivos que indicam exatamente o que fazer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-12 space-y-24">
+
+        <!-- SECTION 1: OS 4 NÍVEIS DE ANÁLISE DE DADOS -->
+        <section class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-indigo-500 pl-4">1. Os 4 Tipos Principais de Análise de Dados</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    A análise de dados evolui em níveis de complexidade e valor estratégico. Clique nos botões abaixo para ver exemplos reais de como marcas famosas usam cada nível!
+                </p>
+            </div>
+
+            <!-- Botões das 4 Análises -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button onclick="showAnalysisType('descritiva', this)" id="type-descritiva" class="tab-active p-4 rounded-2xl border text-center transition-all cursor-pointer">
+                    <span class="text-xs font-bold text-indigo-400 block">1. Descritiva</span>
+                    <span class="text-[10px] text-gray-400">O que aconteceu?</span>
+                </button>
+                <button onclick="showAnalysisType('diagnostica', this)" id="type-diagnostica" class="tab-inactive p-4 rounded-2xl border text-center transition-all cursor-pointer">
+                    <span class="text-xs font-bold block">2. Diagnóstica</span>
+                    <span class="text-[10px] text-gray-400">Por que aconteceu?</span>
+                </button>
+                <button onclick="showAnalysisType('preditiva', this)" id="type-preditiva" class="tab-inactive p-4 rounded-2xl border text-center transition-all cursor-pointer">
+                    <span class="text-xs font-bold block">3. Preditiva</span>
+                    <span class="text-[10px] text-gray-400">O que vai acontecer?</span>
+                </button>
+                <button onclick="showAnalysisType('prescritiva', this)" id="type-prescritiva" class="tab-inactive p-4 rounded-2xl border text-center transition-all cursor-pointer">
+                    <span class="text-xs font-bold block">4. Prescritiva</span>
+                    <span class="text-[10px] text-gray-400">O que devemos fazer?</span>
+                </button>
+            </div>
+
+            <!-- Painel Explicativo da Análise -->
+            <div id="analysis-detail-card" class="glass-card p-6 md:p-8 rounded-3xl space-y-4 fade-in">
+                <!-- Conteúdo alterado via JS -->
+            </div>
+        </section>
+
+        <!-- SECTION 2: MACHINE LEARNING E OS 4 ALGORITMOS -->
+        <section id="algoritmos" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-indigo-500 pl-4">2. Machine Learning & Motores Algorítmicos</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Os **algoritmos** são sequências lógicas e matemáticas que transformam dados brutos em estratégias de mercado. <strong class="text-indigo-400">Toque no gráfico ou selecione um algoritmo abaixo para entender sua aplicação prática!</strong>
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-center bg-gray-950/60 p-6 md:p-8 rounded-3xl border border-gray-800">
+                <!-- Gráfico Chart.js -->
+                <div class="lg:col-span-6 flex flex-col items-center">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Aplicações dos Algoritmos no Marketing</h4>
+                    <div class="chart-container">
+                        <canvas id="algoritmosChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Painel Explicativo do Algoritmo Clicado -->
+                <div id="algo-detail-box" class="lg:col-span-6 glass-card p-6 rounded-2xl min-h-[240px] flex flex-col justify-center space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Toque em uma fatia do gráfico</span>
+                    <h3 class="text-base font-bold text-white">Explorar Motores de Aprendizado de Máquina</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Algoritmos de Classificação, Regressão, Agrupamento (Clustering) e Recomendação formam a espinha dorsal de serviços como Netflix, Amazon e Spotify. Toque no gráfico para ver detalhes!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: TENDÊNCIAS, CHURN E BUSINESS INTELLIGENCE -->
+        <section id="bi-churn" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-indigo-500 pl-4">3. Previsão de Comportamento & Business Intelligence (BI)</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Antecipar desejos e evitar o cancelamento de clientes é a chave para o crescimento sustentável. Entenda como o Business Intelligence conecta todas as pontas do negócio:
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Previsão de Churn -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-rose-500">
+                    <div class="text-2xl text-rose-400"><i class="fa-solid fa-user-minus"></i></div>
+                    <h4 class="font-bold text-sm text-white">Redução da Rotatividade (Churn)</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        A IA identifica sinais precoces de desinteresse do cliente (como diminuição de acessos ou reclamações), permitindo que a empresa ofereça descontos ou suporte antes que ele cancele o serviço.
+                    </p>
+                    <span class="text-[9px] bg-rose-500/10 text-rose-300 px-2 py-1 rounded font-bold uppercase">Retenção de Clientes</span>
+                </div>
+
+                <!-- Antecipação de Tendências -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-cyan-500">
+                    <div class="text-2xl text-cyan-400"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <h4 class="font-bold text-sm text-white">Antecipação de Tendências</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Análise de pesquisas e dados de redes sociais para descobrir produtos emergentes antes dos concorrentes, otimizando o estoque e ajustando orçamentos de publicidade.
+                    </p>
+                    <span class="text-[9px] bg-cyan-500/10 text-cyan-300 px-2 py-1 rounded font-bold uppercase">Vantagem Competitiva</span>
+                </div>
+
+                <!-- Business Intelligence (BI) -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-emerald-500">
+                    <div class="text-2xl text-emerald-400"><i class="fa-solid fa-chart-column"></i></div>
+                    <h4 class="font-bold text-sm text-white">Business Intelligence (BI)</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Integra dados de várias fontes (vendas, redes sociais, suporte) em painéis únicos (Dashboards), fornecendo uma visão ampla do negócio para tomar decisões estratégicas.
+                    </p>
+                    <span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded font-bold uppercase">Visão Sistêmica</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: ARSENAL DE FERRAMENTAS DE IA PARA ANÁLISE DE DADOS -->
+        <section id="ferramentas" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-indigo-500 pl-4">4. O Arsenal de Ferramentas de IA para Análise de Dados</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Conheça as principais plataformas utilizadas por empresas no mundo real. Use os filtros abaixo para navegar por categoria!
+                </p>
+            </div>
+
+            <!-- Filtros de Categoria -->
+            <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                <button onclick="filterTools('all', this)" class="filter-btn-active px-4 py-2 rounded-xl border transition cursor-pointer">Todas as Ferramentas</button>
+                <button onclick="filterTools('bi', this)" class="filter-btn-inactive px-4 py-2 rounded-xl border transition cursor-pointer">Visualização & BI</button>
+                <button onclick="filterTools('cloud', this)" class="filter-btn-inactive px-4 py-2 rounded-xl border transition cursor-pointer">Nuvem & Big Data</button>
+                <button onclick="filterTools('prod', this)" class="filter-btn-inactive px-4 py-2 rounded-xl border transition cursor-pointer">Produtividade Rápida</button>
+                <button onclick="filterTools('crm', this)" class="filter-btn-inactive px-4 py-2 rounded-xl border transition cursor-pointer">CRM & Vendas</button>
+            </div>
+
+            <!-- Grid de Ferramentas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="tools-grid">
+                <!-- Power BI -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="bi">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-amber-400"><i class="fa-solid fa-chart-line"></i></span>
+                        <span class="text-[9px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded font-bold uppercase">Microsoft</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Power BI + Copilot</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Cria relatórios visuais e narrativas automáticas. Você pode fazer perguntas sobre seus dados usando português comum!
+                    </p>
+                </div>
+
+                <!-- Tableau -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="bi">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-blue-400"><i class="fa-solid fa-circle-nodes"></i></span>
+                        <span class="text-[9px] bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded font-bold uppercase">Salesforce</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Tableau AI</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Detecta anomalias em indicadores de vendas e sugere as melhores formas visuais de exibir gráficos dinâmicos.
+                    </p>
+                </div>
+
+                <!-- Google BigQuery -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="cloud">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-emerald-400"><i class="fa-solid fa-database"></i></span>
+                        <span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-bold uppercase">Google Cloud</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Google Cloud + BigQuery</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Processa bilhões de linhas de dados em segundos e constrói modelos preditivos direto com linguagem SQL.
+                    </p>
+                </div>
+
+                <!-- AWS SageMaker -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="cloud">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-orange-400"><i class="fa-solid fa-server"></i></span>
+                        <span class="text-[9px] bg-orange-500/10 text-orange-300 px-2 py-0.5 rounded font-bold uppercase">Amazon AWS</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">AWS SageMaker + QuickSight</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Permite que cientistas de dados coloquem modelos de Machine Learning pesados em produção na nuvem.
+                    </p>
+                </div>
+
+                <!-- Julius AI -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="prod">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-purple-400"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                        <span class="text-[9px] bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded font-bold uppercase">Análise Rápida</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Julius AI</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Ideal para quem precisa de análises rápidas de campanhas e tratamento estatístico sem depender de um time de TI.
+                    </p>
+                </div>
+
+                <!-- ChatGPT -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="prod">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-teal-400"><i class="fa-solid fa-file-csv"></i></span>
+                        <span class="text-[9px] bg-teal-500/10 text-teal-300 px-2 py-0.5 rounded font-bold uppercase">OpenAI</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">ChatGPT (Análise Avançada)</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Lê planilhas de Excel/CSV, cria gráficos de pizza ou barras instantâneos e dá diagnósticos de melhoria de vendas.
+                    </p>
+                </div>
+
+                <!-- Salesforce Einstein -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="crm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-cyan-400"><i class="fa-solid fa-brain"></i></span>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-300 px-2 py-0.5 rounded font-bold uppercase">CRM Vendas</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Salesforce Einstein</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        IA nativa de CRM que qualifica potenciais compradores e sugere qual a melhor hora para o vendedor ligar.
+                    </p>
+                </div>
+
+                <!-- HubSpot -->
+                <div class="glass-card p-5 rounded-2xl space-y-3 tool-item" data-cat="crm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-rose-400"><i class="fa-solid fa-hubspot"></i></span>
+                        <span class="text-[9px] bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded font-bold uppercase">Automação</span>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">HubSpot AI</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Automatiza e personaliza jornadas inteiras do cliente com base no comportamento de navegação no site.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 py-12 px-6 border-t border-gray-900 mt-20 text-center text-slate-500 text-xs">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div class="space-y-1">
+                <p class="text-sm font-bold text-slate-400">Marketing Digital: Análise de Dados e IA • Aula 2</p>
+                <p class="text-xs text-slate-600">Material interativo adaptado para estudantes da Jornada Maker.</p>
+            </div>
+            <div class="text-xs md:text-sm bg-slate-900 text-indigo-400 border border-indigo-500/10 px-4 py-2 rounded-xl font-medium">
+                Prof. Luiz Roberto Nogueira Junior
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS DE LÓGICA E INTERATIVIDADE -->
+    <script>
+        // --- DADOS DAS 4 ANÁLISES DE DADOS (SEÇÃO 1) ---
+        const analysisData = {
+            'descritiva': {
+                title: '1. Análise Descritiva (O que aconteceu?)',
+                badge: 'Histórico & Passado',
+                desc: 'Examina dados do passado para resumir resultados. Exemplo: Saber que sua loja virtual vendeu 500 pares de tênis no mês passado ou que um vídeo do YouTube teve 10.000 visualizações.',
+                icon: 'fa-clock-rotate-left',
+                color: 'text-blue-400'
+            },
+            'diagnostica': {
+                title: '2. Análise Diagnóstica (Por que aconteceu?)',
+                badge: 'Causas & Motivos',
+                desc: 'Investiga as razões por trás dos resultados. Exemplo: Descobrir que as vendas caíram na terça-feira porque o botão de "Comprar" do site apresentou um erro no celular.',
+                icon: 'fa-magnifying-glass-chart',
+                color: 'text-amber-400'
+            },
+            'preditiva': {
+                title: '3. Análise Preditiva (O que vai acontecer?)',
+                badge: 'Machine Learning & Futuro',
+                desc: 'Usa modelos estatísticos para prever tendências. Exemplo: A IA calcula que na próxima Black Friday a demanda por casacos vai aumentar em 40% devido à previsão de frio.',
+                icon: 'fa-wand-magic-sparkles',
+                color: 'text-purple-400'
+            },
+            'prescritiva': {
+                title: '4. Análise Prescritiva (O que devemos fazer?)',
+                badge: 'Ações Recomendadas',
+                desc: 'Sugere a melhor decisão a ser tomada com base nos dados. Exemplo: O sistema recomenda enviar um cupom de 15% de desconto hoje para evitar que o cliente cancele a assinatura.',
+                icon: 'fa-compass-drafting',
+                color: 'text-emerald-400'
+            }
+        };
+
+        function showAnalysisType(typeKey, element) {
+            document.querySelectorAll('button[id^="type-"]').forEach(btn => {
+                btn.className = "tab-inactive p-4 rounded-2xl border text-center transition-all cursor-pointer";
+                btn.querySelector('span').classList.remove('text-indigo-400');
+            });
+
+            if (element) {
+                element.className = "tab-active p-4 rounded-2xl border text-center transition-all cursor-pointer";
+                element.querySelector('span').classList.add('text-indigo-400');
+            }
+
+            const data = analysisData[typeKey];
+            const detailCard = document.getElementById('analysis-detail-card');
+            detailCard.classList.remove('fade-in');
+            void detailCard.offsetWidth; // Força re-render
+
+            detailCard.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="text-2xl ${data.color}"><i class="fa-solid ${data.icon}"></i></div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20">${data.badge}</span>
+                        <h3 class="text-base md:text-lg font-bold text-white mt-1">${data.title}</h3>
+                    </div>
+                </div>
+                <p class="text-xs md:text-sm text-gray-300 leading-relaxed">${data.desc}</p>
+            `;
+            detailCard.classList.add('fade-in');
+            showToast(`Visualizando tipo de análise: ${typeKey}!`, "info");
+        }
+
+        // --- DADOS DOS ALGORITMOS (SEÇÃO 2) ---
+        const algoDetails = {
+            0: {
+                title: "1. Algoritmos de Classificação",
+                desc: "Separam dados em categorias pré-definidas. No marketing, identificam se um lead está pronto para comprar ou se um cliente corre risco de cancelar o serviço (Churn)."
+            },
+            1: {
+                title: "2. Algoritmos de Regressão",
+                desc: "Preveem valores numéricos contínuos no futuro. São usados para calcular o faturamento esperado do mês que vem e o valor de vida útil do cliente (LTV)."
+            },
+            2: {
+                title: "3. Algoritmos de Agrupamento (Clustering)",
+                desc: "Agrupam pessoas sem categorias prévias, descobrindo padrões ocultos para criar personas e micro-segmentar audiências por semelhança de hábitos."
+            },
+            3: {
+                title: "4. Algoritmos de Recomendação",
+                desc: "Analisam preferências para sugerir produtos personalizados. São a base das recomendações da Netflix, Spotify, Amazon e TikTok!"
+            }
+        };
+
+        // --- SISTEMA DE TOAST (NOTIFICAÇÃO) ---
+        function showToast(message, type = "info") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+
+            if (type === "error") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500"></i>`;
+            } else if (type === "success") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-indigo-400"></i>`;
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        // --- FILTRO DE FERRAMENTAS (SEÇÃO 4) ---
+        function filterTools(category, element) {
+            document.querySelectorAll('.filter-btn-active').forEach(btn => {
+                btn.className = "filter-btn-inactive px-4 py-2 rounded-xl border transition cursor-pointer";
+            });
+
+            if (element) {
+                element.className = "filter-btn-active px-4 py-2 rounded-xl border transition cursor-pointer";
+            }
+
+            const items = document.querySelectorAll('.tool-item');
+            items.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-cat') === category) {
+                    item.style.display = 'block';
+                    item.classList.add('fade-in');
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            showToast(`Filtro aplicado: ${category.toUpperCase()}`, "info");
+        }
+
+
+        // --- INICIALIZAÇÃO DA PÁGINA ---
+        window.onload = function() {
+            showAnalysisType('descritiva', document.getElementById('type-descritiva'));
+            
+
+            // Configuração do Gráfico dos Algoritmos (Chart.js)
+            const ctx = document.getElementById('algoritmosChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Classificação', 'Regressão', 'Agrupamento (Clustering)', 'Recomendação'],
+                    datasets: [{
+                        data: [30, 25, 20, 25],
+                        backgroundColor: [
+                            '#6366f1',
+                            '#06b6d4',
+                            '#a855f7',
+                            '#10b981'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0b0f19',
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Algoritmo: ${context.label}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%',
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const detailBox = document.getElementById('algo-detail-box');
+                            const detail = algoDetails[dataIndex];
+
+                            detailBox.classList.remove('fade-in');
+                            void detailBox.offsetWidth; // Re-render
+
+                            detailBox.innerHTML = `
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Motor Algorítmico Selecionado</span>
+                                <h3 class="text-base font-bold text-white mt-1 mb-2">${detail.title}</h3>
+                                <p class="text-xs text-gray-300 leading-relaxed">${detail.desc}</p>
+                            `;
+                            detailBox.classList.add('fade-in');
+                            showToast("Algoritmo detalhado!", "success");
+                        }
+                    }
+                }
+            });
+        };
+
+    </script>
+</body>
+</html>

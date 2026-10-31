@@ -1,0 +1,132 @@
+[
+  {
+    "numero": 1,
+    "pergunta": "O que são os Algoritmos de Recomendação no marketing digital?",
+    "alternativas": [
+      "A) Programas que desligam a internet quando você passa de duas horas navegando.",
+      "B) Sistemas de IA que analisam o histórico de pesquisa e compras para sugerir produtos personalizados.",
+      "C) Ferramentas para apagar fotos velhas do celular.",
+      "D) Comerciais de rádio gravados por atores famosos."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Sistemas de IA que analisam o histórico de pesquisa e compras para sugerir produtos personalizados.",
+    "explicacao": "Exato! Algoritmos de recomendação analisam o perfil do usuário para sugerir os produtos exatos que ele tem mais chance de querer comprar."
+  },
+  {
+    "numero": 2,
+    "pergunta": "O que é a estratégia de Cross-selling (Venda Cruzada)?",
+    "alternativas": [
+      "A) Vender produtos estragados com desconto no supermercado.",
+      "B) Oferecer um produto adicional e complementar ao que o cliente está comprando (como uma capinha para o celular).",
+      "C) Cancelar a assinatura do cliente sem avisar.",
+      "D) Cobrar duas vezes pelo mesmo item."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Oferecer um produto adicional e complementar ao que o cliente está comprando (como uma capinha para o celular).",
+    "explicacao": "Muito bem! O Cross-selling cruza produtos que se combinam: ao comprar o celular, a IA te oferece o fone e a capinha de proteção!"
+  },
+  {
+    "numero": 3,
+    "pergunta": "O que é a estratégia de Up-selling (Venda Superior)?",
+    "alternativas": [
+      "A) Incentivar o cliente a levar uma versão melhor, maior ou superior do produto que ele escolheu.",
+      "B) Entregar o produto na casa do cliente usando drones de entregas.",
+      "C) Mudar o idioma do site para inglês.",
+      "D) Vender itens usados de brechó pelo dobro do preço."
+    ],
+    "respostaCorreta": 0,
+    "respostaCorretaTexto": "A) Incentivar o cliente a levar uma versão melhor, maior ou superior do produto que ele escolheu.",
+    "explicacao": "Perfeito! O Up-selling faz um upgrade: sugere trocar o modelo básico por um modelo Pro com mais memória ou desempenho."
+  },
+  {
+    "numero": 4,
+    "pergunta": "Qual o objetivo principal de Personalizar a Experiência do Cliente (CX)?",
+    "alternativas": [
+      "A) Forçar todo mundo a comprar o mesmo produto em liquidação.",
+      "B) Adaptar a jornada, vitrines e ofertas especificamente para os gostos de cada cliente individual em tempo real.",
+      "C) Esconder os preços do site até o cliente cadastrar o e-mail.",
+      "D) Bloquear a visualização de fotos nas redes sociais."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Adaptar a jornada, vitrines e ofertas especificamente para os gostos de cada cliente individual em tempo real.",
+    "explicacao": "Sensacional! Quanto mais personalizada for a experiência, mais acolhido e satisfeito o cliente se sente com a marca."
+  },
+  {
+    "numero": 5,
+    "pergunta": "O que estuda a área do Neuromarketing?",
+    "alternativas": [
+      "A) A montagem de computadores e placas de vídeo para jogos.",
+      "B) A aplicação da neurociência ao marketing para entender os estímulos cerebrais e decisões emocionais do consumidor.",
+      "C) A entrega de panfletos em semáforos de trânsito.",
+      "D) A formatação de celulares infectados por vírus."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) A aplicação da neurociência ao marketing para entender os estímulos cerebrais e decisões emocionais do consumidor.",
+    "explicacao": "Isso mesmo! O Neuromarketing investiga como o cérebro humano reage a cores, imagens e palavras na hora de tomar uma decisão."
+  },
+  {
+    "numero": 6,
+    "pergunta": "Como a IA auxilia na prática do Neuromarketing digital?",
+    "alternativas": [
+      "A) Trocando as senhas de acesso do cliente sem permissão.",
+      "B) Analisando dados de engajamento para descobrir quais layouts, textos e imagens geram maior atenção e resposta emocional.",
+      "C) Desligando o monitor do computador no final do dia.",
+      "D) Exibindo anúncios apenas em preto e branco."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Analisando dados de engajamento para descobrir quais layouts, textos e imagens geram maior atenção e resposta emocional.",
+    "explicacao": "Incrível! A IA testa milhares de variações visuais para descobrir qual design desperta mais interesse no cérebro do cliente."
+  },
+  {
+    "numero": 7,
+    "pergunta": "Por que mapear a 'Jornada do Consumidor' é fundamental para a IA?",
+    "alternativas": [
+      "A) Para medir a velocidade de carregamento da bateria do telefone.",
+      "B) Para entregar a mensagem e o incentivo certo no momento exato em que o cliente está decidindo a compra.",
+      "C) Para proibir pesquisas por produtos concorrentes.",
+      "D) Para apagar o histórico de navegação do usuário."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Para entregar a mensagem e o incentivo certo no momento exato em que o cliente está decidindo a compra.",
+    "explicacao": "Excelente! Mapear cada ponto de contato garante que o anúncio não seja chato, mas sim útil no instante exato da necessidade."
+  },
+  {
+    "numero": 8,
+    "pergunta": "Qual a vantagem da Recomendação Personalizada comparada ao marketing antigo igual para todo mundo?",
+    "alternativas": [
+      "A) Ela gasta mais papéis impressos em gráficas.",
+      "B) Aumenta muito as vendas e a satisfação, pois o cliente encontra exatamente o que tem a ver com seus gostos.",
+      "C) Obriga o cliente a responder um questionário de 50 perguntas.",
+      "D) Não traz nenhuma vantagem prática de conversão."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Aumenta muito as vendas e a satisfação, pois o cliente encontra exatamente o que tem a ver com seus gostos.",
+    "explicacao": "Correto! Ver anúncios de coisas que a gente gosta é muito mais legal do que ver propaganda de coisas que a gente não precisa!"
+  },
+  {
+    "numero": 9,
+    "pergunta": "Como a coleta contínua de dados melhora os sistemas de recomendação?",
+    "alternativas": [
+      "A) Apagando o histórico de compras passadas do consumidor.",
+      "B) Fazendo a IA aprender com cada clique e compra, tornando as sugestões futuras cada vez mais precisas.",
+      "C) Mudando as cores do logotipo da marca semanalmente.",
+      "D) Bloqueando os acessos durante os finais de semana."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Fazendo a IA aprender com cada clique e compra, tornando as sugestões futuras cada vez mais precisas.",
+    "explicacao": "Espetacular! Quanto mais o consumidor usa o site, mais a IA entende seu perfil e mais certeira fica a indicação!"
+  },
+  {
+    "numero": 10,
+    "pergunta": "Qual a postura ética esperada ao usar Neuromarketing e IA no relacionamento com o cliente?",
+    "alternativas": [
+      "A) Enganar o consumidor com promessas falsas usando gatilhos mentais.",
+      "B) Usar a tecnologia para criar uma experiência honesta, ágil e realmente útil para o consumidor, respeitando sua privacidade.",
+      "C) Vender dados pessoais e senhas secretas de clientes na internet.",
+      "D) Esconder as regras de cancelamento de compras do site."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Usar a tecnologia para criar uma experiência honesta, ágil e realmente útil para o consumidor, respeitando sua privacidade.",
+    "explicacao": "Perfeito! A tecnologia e os gatilhos emocionais devem ser usados de forma transparente para ajudar o cliente, criando uma relação de confiança!"
+  }
+]

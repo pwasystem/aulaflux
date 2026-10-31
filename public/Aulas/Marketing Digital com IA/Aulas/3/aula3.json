@@ -1,0 +1,132 @@
+[
+  {
+    "numero": 1,
+    "pergunta": "O que é a Publicidade Programática?",
+    "alternativas": [
+      "A) A gravação de comerciais de TV usando câmeras de alta definição.",
+      "B) A automação da compra e venda de espaços publicitários digitais em tempo real usando algoritmos.",
+      "C) A entrega manual de panfletos em semáforos da cidade.",
+      "D) O envio de cartas físicas pelos correios para clientes antigos."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) A automação da compra e venda de espaços publicitários digitais em tempo real usando algoritmos.",
+    "explicacao": "Exato! A publicidade programática usa robôs e IA para negociar o espaço de anúncio em milissegundos!"
+  },
+  {
+    "numero": 2,
+    "pergunta": "O que significa a sigla RTB no contexto de anúncios digitais?",
+    "alternativas": [
+      "A) Real-Time Bidding (Leilão em Tempo Real).",
+      "B) Real-Time Blocking (Bloqueio de Redes).",
+      "C) Return To Business (Retorno aos Negócios).",
+      "D) Radio Traffic Banner (Banners de Rádio)."
+    ],
+    "respostaCorreta": 0,
+    "respostaCorretaTexto": "A) Real-Time Bidding (Leilão em Tempo Real).",
+    "explicacao": "Muito bem! RTB é o leilão instantâneo onde as marcas disputam para exibir o anúncio enquanto a página carrega!"
+  },
+  {
+    "numero": 3,
+    "pergunta": "Quanto tempo leva, em média, a negociação de um leilão programático de anúncio?",
+    "alternativas": [
+      "A) Cerca de 24 horas úteis.",
+      "B) Menos de 100 milissegundos (uma fração de segundo!).",
+      "C) Cerca de 1 hora.",
+      "D) 1 semana inteira de análise."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Menos de 100 milissegundos (uma fração de segundo!).",
+    "explicacao": "Sensacional! O leilão acontece nos bastidores em milissegundos antes que a página do site termine de carregar!"
+  },
+  {
+    "numero": 4,
+    "pergunta": "Como a IA otimiza os lances em leilões de anúncios?",
+    "alternativas": [
+      "A) Comprando todos os espaços do site sem olhar o preço.",
+      "B) Analisando o perfil do usuário para pagar mais em clientes com alta intenção de compra e economizar nos outros.",
+      "C) Desligando os servidores durante o final de semana.",
+      "D) Exibindo apenas anúncios em preto e branco."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Analisando o perfil do usuário para pagar mais em clientes com alta intenção de compra e economizar nos outros.",
+    "explicacao": "Perfeito! A IA ajusta o valor do lance com precisão matemática para gastar o dinheiro onde traz mais retorno!"
+  },
+  {
+    "numero": 5,
+    "pergunta": "Para que serve a 'Personalização de Anúncios'?",
+    "alternativas": [
+      "A) Para mudar o logotipo da marca para todos os clientes do país.",
+      "B) Para adaptar a oferta, imagens e textos especificamente para o perfil de cada consumidor.",
+      "C) Para esconder o valor das mercadorias do site.",
+      "D) Para obrigar o cliente a responder um formulário longo."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Para adaptar a oferta, imagens e textos especificamente para o perfil de cada consumidor.",
+    "explicacao": "Excelente! Anúncios personalizados mostram produtos que têm a ver com o que o cliente já gosta ou procura!"
+  },
+  {
+    "numero": 6,
+    "pergunta": "Qual a vantagem da 'Segmentação Precisa' baseada em IA?",
+    "alternativas": [
+      "A) Mostrar o mesmo anúncio para 100% da população mundial.",
+      "B) Direcionar o anúncio exatamente para o público com interesse real no produto, aumentando o retorno do investimento.",
+      "C) Apagar histórico de buscas dos celulares.",
+      "D) Bloquear a visualização de fotos nas redes sociais."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Direcionar o anúncio exatamente para o público com interesse real no produto, aumentando o retorno do investimento.",
+    "explicacao": "Isso mesmo! A segmentação precisa evita desperdiçar orçamento exibindo anúncios para quem não precisa daquele produto."
+  },
+  {
+    "numero": 7,
+    "pergunta": "O que são os Testes A/B em ferramentas de anúncios?",
+    "alternativas": [
+      "A) Testar se os computadores da empresa estão ligados na tomada.",
+      "B) Comparar duas versões de anúncios (versão A e versão B) para ver qual gera mais cliques e conversões.",
+      "C) Avaliar as notas dos alunos nas provas de matemática.",
+      "D) Formatá o celular do cliente antes de enviar uma mensagem."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Comparar duas versões de anúncios (versão A e versão B) para ver qual gera mais cliques e conversões.",
+    "explicacao": "Incrível! Com os testes A/B, a IA descobre qual frase ou foto traz mais vendas e foca o investimento nela!"
+  },
+  {
+    "numero": 8,
+    "pergunta": "O que faz uma Plataforma Programática (como DSP ou SSP)?",
+    "alternativas": [
+      "A) Conecta anunciantes e sites de forma automática para realizar a compra e venda de anúncios.",
+      "B) Imprime cartazes em papel para colar em outdoors.",
+      "C) Formata computadores infectados por vírus.",
+      "D) Transmite programas de rádio FM."
+    ],
+    "respostaCorreta": 0,
+    "respostaCorretaTexto": "A) Conecta anunciantes e sites de forma automática para realizar a compra e venda de anúncios.",
+    "explicacao": "Correto! As plataformas programáticas automatizam o mercado publicitário conectando quem compra a quem vende espaço!"
+  },
+  {
+    "numero": 9,
+    "pergunta": "Para que serve a 'Previsão de Comportamento' na otimização de campanhas?",
+    "alternativas": [
+      "A) Adivinhar a previsão do tempo para os próximos 6 meses.",
+      "B) Antecipar hábitos e tendências de consumo para ajustar os anúncios antes que os concorrentes façam isso.",
+      "C) Trocar a senha do Wi-Fi do escritório.",
+      "D) Apagar e-mails velhos da caixa de entrada."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Antecipar hábitos e tendências de consumo para ajustar os anúncios antes que os concorrentes façam isso.",
+    "explicacao": "Espetacular! Antecipar o que o cliente vai querer comprar permite criar campanhas atrativas no momento exato!"
+  },
+  {
+    "numero": 10,
+    "pergunta": "Qual é um dos principais papéis dos KPIs na gestão de anúncios programáticos?",
+    "alternativas": [
+      "A) Mudar as fontes de texto do site todo domingo.",
+      "B) Medir os resultados numéricos da campanha (como cliques e vendas) para permitir ajustes em tempo real.",
+      "C) Criar nomes secretos para os funcionários da empresa.",
+      "D) Bloquear o acesso do consumidor durante a noite."
+    ],
+    "respostaCorreta": 1,
+    "respostaCorretaTexto": "B) Medir os resultados numéricos da campanha (como cliques e vendas) para permitir ajustes em tempo real.",
+    "explicacao": "Perfeito! KPIs são as métricas que indicam a saúde da campanha, orientando a IA sobre onde investir mais orçamento!"
+  }
+]
