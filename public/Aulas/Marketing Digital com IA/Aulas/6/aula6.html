@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Digital â¢ Aula 6: MediÃ§Ã£o de Resultados & KPIs</title>
+    <!-- Tailwind CSS para design responsivo e moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para visualizaÃ§Ã£o interativa de grÃ¡ficos de desempenho -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font-Awesome para Ã­cones expressivos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fontes Inter e Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 320px; }
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.08);
+        }
+        .tab-active {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #60a5fa;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-blue-500/30 selection:text-white">
+
+    <!-- NAVIGATION_BAR -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-gray-800 shadow-lg">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 gap-4">
+                <div class="font-black text-xs md:text-sm tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-blue-400"></i> Marketing Digital â¢ Aula 6
+                </div>
+                <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold text-gray-400">
+                    <a href="#kpis" class="hover:text-blue-400 transition-colors">1. O que sÃ£o KPIs</a>
+                    <a href="#ciclo" class="hover:text-blue-400 transition-colors">2. Ciclo de MediÃ§Ã£o</a>
+                    <a href="#dashboards" class="hover:text-blue-400 transition-colors">3. Monitoramento em Tempo Real</a>
+                    <a href="#calculadora" class="hover:text-blue-400 transition-colors">4. LaboratÃ³rio de KPIs</a>
+                </div>
+                <!-- Indicador de progresso global -->
+                <div class="bg-gray-900/60 px-4 py-2 rounded-xl border border-gray-800 text-center min-w-[130px] sm:min-w-[180px]">
+                    <div class="text-[9px] uppercase text-blue-300 font-bold tracking-wider mb-1">Seu Progresso</div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-white" id="progress-percent">0%</span>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TOAST_NOTIFICATION_SYSTEM -->
+    <div id="toast" class="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl border border-white/10 flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-12 opacity-0 pointer-events-none">
+        <span class="text-blue-400 text-lg" id="toast-icon"><i class="fa-solid fa-circle-info"></i></span>
+        <span class="text-xs font-semibold" id="toast-message">Mensagem do Sistema</span>
+    </div>
+
+    <!-- MAIN_HEADER -->
+    <header id="kpis" class="relative overflow-hidden bg-slate-950 py-16 px-6 border-b border-gray-900">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/30 via-transparent to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-4 text-center lg:text-left">
+                <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-500/30">MÃ³dulo 6 â¢ MediÃ§Ã£o de Resultados & OtimizaÃ§Ã£o</span>
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">MediÃ§Ã£o de Resultados & <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">KPIs de Sucesso</span></h1>
+                <p class="text-gray-400 text-sm md:text-base font-light leading-relaxed">
+                    No marketing digital, nÃ£o adiantamos adivinhar ou "torcer" para dar certo. A **mediÃ§Ã£o de resultados** acompanha mÃ©tricas numÃ©ricas quantificÃ¡veis em tempo real para tomar decisÃµes inteligentes e aumentar os lucros!
+                </p>
+                <div class="p-4 bg-slate-900/80 rounded-2xl border border-gray-800 text-xs text-blue-300 space-y-1">
+                    <strong class="text-white block"><i class="fa-solid fa-bullseye text-blue-400 mr-1.5"></i> O que Ã© um KPI?</strong>
+                    KPI (<em>Key Performance Indicator</em>) Ã© um **Indicador-Chave de Desempenho**: um nÃºmero crucial que mostra se a campanha atingiu a meta ou se precisa de ajustes!
+                </div>
+            </div>
+
+            <!-- Card Comparativo MediÃ§Ã£o de Resultados -->
+            <div class="glass-card p-6 rounded-3xl space-y-4">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-400"></i> GestÃ£o de Campanhas: Sem Dados vs. Com KPIs
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-rose-400 block"><i class="fa-solid fa-circle-xmark mr-1"></i> Sem MediÃ§Ã£o</span>
+                        <p class="text-[11px] text-gray-400">Gasto de dinheiro em anÃºncios sem saber quantas pessoas compraram ou qual propaganda funcionou.</p>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-emerald-400 block"><i class="fa-solid fa-chart-pie mr-1"></i> Com KPIs & Ajustes</span>
+                        <p class="text-[11px] text-gray-400">Monitoramento contÃ­nuo em tempo real. Investimento concentrado apenas nos anÃºncios que dÃ£o retorno positivo!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-12 space-y-24">
+
+        <!-- SECTION 1: OS PRINCIPAIS KPIS DO MARKETING DIGITAL -->
+        <section class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-blue-500 pl-4">1. Os Principais KPIs do Marketing Digital</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Cada indicador responde a uma pergunta especÃ­fica sobre o sucesso do seu negÃ³cio na internet. ConheÃ§a as mÃ©tricas indispensÃ¡veis:
+                </p>
+            </div>
+
+            <!-- Grid de Cards de KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- ROI -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-emerald-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-emerald-400"><i class="fa-solid fa-sack-dollar"></i></span>
+                        <span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-bold uppercase">Financeiro</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">ROI (Retorno sobre Investimento)</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Calcula o lucro obtido em relaÃ§Ã£o ao valor gasto. Mostra quanto dinheiro a empresa ganhou para cada R$ 1,00 investido na propaganda.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-emerald-300 font-mono">
+                        ROI = [(Faturamento - Custo) / Custo] Ã 100
+                    </div>
+                </div>
+
+                <!-- CPA -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-blue-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-blue-400"><i class="fa-solid fa-user-plus"></i></span>
+                        <span class="text-[9px] bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded font-bold uppercase">Custo de Venda</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">CPA (Custo por AquisiÃ§Ã£o)</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Indica quanto a marca gastou em anÃºncios para conseguir **cada novo cliente pagante**. Quanto menor o CPA, mais eficiente Ã© a campanha!
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-blue-300 font-mono">
+                        CPA = Investimento Total / NÃºmero de Vendas
+                    </div>
+                </div>
+
+                <!-- Taxa de ConversÃ£o -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-purple-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-purple-400"><i class="fa-solid fa-filter-circle-dollar"></i></span>
+                        <span class="text-[9px] bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded font-bold uppercase">Engajamento</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">Taxa de ConversÃ£o</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Porcentagem de pessoas que visitaram a pÃ¡gina e realizaram a aÃ§Ã£o desejada (como comprar, cadastrar e-mail ou baixar um e-book).
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-purple-300 font-mono">
+                        ConversÃ£o (%) = (AÃ§Ãµes / Visitantes) Ã 100
+                    </div>
+                </div>
+
+                <!-- CTR -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-amber-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-amber-400"><i class="fa-solid fa-mouse-pointer"></i></span>
+                        <span class="text-[9px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded font-bold uppercase">AtraÃ§Ã£o do AnÃºncio</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">CTR (Click-Through Rate)</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Mede o interesse do pÃºblico no anÃºncio. Mostra a porcentagem de pessoas que viram o anÃºncio e resolveram clicar nele.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-amber-300 font-mono">
+                        CTR (%) = (Cliques / VisualizaÃ§Ãµes) Ã 100
+                    </div>
+                </div>
+
+                <!-- CAC vs LTV -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-cyan-500 md:col-span-2 lg:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-cyan-400"><i class="fa-solid fa-scale-balanced"></i></span>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-300 px-2 py-0.5 rounded font-bold uppercase">SaÃºde Financeira</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">CAC vs. LTV (Custo de AquisiÃ§Ã£o x Valor do Cliente)</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        O **CAC** Ã© o custo total para conquistar um cliente. O **LTV (Lifetime Value)** Ã© o total de dinheiro que esse cliente gasta com sua empresa durante todo o tempo em que permanece fiel. O LTV deve ser sempre muito maior que o CAC!
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-cyan-300 flex justify-between font-mono">
+                        <span>Regra de Ouro: LTV > 3x CAC</span>
+                        <span class="text-gray-400">Cliente Lucrativo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: O CICLO DE GESTÃO ORIENTADA A DADOS EM 4 PASSO -->
+        <section id="ciclo" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-blue-500 pl-4">2. O Ciclo de GestÃ£o Orientada a Dados</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    A mediÃ§Ã£o de resultados nÃ£o acontece apenas no fim da campanha. Ela forma um **ciclo contÃ­nuo de 4 etapas**:
+                </p>
+            </div>
+
+            <!-- Pipeline em 4 Passos -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-blue-500">
+                    <span class="text-xs font-mono font-bold text-blue-400">PASSO 01</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-list-check text-blue-400"></i> 1. DefiniÃ§Ã£o</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Escolha das metas do negÃ³cio e seleÃ§Ã£o dos KPIs certos que vÃ£o medir o progresso da campanha.</p>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-purple-500">
+                    <span class="text-xs font-mono font-bold text-purple-400">PASSO 02</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-eye text-purple-400"></i> 2. Monitoramento</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Acompanhamento dos dados em tempo real para verificar como os usuÃ¡rios interagem nos canais digitais.</p>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-amber-500">
+                    <span class="text-xs font-mono font-bold text-amber-400">PASSO 03</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-magnifying-glass-chart text-amber-400"></i> 3. AnÃ¡lise</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">InterpretaÃ§Ã£o tÃ©cnica dos nÃºmeros para descobrir quais anÃºncios funcionam e quais tÃªm baixo desempenho.</p>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-emerald-500">
+                    <span class="text-xs font-mono font-bold text-emerald-400">PASSO 04</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i> 4. Ajustes e Melhoria</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">AplicaÃ§Ã£o prÃ¡tica dos aprendizados para corrigir falhas, reinvestir o dinheiro e aumentar a eficÃ¡cia futura.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: MONITORAMENTO EM TEMPO REAL E DASHBOARDS -->
+        <section id="dashboards" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-blue-500 pl-4">3. Monitoramento em Tempo Real & Dashboards</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    PainÃ©is interativos mostram a evoluÃ§Ã£o das mÃ©tricas ao longo das semanas de campanha. <strong class="text-blue-400">Clique nas fatias do grÃ¡fico abaixo para analisar o desempenho por canal de mÃ­dia!</strong>
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-center bg-gray-950/60 p-6 md:p-8 rounded-3xl border border-gray-800">
+                <!-- GrÃ¡fico Chart.js de Origem de Vendas / ConversÃµes -->
+                <div class="lg:col-span-6 flex flex-col items-center">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Origem das ConversÃµes da Campanha</h4>
+                    <div class="chart-container">
+                        <canvas id="kpiChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Painel Explicativo ClicÃ¡vel -->
+                <div id="kpi-detail-box" class="lg:col-span-6 glass-card p-6 rounded-2xl min-h-[240px] flex flex-col justify-center space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-400">Toque em uma fatia do grÃ¡fico ao lado</span>
+                    <h3 class="text-base font-bold text-white">AnÃ¡lise de MÃ­dia por Canal</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Ao acompanhar o dashboard em tempo real, a equipe de marketing identifica qual canal traz mais vendas pelo menor custo, redistribuindo o orÃ§amento de forma imediata!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: LABORATÃRIO PRÃTICO - CALCULADORA INTERATIVA DE KPIS -->
+        <section id="calculadora" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-blue-500 pl-4">4. LaboratÃ³rio PrÃ¡tico: Simulador de CÃ¡lculo de KPIs</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Insira os dados da sua campanha hipotÃ©tica nos campos abaixo e calcule instantaneamente o **ROI**, o **CPA** e a **Taxa de ConversÃ£o** para avaliar a saÃºde do negÃ³cio!
+                </p>
+            </div>
+
+            <div class="bg-gray-950 p-6 md:p-8 rounded-3xl border border-gray-800 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Campo Investimento -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-gray-300 uppercase">1. Investimento (R$)</label>
+                        <input type="number" id="calc-invest" value="1000" min="1" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Campo Faturamento -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-gray-300 uppercase">2. Faturamento (R$)</label>
+                        <input type="number" id="calc-revenue" value="3500" min="0" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Campo Visitantes/Cliques -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-gray-300 uppercase">3. Visitantes (Cliques)</label>
+                        <input type="number" id="calc-clicks" value="5000" min="1" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Campo Vendas / ConversÃµes -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-gray-300 uppercase">4. Vendas Realizadas</label>
+                        <input type="number" id="calc-sales" value="150" min="0" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- BotÃ£o de Calcular -->
+                <button onclick="calculateKPIs()" class="w-full py-3.5 bg-blue-500 hover:bg-blue-600 text-slate-950 font-bold rounded-xl text-xs md:text-sm transition-all cursor-pointer shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> Calcular MÃ©tricas da Campanha
+                </button>
+
+                <!-- Resultado dos KPIs Calculados -->
+                <div id="calc-results-box" class="p-6 bg-slate-900 rounded-2xl border border-gray-800 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center fade-in">
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <span class="text-[10px] text-gray-400 uppercase block font-bold mb-1">ROI (Retorno)</span>
+                        <span class="text-xl font-black text-emerald-400" id="res-roi">250.0%</span>
+                        <span class="text-[10px] text-emerald-300/80 block mt-1" id="label-roi">R$ 2,50 de lucro p/ cada R$ 1,00</span>
+                    </div>
+
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <span class="text-[10px] text-gray-400 uppercase block font-bold mb-1">CPA (Custo p/ Cliente)</span>
+                        <span class="text-xl font-black text-blue-400" id="res-cpa">R$ 6,67</span>
+                        <span class="text-[10px] text-blue-300/80 block mt-1">Custo por Venda Realizada</span>
+                    </div>
+
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <span class="text-[10px] text-gray-400 uppercase block font-bold mb-1">Taxa de ConversÃ£o</span>
+                        <span class="text-xl font-black text-purple-400" id="res-conv">3.0%</span>
+                        <span class="text-[10px] text-purple-300/80 block mt-1">Visitantes que Compraram</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 py-12 px-6 border-t border-gray-900 mt-20 text-center text-slate-500 text-xs">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div class="space-y-1">
+                <p class="text-sm font-bold text-slate-400">Marketing Digital: MediÃ§Ã£o de Resultados & KPIs â¢ Aula 6</p>
+                <p class="text-xs text-slate-600">Material interativo adaptado para estudantes da Jornada Maker.</p>
+            </div>
+            <div class="text-xs md:text-sm bg-slate-900 text-blue-400 border border-blue-500/10 px-4 py-2 rounded-xl font-medium">
+                Prof. Luiz Roberto Nogueira Junior
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS DE LÃGICA E INTERATIVIDADE -->
+    <script>
+        // --- DADOS DE CANAIS DE MÃDIA (SEÃÃO 3) ---
+        const channelDetails = {
+            0: {
+                title: "1. AnÃºncios em Redes Sociais (Instagram/TikTok)",
+                desc: "Representam 40% das conversÃµes. TÃªm altÃ­ssimo poder de atraÃ§Ã£o visual e grande volume de cliques rÃ¡pidos no celular."
+            },
+            1: {
+                title: "2. Links Patrocinados (Google Ads)",
+                desc: "Representam 30% das conversÃµes. Capturam clientes no momento exato em que eles pesquisam pela intenÃ§Ã£o de compra no buscador."
+            },
+            2: {
+                title: "3. E-mail Marketing & AutomaÃ§Ã£o",
+                desc: "Representam 15% das conversÃµes. Possuem o menor CPA e o maior ROI, pois conversam diretamente com quem jÃ¡ se cadastrou no site."
+            },
+            3: {
+                title: "4. TrÃ¡fego OrgÃ¢nico (SEO & ConteÃºdo)",
+                desc: "Representam 15% das conversÃµes. Clientes que encontram a marca espontaneamente por meio de buscas e artigos do blog sem custo direto por clique."
+            }
+        };
+
+        // --- SISTEMA DE TOAST (NOTIFICAÃÃO) ---
+        function showToast(message, type = "info") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+
+            if (type === "error") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500"></i>`;
+            } else if (type === "success") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-blue-400"></i>`;
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        // --- CALCULADORA DE KPIS (SEÃÃO 4) ---
+        function calculateKPIs() {
+            const invest = parseFloat(document.getElementById('calc-invest').value) || 0;
+            const revenue = parseFloat(document.getElementById('calc-revenue').value) || 0;
+            const clicks = parseFloat(document.getElementById('calc-clicks').value) || 1;
+            const sales = parseFloat(document.getElementById('calc-sales').value) || 0;
+
+            if (invest <= 0 || clicks <= 0) {
+                showToast("Preencha valores maiores que zero para cÃ¡lculo!", "error");
+                return;
+            }
+
+            // ROI = [(Faturamento - Investimento) / Investimento] * 100
+            const roi = ((revenue - invest) / invest) * 100;
+            
+            // CPA = Investimento / Vendas
+            const cpa = sales > 0 ? (invest / sales) : 0;
+
+            // Taxa de ConversÃ£o = (Vendas / Cliques) * 100
+            const convRate = (sales / clicks) * 100;
+
+            document.getElementById('res-roi').innerText = roi.toFixed(1) + "%";
+            document.getElementById('res-cpa').innerText = "R$ " + cpa.toFixed(2);
+            document.getElementById('res-conv').innerText = convRate.toFixed(1) + "%";
+
+            const profitPerReal = ((revenue - invest) / invest).toFixed(2);
+            document.getElementById('label-roi').innerText = profitPerReal >= 0 
+                ? `R$ ${profitPerReal} de lucro p/ cada R$ 1,00` 
+                : `PrejuÃ­zo de R$ ${Math.abs(profitPerReal)} p/ cada R$ 1,00`;
+
+            const resBox = document.getElementById('calc-results-box');
+            resBox.classList.remove('fade-in');
+            void resBox.offsetWidth;
+            resBox.classList.add('fade-in');
+
+            showToast("MÃ©tricas da campanha calculadas!", "success");
+        }
+
+
+        // --- INICIALIZAÃÃO DA PÃGINA ---
+        window.onload = function() {
+            calculateKPIs();
+
+            // ConfiguraÃ§Ã£o do GrÃ¡fico de Origem das ConversÃµes (Chart.js)
+            const ctx = document.getElementById('kpiChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['AnÃºncios em Redes Sociais', 'Google Ads (Links Patrocinados)', 'E-mail Marketing & AutomaÃ§Ã£o', 'TrÃ¡fego OrgÃ¢nico (SEO)'],
+                    datasets: [{
+                        data: [40, 30, 15, 15],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#a855f7',
+                            '#f59e0b'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0b0f19',
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Canal: ${context.label}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%',
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const detailBox = document.getElementById('kpi-detail-box');
+                            const detail = channelDetails[dataIndex];
+
+                            detailBox.classList.remove('fade-in');
+                            void detailBox.offsetWidth; // Re-render
+
+                            detailBox.innerHTML = `
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-400">Canal de MÃ­dia Selecionado</span>
+                                <h3 class="text-base font-bold text-white mt-1 mb-2">${detail.title}</h3>
+                                <p class="text-xs text-gray-300 leading-relaxed">${detail.desc}</p>
+                            `;
+                            detailBox.classList.add('fade-in');
+                            showToast("Canal detalhado!", "success");
+                        }
+                    }
+                }
+            });
+        };
+
+    </script>
+</body>
+</html>
