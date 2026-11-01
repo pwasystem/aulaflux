@@ -273,6 +273,11 @@
             </button>
           </div>
 
+          <div id="aula-aviso-somente-envio" style="display: none; margin-top: 1rem; padding: 0.9rem 1.15rem; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: var(--radius-md); color: var(--text-secondary); font-size: 0.875rem; align-items: center; gap: 0.65rem;">
+            <i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent-cyan); font-size: 1.15rem;"></i>
+            <span>Esta aula do cronograma é dedicada à entrega de atividades práticas. Utilize a caixa abaixo para enviar seus arquivos ao Google Drive da turma.</span>
+          </div>
+
           <!-- 2. ARQUIVOS DE ESTUDO E APRESENTAÇÃO (Aula.pdf e Apresentação.pdf) -->
           <div id="aula-sec-pdfs" class="aula-pdfs-bar" style="display: none;">
             <!-- Aula.pdf: Texto com o conteúdo da aula para download e leitura -->
@@ -322,7 +327,11 @@
             <div id="aula-video-source-actions" style="display: flex; gap: 0.5rem; align-items: center;"></div>
           </div>
           <div class="video-horizontal-proportional" id="aula-video-container">
-            <!-- Player inserido dinamicamente via app.js -->
+            <video id="aula-video-player" controls preload="metadata" style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;">
+              <source id="aula-video-source" src="" type="video/mp4">
+              Seu navegador não suporta a reprodução de vídeo.
+            </video>
+            <iframe id="aula-video-drive-iframe" title="Vídeo da Aula" style="display: none; width: 100%; height: 100%; border: none;" allow="autoplay; fullscreen"></iframe>
           </div>
         </div>
 
@@ -343,7 +352,7 @@
             </div>
           </div>
           <div class="game-iframe-wrapper" id="aula-game-wrapper">
-            <iframe id="aula-game-iframe" title="Aula Gamificada Interativa" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"></iframe>
+            <iframe id="aula-game-iframe" title="Aula Gamificada Interativa"></iframe>
           </div>
         </div>
 
@@ -901,6 +910,7 @@
               <i class="fa-solid fa-rotate"></i> Verificar Pasta Drive
             </button>
           </div>
+          <div id="gas-connection-status-msg" style="display: none; margin-top: 0.75rem; font-size: 0.825rem;"></div>
         </div>
 
         <!-- Filtros de Resultados dos Alunos -->
@@ -1362,10 +1372,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- Configuração do Firebase e Google Apps Script -->
-  <script src="config.js?v=20261101"></script>
+  <script src="config.js?v=20261101d"></script>
 
   <!-- Lógica da Aplicação -->
-  <script src="app.js?v=20261101"></script>
+  <script src="app.js?v=20261101d"></script>
 </body>
 
 </html>

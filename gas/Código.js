@@ -36,8 +36,25 @@ function autorizarDrive() {
   Logger.log('Pasta Aula Flux/Aulas pronta: ' + (pastaAulas ? pastaAulas.getUrl() : 'não encontrada'));
 }
 
-function responderJson(dados) {
-  return ContentService.createTextOutput(JSON.stringify(dados))
+var ALLOWED_ORIGINS = [
+  'https://aulaflux.web.app',
+  'https://aulaflux.firebaseapp.com',
+  'http://localhost:5000',
+  'http://127.0.0.1:5000'
+];
+
+function responderJson(dados, e) {
+  if (dados && typeof dados === 'object') {
+    dados.allowedOrigin = 'https://aulaflux.web.app';
+    dados.allowedOrigins = ALLOWED_ORIGINS;
+  }
+  var jsonStr = JSON.stringify(dados);
+  var callback = (e && e.parameter && e.parameter.callback) ? String(e.parameter.callback).replace(/[^a-zA-Z0-9_$.]/g, '') : '';
+  if (callback) {
+    return ContentService.createTextOutput(callback + '(' + jsonStr + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(jsonStr)
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -239,6 +256,19 @@ function lerPastaAula(pastaAula, incluirConteudoCompleto) {
     }
   }
 
+  arquivos.dadosTxt = arquivos.dados;
+  arquivos.mapaPng = arquivos.mapa;
+  arquivos.videoMp4 = arquivos.video;
+  if (arquivos.game && arquivos.game.exists) {
+    arquivos.game.htmlContent = arquivos.game.content;
+  }
+  arquivos.gameHtml = arquivos.game;
+  arquivos.infograficoPng = arquivos.infografico;
+  if (arquivos.quiz && arquivos.quiz.exists) {
+    arquivos.quiz.jsonContent = arquivos.quiz.questions;
+  }
+  arquivos.quizJson = arquivos.quiz;
+
   return arquivos;
 }
 
@@ -281,13 +311,13 @@ function doGet(e) {
         service: 'AulaFlux GAS Drive Connector',
         raizEncontrada: !!pastaRaiz,
         raizId: pastaRaiz ? pastaRaiz.getId() : null
-      });
+      }, e);
     }
 
     if (action === 'listarCursos') {
       var raiz = obterPastaRaizAulas(false);
       if (!raiz) {
-        return responderJson({ ok: false, error: 'Pasta Aula Flux/Aulas não encontrada no Google Drive.' });
+        return responderJson({ ok: false, error: 'Pasta Aula Flux/Aulas não encontrada no Google Drive.' }, e);
       }
       var cursos = [];
       var fIter = raiz.getFolders();
@@ -308,27 +338,29 @@ function doGet(e) {
           totalPastas: pastasNumeradas.length
         });
       }
-      return responderJson({ ok: true, cursos: cursos });
+      return responderJson({ ok: true, cursos: cursos }, e);
     }
 
     if (action === 'verificarCurso') {
       var nomeCurso = params.curso || '';
       if (!nomeCurso) {
-        return responderJson({ ok: false, error: 'Parâmetro curso é obrigatório.' });
+        return responderJson({ ok: false, error: 'Parâmetro curso é obrigatório.' }, e);
       }
       var raizAulas = obterPastaRaizAulas(false);
       if (!raizAulas) {
-        return responderJson({ ok: false, error: 'Pasta Aula Flux/Aulas não encontrada no Drive.' });
+        return responderJson({ ok: false, error: 'Pasta Aula Flux/Aulas não encontrada no Drive.' }, e);
       }
       var pastaCurso = buscarPasta(raizAulas, nomeCurso, false);
       if (!pastaCurso) {
         return responderJson({
           ok: true,
           cursoExisteNoDrive: false,
+          courseName: nomeCurso,
           curso: nomeCurso,
+          totalLessonFolders: 0,
           aulas: {},
           pastasNumeros: []
-        });
+        }, e);
       }
 
       var videosTxtMap = lerVideosTxtCurso(pastaCurso);
@@ -361,34 +393,51 @@ function doGet(e) {
       return responderJson({
         ok: true,
         cursoExisteNoDrive: true,
+        courseName: pastaCurso.getName(),
         curso: pastaCurso.getName(),
         cursoFolderId: pastaCurso.getId(),
         pastasNumeros: numeros,
         totalPastas: numeros.length,
+        totalLessonFolders: numeros.length,
         aulas: aulasResumo
-      });
+      }, e);
     }
 
     if (action === 'obterAula') {
       var cursoParam = params.curso || '';
       var aulaNum = parseInt(params.aula || '1', 10);
       if (!cursoParam || isNaN(aulaNum)) {
-        return responderJson({ ok: false, error: 'Parâmetros curso e aula são obrigatórios.' });
+        return responderJson({ ok: false, error: 'Parâmetros curso e aula são obrigatórios.' }, e);
       }
 
       var raizDrive = obterPastaRaizAulas(false);
       if (!raizDrive) {
-        return responderJson({ ok: true, folderExists: false, curso: cursoParam, aula: aulaNum, files: {} });
+        return responderJson({ ok: true, folderExists: false, curso: cursoParam, aula: aulaNum, files: {} }, e);
       }
 
       var folderCurso = buscarPasta(raizDrive, cursoParam, false);
       if (!folderCurso) {
-        return responderJson({ ok: true, folderExists: false, curso: cursoParam, aula: aulaNum, files: {} });
+        return responderJson({ ok: true, folderExists: false, curso: cursoParam, aula: aulaNum, files: {} }, e);
+      }
+
+      // Contar pastas numeradas existentes no curso
+      var iterSub = folderCurso.getFolders();
+      var totalFolders = 0;
+      while (iterSub.hasNext()) {
+        var sf = iterSub.next();
+        if (!isNaN(parseInt(sf.getName().trim(), 10))) totalFolders++;
       }
 
       var folderAula = buscarPasta(folderCurso, String(aulaNum), false);
       if (!folderAula) {
-        return responderJson({ ok: true, folderExists: false, curso: cursoParam, aula: aulaNum, files: {} });
+        return responderJson({
+          ok: true,
+          folderExists: false,
+          totalFolders: totalFolders || 6,
+          curso: cursoParam,
+          aula: aulaNum,
+          files: {}
+        }, e);
       }
 
       var videosMap = lerVideosTxtCurso(folderCurso);
@@ -397,19 +446,26 @@ function doGet(e) {
         dadosArquivos.videoYoutubeUrl = videosMap[aulaNum];
       }
 
+      var headerInfo = {
+        aulaLabel: dadosArquivos.dados.exists ? dadosArquivos.dados.aulaLabel : ('Aula ' + aulaNum),
+        titulo: dadosArquivos.dados.exists ? dadosArquivos.dados.titulo : ('Aula ' + aulaNum)
+      };
+
       return responderJson({
         ok: true,
         folderExists: true,
+        totalFolders: totalFolders || 6,
         curso: folderCurso.getName(),
         aula: aulaNum,
         folderId: folderAula.getId(),
+        header: headerInfo,
         files: dadosArquivos
-      });
+      }, e);
     }
 
-    return responderJson({ ok: false, error: 'Ação desconhecida: ' + action });
+    return responderJson({ ok: false, error: 'Ação desconhecida: ' + action }, e);
   } catch (err) {
-    return responderJson({ ok: false, error: String(err && err.message ? err.message : err) });
+    return responderJson({ ok: false, error: String(err && err.message ? err.message : err) }, e);
   }
 }
 
@@ -426,11 +482,11 @@ function doPost(e) {
       var nomeCurso = (body.curso || '').trim();
       var nomeTurma = (body.turma || '').trim();
       var numeroAula = body.aula || '';
-      var nomeAluno = (body.aluno || 'Aluno').trim();
+      var nomeAluno = (body.alunoNome || body.aluno || 'Aluno').trim();
       var nomeProfessor = (body.professor || '').trim();
 
       if (!nomeCurso || !nomeTurma) {
-        return responderJson({ ok: false, error: 'Curso e turma são obrigatórios para o envio de arquivos.' });
+        return responderJson({ ok: false, error: 'Curso e turma são obrigatórios para o envio de arquivos.' }, e);
       }
 
       var raiz = obterPastaRaizAulas(true);
@@ -439,16 +495,19 @@ function doPost(e) {
       var pastaTurma = buscarPasta(pastaEnvios, nomeTurma, true);
 
       var listaArquivos = body.arquivos || [];
-      if (!listaArquivos.length && body.base64 && body.nomeArquivo) {
+      var base64Recebido = body.base64Data || body.base64;
+      var nomeArqRecebido = body.fileName || body.nomeArquivo;
+
+      if (!listaArquivos.length && base64Recebido && nomeArqRecebido) {
         listaArquivos.push({
-          nome: body.nomeArquivo,
+          nome: nomeArqRecebido,
           mimeType: body.mimeType || 'application/octet-stream',
-          base64: body.base64
+          base64: base64Recebido
         });
       }
 
       if (!listaArquivos.length) {
-        return responderJson({ ok: false, error: 'Nenhum arquivo recebido para upload.' });
+        return responderJson({ ok: false, error: 'Nenhum arquivo recebido para upload.' }, e);
       }
 
       var salvos = [];
@@ -456,7 +515,9 @@ function doPost(e) {
         var item = listaArquivos[i];
         var base64Clean = String(item.base64 || '').replace(/^data:[^;]+;base64,/, '');
         var bytes = Utilities.base64Decode(base64Clean);
-        var nomeFinal = item.nome || ('arquivo_' + Date.now());
+        var prefixoAluno = nomeAluno.replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').trim().replace(/\s+/g, '_');
+        var nomeOriginal = item.nome || ('arquivo_' + Date.now());
+        var nomeFinal = 'Aula' + numeroAula + '_' + prefixoAluno + '_' + nomeOriginal;
         var blob = Utilities.newBlob(bytes, item.mimeType || 'application/octet-stream', nomeFinal);
         var arqCriado = pastaTurma.createFile(blob);
         arqCriado.setDescription(
@@ -473,13 +534,20 @@ function doPost(e) {
         });
       }
 
+      var caminhoStr = 'Aula Flux/Aulas/' + pastaCurso.getName() + '/envios/' + pastaTurma.getName();
+      var primeiroArq = salvos[0] || {};
+
       return responderJson({
         ok: true,
-        caminho: 'Aula Flux/Aulas/' + pastaCurso.getName() + '/envios/' + pastaTurma.getName(),
+        caminho: caminhoStr,
+        folderPath: caminhoStr,
         pastaTurmaId: pastaTurma.getId(),
-         pastaTurmaUrl: pastaTurma.getUrl(),
+        pastaTurmaUrl: pastaTurma.getUrl(),
+        fileId: primeiroArq.id || '',
+        fileName: primeiroArq.nome || '',
+        fileUrl: primeiroArq.url || '',
         arquivos: salvos
-      });
+      }, e);
     }
 
     if (action === 'atualizarGameHtml') {
@@ -487,14 +555,14 @@ function doPost(e) {
       var aulaAlvo = String(body.aula || '').trim();
       var htmlNovo = body.content || '';
       if (!cursoAlvo || !aulaAlvo || !htmlNovo) {
-        return responderJson({ ok: false, error: 'Parâmetros curso, aula e content são obrigatórios.' });
+        return responderJson({ ok: false, error: 'Parâmetros curso, aula e content são obrigatórios.' }, e);
       }
       var raizAulas = obterPastaRaizAulas(false);
-      if (!raizAulas) return responderJson({ ok: false, error: 'Pasta Aula Flux/Aulas não encontrada.' });
+      if (!raizAulas) return responderJson({ ok: false, error: 'Pasta Aula Flux/Aulas não encontrada.' }, e);
       var pCurso = buscarPasta(raizAulas, cursoAlvo, false);
-      if (!pCurso) return responderJson({ ok: false, error: 'Pasta do curso não encontrada.' });
+      if (!pCurso) return responderJson({ ok: false, error: 'Pasta do curso não encontrada.' }, e);
       var pAula = buscarPasta(pCurso, aulaAlvo, false);
-      if (!pAula) return responderJson({ ok: false, error: 'Pasta da aula não encontrada.' });
+      if (!pAula) return responderJson({ ok: false, error: 'Pasta da aula não encontrada.' }, e);
 
       var fIter = pAula.getFiles();
       var gameFile = null;
@@ -507,15 +575,15 @@ function doPost(e) {
       }
       if (gameFile) {
         gameFile.setContent(htmlNovo);
-        return responderJson({ ok: true, updated: true, id: gameFile.getId() });
+        return responderJson({ ok: true, updated: true, id: gameFile.getId() }, e);
       } else {
         var novoArq = pAula.createFile('Game.html', htmlNovo, 'text/html');
-        return responderJson({ ok: true, created: true, id: novoArq.getId() });
+        return responderJson({ ok: true, created: true, id: novoArq.getId() }, e);
       }
     }
 
-    return responderJson({ ok: false, error: 'Ação POST desconhecida: ' + action });
+    return responderJson({ ok: false, error: 'Ação POST desconhecida: ' + action }, e);
   } catch (err) {
-    return responderJson({ ok: false, error: String(err && err.message ? err.message : err) });
+    return responderJson({ ok: false, error: String(err && err.message ? err.message : err) }, e);
   }
 }

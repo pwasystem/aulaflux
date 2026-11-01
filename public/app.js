@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Inicializar campo de URL do GAS no painel admin se existir
-  const inputGasUrl = document.getElementById('input-gas-webapp-url');
+  const inputGasUrl = document.getElementById('gas-webapp-url-input') || document.getElementById('input-gas-webapp-url');
   if (inputGasUrl && AppState.gasWebAppUrl) {
     inputGasUrl.value = AppState.gasWebAppUrl;
   }
@@ -2649,8 +2649,112 @@ function obterUrlGasAtiva() {
   return AppState.gasWebAppUrl || ((typeof GAS_CONFIG !== 'undefined' && GAS_CONFIG.webAppUrl) ? GAS_CONFIG.webAppUrl : '');
 }
 
+/**
+ * Executa requisição GET ao Google Apps Script via JSONP (<script>),
+ * eliminando bloqueios de CORS (Access-Control-Allow-Origin) no domínio https://aulaflux.web.app.
+ */
+function chamarGasJsonp(urlBase, paramsObj = {}, timeoutMs = 6500) {
+  return new Promise((resolve) => {
+    if (!urlBase) {
+      resolve(null);
+      return;
+    }
+
+    const cbName = '__aulafluxGasCb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    let finalizado = false;
+    let scriptEl = null;
+
+    const limpar = () => {
+      try {
+        delete window[cbName];
+      } catch (_) {
+        window[cbName] = undefined;
+      }
+      if (scriptEl && scriptEl.parentNode) {
+        scriptEl.parentNode.removeChild(scriptEl);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      if (finalizado) return;
+      finalizado = true;
+      limpar();
+      resolve(null);
+    }, timeoutMs);
+
+    window[cbName] = (dados) => {
+      if (finalizado) return;
+      finalizado = true;
+      clearTimeout(timer);
+      limpar();
+      resolve(dados || null);
+    };
+
+    const queryParams = new URLSearchParams({
+      ...paramsObj,
+      origin: window.location.origin || 'https://aulaflux.web.app',
+      callback: cbName,
+      _ts: String(Date.now())
+    });
+
+    const sep = urlBase.includes('?') ? '&' : '?';
+    scriptEl = document.createElement('script');
+    scriptEl.src = `${urlBase}${sep}${queryParams.toString()}`;
+    scriptEl.async = true;
+    scriptEl.onerror = () => {
+      if (finalizado) return;
+      finalizado = true;
+      clearTimeout(timer);
+      limpar();
+      resolve(null);
+    };
+
+    document.head.appendChild(scriptEl);
+  });
+}
+
+/**
+ * Executa requisição POST ao Google Apps Script compatível com CORS para https://aulaflux.web.app.
+ * Usa Simple Request (text/plain;charset=utf-8 sem credenciais) e fallback automático no-cors.
+ */
+async function chamarGasPost(gasUrl, payloadObj) {
+  const bodyStr = JSON.stringify({
+    ...payloadObj,
+    origin: window.location.origin || 'https://aulaflux.web.app'
+  });
+
+  try {
+    const resp = await fetch(gasUrl, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: bodyStr
+    });
+    const json = await resp.json().catch(() => null);
+    if (json) return json;
+  } catch (_) {
+    // Fallback mode: 'no-cors' garante que o POST chegue ao Google Apps Script mesmo sem header CORS no redirect
+    try {
+      await fetch(gasUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        credentials: 'omit',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: bodyStr
+      });
+      return { ok: true, opaque: true };
+    } catch (errNoCors) {
+      return { ok: false, error: errNoCors.message };
+    }
+  }
+  return { ok: true };
+}
+
 function salvarUrlGasWebApp() {
-  const input = document.getElementById('input-gas-webapp-url');
+  const input = document.getElementById('gas-webapp-url-input') || document.getElementById('input-gas-webapp-url');
   const url = input ? input.value.trim() : '';
   if (!url) {
     mostrarToast("Informe a URL do Web App do Google Apps Script.", "error");
@@ -2677,34 +2781,34 @@ async function testarConexaoGasDrive() {
 
   if (statusBox) {
     statusBox.style.display = 'block';
-    statusBox.innerHTML = `<span style="color: var(--accent-cyan);"><i class="fa-solid fa-spinner fa-spin"></i> Testando conexão com o projeto Google Apps Script...</span>`;
+    statusBox.innerHTML = `<span style="color: var(--accent-cyan);"><i class="fa-solid fa-spinner fa-spin"></i> Testando conexão com o projeto Google Apps Script (sem bloqueio CORS)...</span>`;
   }
 
-  try {
-    const res = await fetch(`${gasUrl}?action=verificarCurso&curso=${encodeURIComponent('Marketing Digital com IA')}`);
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch (_) {}
+  const json = await chamarGasJsonp(gasUrl, {
+    action: 'verificarCurso',
+    curso: 'Marketing Digital com IA'
+  });
 
-    if (json && json.ok) {
-      if (statusBox) {
-        statusBox.innerHTML = `<span style="color: var(--accent-emerald);"><i class="fa-solid fa-circle-check"></i> Conectado com sucesso ao Google Drive! Curso "${json.courseName}" localizado (${json.totalLessonFolders || 0} pastas de aulas numeradas).</span>`;
-      }
-      mostrarToast("Conexão com Google Apps Script / Drive validada com sucesso!", "success");
-    } else if (text.includes(' DriveApp') || text.includes('permiss') || text.includes('autoriz')) {
-      if (statusBox) {
-        statusBox.innerHTML = `<span style="color: var(--accent-amber);"><i class="fa-solid fa-key"></i> O script respondeu, mas requer autorização OAuth única do proprietário no editor do Apps Script (Executar -> autorizarDrive). Fallback local ativo!</span>`;
-      }
-      mostrarToast("Autorize a permissão do DriveApp no editor do Google Apps Script (função autorizarDrive).", "info");
-    } else {
-      if (statusBox) {
-        statusBox.innerHTML = `<span style="color: var(--accent-amber);"><i class="fa-solid fa-circle-info"></i> Resposta recebida do Apps Script. Modo híbrido (Drive + Local) ativo.</span>`;
-      }
-    }
-  } catch (err) {
+  if (json && json.ok) {
     if (statusBox) {
-      statusBox.innerHTML = `<span style="color: var(--accent-amber);"><i class="fa-solid fa-circle-exclamation"></i> Não foi possível contatar o endpoint remoto (${err.message}). O carregamento local está ativo.</span>`;
+      statusBox.innerHTML = `<span style="color: var(--accent-emerald);"><i class="fa-solid fa-circle-check"></i> Conectado com sucesso ao Google Drive! Curso "${json.courseName || json.curso}" localizado (${json.totalLessonFolders || json.totalPastas || 0} pastas de aulas numeradas).</span>`;
     }
+    mostrarToast("Conexão com Google Apps Script / Drive validada com sucesso!", "success");
+  } else {
+    if (statusBox) {
+      statusBox.innerHTML = `
+        <div style="color: var(--accent-amber); display: flex; flex-direction: column; gap: 0.5rem;">
+          <span><i class="fa-solid fa-key"></i> <strong>Autorização OAuth Pendente no Google Apps Script:</strong></span>
+          <span>O Google bloqueia respostas da Web App até que o proprietário autorize o acesso ao Google Drive uma única vez.</span>
+          <div>
+            <a href="${gasUrl}?action=status" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <i class="fa-solid fa-unlock-keyhole"></i> Clique aqui para Autorizar o Script no Google ("Review Permissions")
+            </a>
+          </div>
+        </div>
+      `;
+    }
+    mostrarToast("Abra o link de autorização do Google Apps Script para liberar o acesso ao Drive.", "info");
   }
 }
 
@@ -2764,39 +2868,48 @@ async function verificarArquivosAula(cursoNome, numeroAula) {
     }
   };
 
-  // 1. Consultar conexão Google Apps Script (Drive) e arquivos locais em paralelo
+  // 1. Consultar conexão Google Apps Script (via JSONP livre de CORS para https://aulaflux.web.app)
   const gasUrl = obterUrlGasAtiva();
   const promessaGas = gasUrl
-    ? fetch(`${gasUrl}?action=obterAula&curso=${encodeURIComponent(cursoNome)}&aula=${encodeURIComponent(numeroAula)}`)
-        .then(r => r.json())
-        .catch(() => null)
+    ? chamarGasJsonp(gasUrl, {
+        action: 'obterAula',
+        curso: cursoNome,
+        aula: String(numeroAula)
+      }, 3500)
     : Promise.resolve(null);
 
-  const [
-    dadosGas,
-    locDados,
-    locMapa,
-    locAulaPdf,
-    locApresPdf,
-    locVideo,
-    locGame,
-    locInfo1,
-    locInfo2,
-    locQuiz
-  ] = await Promise.all([
-    promessaGas,
-    verificarArquivoLocalExiste(`${basePathLocal}/Dados.txt`, 'text'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Mapa.png`, 'image'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Aula.pdf`, 'pdf'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Apresentação.pdf`, 'pdf'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Vídeo.mp4`, 'video'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Game.html`, 'html'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Infográfico.png`, 'image'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Inforgráfico.png`, 'image'),
-    verificarArquivoLocalExiste(`${basePathLocal}/Quiz.json`, 'json')
-  ]);
+  // Verificar primeiro Dados.txt local para evitar requisições HEAD 404 em aulas que não têm pasta local
+  const locDados = await verificarArquivoLocalExiste(`${basePathLocal}/Dados.txt`, 'text');
 
-  const locInfo = locInfo1.exists ? locInfo1 : locInfo2;
+  let locMapa = { exists: false };
+  let locAulaPdf = { exists: false };
+  let locApresPdf = { exists: false };
+  let locVideo = { exists: false };
+  let locGame = { exists: false };
+  let locInfo = { exists: false };
+  let locQuiz = { exists: false };
+
+  if (locDados.exists) {
+    [
+      locMapa,
+      locAulaPdf,
+      locApresPdf,
+      locVideo,
+      locGame,
+      locInfo,
+      locQuiz
+    ] = await Promise.all([
+      verificarArquivoLocalExiste(`${basePathLocal}/Mapa.png`, 'image'),
+      verificarArquivoLocalExiste(`${basePathLocal}/Aula.pdf`, 'pdf'),
+      verificarArquivoLocalExiste(`${basePathLocal}/Apresentação.pdf`, 'pdf'),
+      verificarArquivoLocalExiste(`${basePathLocal}/Vídeo.mp4`, 'video'),
+      verificarArquivoLocalExiste(`${basePathLocal}/Game.html`, 'html'),
+      verificarArquivoLocalExiste(`${basePathLocal}/Infográfico.png`, 'image'),
+      verificarArquivoLocalExiste(`${basePathLocal}/Quiz.json`, 'json')
+    ]);
+  }
+
+  const dadosGas = await promessaGas;
 
   // 2. Se o Google Apps Script retornou dados válidos do Google Drive, mesclar
   if (dadosGas && dadosGas.ok) {
@@ -2861,9 +2974,16 @@ async function verificarArquivosAula(cursoNome, numeroAula) {
         };
       }
       if (gf.quizJson && gf.quizJson.exists) {
+        const gasQuizValido = gf.quizJson.jsonContent && (
+          (Array.isArray(gf.quizJson.jsonContent) && gf.quizJson.jsonContent.length > 0) ||
+          (Array.isArray(gf.quizJson.jsonContent.questions) && gf.quizJson.jsonContent.questions.length > 0) ||
+          (Array.isArray(gf.quizJson.jsonContent.perguntas) && gf.quizJson.jsonContent.perguntas.length > 0)
+        );
         resultado.files.quizJson = {
           exists: true,
-          jsonContent: gf.quizJson.jsonContent || (locQuiz.exists ? locQuiz.jsonContent : null)
+          jsonContent: gasQuizValido
+            ? gf.quizJson.jsonContent
+            : (locQuiz.exists ? locQuiz.jsonContent : gf.quizJson.jsonContent)
         };
       }
     }
@@ -2914,10 +3034,10 @@ async function verificarArquivosAula(cursoNome, numeroAula) {
 }
 
 // ============================================================================
-// RENDERIZAÇÃO DA PÁGINA DA AULA (ORDEM EXATA E OCULTAÇÃO DINÂMICA)
+// RENDERIZAÇÃO DA PÁGINA DA AULA (ORDEM EXATA E OCULTAÇÃO DINÂMICO)
 // ============================================================================
 function renderizarBotoesNavegacaoAulas(totalAulas, aulaAtiva, totalPastasExistentes) {
-  const navBar = document.getElementById('aula-lessons-nav-bar');
+  const navBar = document.getElementById('aula-seletor-tabs') || document.getElementById('aula-lessons-nav-bar');
   if (!navBar) return;
 
   navBar.innerHTML = '';
@@ -2928,8 +3048,7 @@ function renderizarBotoesNavegacaoAulas(totalAulas, aulaAtiva, totalPastasExiste
     const isAtiva = i === Number(aulaAtiva);
     const isSomenteEnvio = i > (totalPastasExistentes || 6);
 
-    btn.className = isAtiva ? 'btn btn-primary' : 'btn btn-secondary';
-    btn.style.cssText = 'padding: 0.4rem 0.85rem; font-size: 0.8rem;';
+    btn.className = `lesson-tab-pill ${isAtiva ? 'active' : ''} ${isSomenteEnvio ? 'only-upload' : ''}`;
     btn.innerHTML = isSomenteEnvio
       ? `<i class="fa-solid fa-cloud-arrow-up"></i> <span>Aula ${i} (Envio)</span>`
       : `<i class="fa-solid fa-book-open"></i> <span>Aula ${i}</span>`;
@@ -2949,7 +3068,7 @@ async function abrirPaginaAula(numeroAula) {
   }
 
   // Exibir loading e ocultar seções enquanto verifica os arquivos da pasta da aula
-  const loadingBox = document.getElementById('aula-loading-state');
+  const loadingBox = document.getElementById('aula-loading-box') || document.getElementById('aula-loading-state');
   const secCabecalho = document.getElementById('aula-sec-cabecalho');
   const secPdfs = document.getElementById('aula-sec-pdfs');
   const secVideo = document.getElementById('aula-sec-video');
@@ -2968,10 +3087,22 @@ async function abrirPaginaAula(numeroAula) {
   if (secQuiz) secQuiz.style.display = 'none';
   if (secUpload) secUpload.style.display = 'none';
 
+  // Atualizar badges de contexto superior (Curso, Turma, Professor)
+  const contextBadges = document.getElementById('aula-context-badges');
+  if (contextBadges) {
+    contextBadges.innerHTML = `
+      <span class="badge-tag"><i class="fa-solid fa-graduation-cap"></i> ${ctx.cursoNome || 'Marketing Digital com IA'}</span>
+      <span class="badge-tag"><i class="fa-solid fa-users"></i> Turma: ${ctx.turmaNome || 'Geral'}</span>
+      <span class="badge-tag"><i class="fa-solid fa-chalkboard-user"></i> Prof. ${ctx.professorNome || 'Docente'}</span>
+    `;
+  }
+
   // Atualizar caminho da pasta de envio para a turma atual
   const caminhoDriveStr = `Aula Flux/Aulas/${ctx.cursoNome || 'Marketing Digital com IA'}/envios/${ctx.turmaNome || 'Geral'}`;
-  const pathDisplay = document.getElementById('aula-upload-drive-path-display');
-  if (pathDisplay) pathDisplay.textContent = caminhoDriveStr;
+  const pathDisplay = document.getElementById('aula-upload-drive-path') || document.getElementById('aula-upload-drive-path-display');
+  if (pathDisplay) {
+    pathDisplay.innerHTML = `<i class="fa-solid fa-folder-tree"></i> ${caminhoDriveStr}`;
+  }
 
   // Limpar seleção de arquivos de envio anterior ao trocar de aula
   ctx.arquivosSelecionadosUpload = [];
@@ -2979,7 +3110,7 @@ async function abrirPaginaAula(numeroAula) {
   if (inputUpload) inputUpload.value = '';
   renderizarListaArquivosSelecionadosUpload();
   const statusUpload = document.getElementById('aula-upload-status-msg');
-  if (statusUpload) statusUpload.style.display = 'none';
+  if (statusUpload) statusUpload.textContent = '';
 
   // Verificar existência dos arquivos via Google Apps Script + pasta local
   const infoAula = await verificarArquivosAula(ctx.cursoNome || 'Marketing Digital com IA', ctx.aulaAtualNumero);
@@ -2992,16 +3123,14 @@ async function abrirPaginaAula(numeroAula) {
 
   // Configurar Cabeçalho (Dados.txt + Mapa.png)
   if (secCabecalho) secCabecalho.style.display = 'block';
-  const badgeCurso = document.getElementById('aula-header-curso-badge');
-  const badgeTurma = document.getElementById('aula-header-turma-badge');
-  const badgeProf = document.getElementById('aula-header-prof-badge');
-  const numLabelEl = document.getElementById('aula-header-numero-label');
+  const numLabelEl = document.getElementById('aula-header-numero-badge') || document.getElementById('aula-header-numero-label');
   const tituloEl = document.getElementById('aula-header-titulo');
+  const subtituloEl = document.getElementById('aula-header-subtitulo');
   const btnMapa = document.getElementById('btn-aula-mapa-mental');
 
-  if (badgeCurso) badgeCurso.innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${ctx.cursoNome}`;
-  if (badgeTurma) badgeTurma.innerHTML = `<i class="fa-solid fa-users"></i> Turma: ${ctx.turmaNome}`;
-  if (badgeProf) badgeProf.innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> Prof. ${ctx.professorNome}`;
+  if (subtituloEl) {
+    subtituloEl.textContent = `${ctx.cursoNome || 'Marketing Digital com IA'} • Turma ${ctx.turmaNome || 'Geral'} • Prof. ${ctx.professorNome || 'Docente'}`;
+  }
 
   // CASO HAJA MAIS AULAS QUE AS PASTAS NUMERADAS:
   // "No caso de haver mais aulas que as pastas, estas aulas devem apenas exibir a caixa para envio dos arquivos."
@@ -3104,6 +3233,9 @@ async function abrirPaginaAula(numeroAula) {
   }
 
   // 6. Game.html (Aula gamificada exibida abaixo do vídeo para interação com o aluno)
+  const gameSavedBadge = document.getElementById('aula-game-saved-badge');
+  if (gameSavedBadge) gameSavedBadge.style.display = 'none';
+
   if (infoAula.files.gameHtml.exists) {
     if (secGame) secGame.style.display = 'block';
     const gameIframe = document.getElementById('aula-game-iframe');
@@ -3127,8 +3259,13 @@ async function abrirPaginaAula(numeroAula) {
   if (infoAula.files.infograficoPng.exists) {
     if (secInfografico) secInfografico.style.display = 'block';
     const imgInfo = document.getElementById('aula-infografico-img');
+    const linkDownInfo = document.getElementById('link-download-infografico');
     if (imgInfo) {
       imgInfo.src = infoAula.files.infograficoPng.url;
+    }
+    if (linkDownInfo) {
+      linkDownInfo.href = infoAula.files.infograficoPng.url;
+      linkDownInfo.setAttribute('download', `Infografico_Aula_${ctx.aulaAtualNumero}.png`);
     }
   } else {
     if (secInfografico) secInfografico.style.display = 'none';
@@ -3156,12 +3293,16 @@ function abrirMapaMentalFlutuante() {
     return;
   }
 
-  const tituloModal = document.getElementById('modal-flutuante-titulo');
-  const bodyModal = document.getElementById('modal-flutuante-body');
-  const linkDown = document.getElementById('modal-flutuante-download-link');
+  const tituloModal = document.getElementById('flutuante-modal-title') || document.getElementById('modal-flutuante-titulo');
+  const subtituloModal = document.getElementById('flutuante-modal-subtitle');
+  const bodyModal = document.getElementById('flutuante-modal-body') || document.getElementById('modal-flutuante-body');
+  const linkDown = document.getElementById('flutuante-modal-download-btn') || document.getElementById('modal-flutuante-download-link');
 
   if (tituloModal) {
-    tituloModal.innerHTML = `<i class="fa-solid fa-diagram-project text-amber"></i> <span>Mapa Mental — ${info.header.aulaLabel}: ${info.header.titulo}</span>`;
+    tituloModal.innerHTML = `<i class="fa-solid fa-sitemap" style="color: var(--accent-cyan);"></i> <span>Mapa Mental — ${info.header.aulaLabel}: ${info.header.titulo}</span>`;
+  }
+  if (subtituloModal) {
+    subtituloModal.textContent = `Visualização em janela flutuante • ${AppState.aulaContexto.cursoNome}`;
   }
   if (bodyModal) {
     bodyModal.innerHTML = `
@@ -3181,16 +3322,20 @@ function ampliarInfograficoAula() {
   const info = AppState.aulaContexto.dadosAulaAtual;
   if (!info || !info.files || !info.files.infograficoPng || !info.files.infograficoPng.exists) return;
 
-  const tituloModal = document.getElementById('modal-flutuante-titulo');
-  const bodyModal = document.getElementById('modal-flutuante-body');
-  const linkDown = document.getElementById('modal-flutuante-download-link');
+  const tituloModal = document.getElementById('flutuante-modal-title') || document.getElementById('modal-flutuante-titulo');
+  const subtituloModal = document.getElementById('flutuante-modal-subtitle');
+  const bodyModal = document.getElementById('flutuante-modal-body') || document.getElementById('modal-flutuante-body');
+  const linkDown = document.getElementById('flutuante-modal-download-btn') || document.getElementById('modal-flutuante-download-link');
 
   if (tituloModal) {
-    tituloModal.innerHTML = `<i class="fa-solid fa-chart-pie text-cyan"></i> <span>Infográfico — ${info.header.aulaLabel}: ${info.header.titulo}</span>`;
+    tituloModal.innerHTML = `<i class="fa-solid fa-chart-pie" style="color: var(--accent-amber);"></i> <span>Infográfico — ${info.header.aulaLabel}: ${info.header.titulo}</span>`;
+  }
+  if (subtituloModal) {
+    subtituloModal.textContent = `Resumo visual da aula • ${AppState.aulaContexto.cursoNome}`;
   }
   if (bodyModal) {
     bodyModal.innerHTML = `
-      <img src="${info.files.infograficoPng.url}" alt="Infográfico da Aula" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
+      <img src="${info.files.infograficoPng.url}" alt="Infográfico da Aula" style="max-width: 100%; max-height: 75vh; height: auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
     `;
   }
   if (linkDown) {
@@ -3203,12 +3348,16 @@ function ampliarInfograficoAula() {
 }
 
 function abrirPdfFlutuante(titulo, previewUrl, downloadUrl) {
-  const tituloModal = document.getElementById('modal-flutuante-titulo');
-  const bodyModal = document.getElementById('modal-flutuante-body');
-  const linkDown = document.getElementById('modal-flutuante-download-link');
+  const tituloModal = document.getElementById('flutuante-modal-title') || document.getElementById('modal-flutuante-titulo');
+  const subtituloModal = document.getElementById('flutuante-modal-subtitle');
+  const bodyModal = document.getElementById('flutuante-modal-body') || document.getElementById('modal-flutuante-body');
+  const linkDown = document.getElementById('flutuante-modal-download-btn') || document.getElementById('modal-flutuante-download-link');
 
   if (tituloModal) {
-    tituloModal.innerHTML = `<i class="fa-solid fa-file-pdf text-rose"></i> <span>${titulo}</span>`;
+    tituloModal.innerHTML = `<i class="fa-solid fa-file-pdf" style="color: var(--accent-rose);"></i> <span>${titulo}</span>`;
+  }
+  if (subtituloModal) {
+    subtituloModal.textContent = `Leitura de documento PDF`;
   }
   if (bodyModal) {
     bodyModal.innerHTML = `
@@ -3222,6 +3371,16 @@ function abrirPdfFlutuante(titulo, previewUrl, downloadUrl) {
   }
 
   abrirModal('modal-janela-flutuante');
+}
+
+function alternarTelaCheiaGame() {
+  const wrapper = document.getElementById('aula-game-wrapper') || document.getElementById('aula-game-iframe');
+  if (!wrapper) return;
+  if (!document.fullscreenElement) {
+    if (wrapper.requestFullscreen) wrapper.requestFullscreen().catch(() => null);
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen().catch(() => null);
+  }
 }
 
 // ============================================================================
@@ -3302,8 +3461,9 @@ async function salvarResultadoGameFirebase(payload) {
       renderizarTabelasResultados();
     }
 
-    const badgeStatus = document.getElementById('aula-game-status-badge');
+    const badgeStatus = document.getElementById('aula-game-saved-badge') || document.getElementById('aula-game-status-badge');
     if (badgeStatus) {
+      badgeStatus.style.display = 'inline-flex';
       badgeStatus.style.background = 'rgba(16, 185, 129, 0.18)';
       badgeStatus.style.color = 'var(--accent-emerald)';
       badgeStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Pontuação (${registroGame.pontuacao}%) salva para ${registroGame.aluno_nome}!`;
@@ -3319,39 +3479,100 @@ async function salvarResultadoGameFirebase(payload) {
 // ============================================================================
 // QUIZ INTERATIVO (QUIZ.JSON) E GRAVAÇÃO NO FIREBASE (QUIZ_RESPOSTAS)
 // ============================================================================
+function atualizarContadorQuizRespondidas() {
+  const quiz = AppState.aulaContexto.quizAtual;
+  const counterEl = document.getElementById('aula-quiz-counter');
+  if (!quiz || !counterEl) return;
+  const total = (quiz.questions || []).length;
+  let respondidas = 0;
+  for (let i = 0; i < total; i++) {
+    if (document.querySelector(`input[name="quiz_aula_q_${i}"]:checked`)) {
+      respondidas++;
+    }
+  }
+  counterEl.textContent = `${respondidas} / ${total} respondidas`;
+}
+
+function reiniciarQuizAulaAtual() {
+  const info = AppState.aulaContexto.dadosAulaAtual;
+  if (info && info.files && info.files.quizJson && info.files.quizJson.jsonContent) {
+    renderizarQuizInterativoAula(info.files.quizJson.jsonContent);
+  }
+}
+
+function normalizarQuestoesQuiz(quizJson) {
+  let dados = quizJson;
+  if (typeof dados === 'string') {
+    try {
+      dados = JSON.parse(dados);
+    } catch (_) {
+      dados = [];
+    }
+  }
+  const listaBruta = Array.isArray(dados)
+    ? dados
+    : (dados && Array.isArray(dados.questions) ? dados.questions
+      : (dados && Array.isArray(dados.perguntas) ? dados.perguntas
+        : (dados && Array.isArray(dados.questoes) ? dados.questoes : [])));
+
+  return listaBruta.map((q, idx) => {
+    const perguntaTexto = q.pergunta || q.question || q.enunciado || `Questão ${idx + 1}`;
+    const opcoesBrutas = Array.isArray(q.alternativas)
+      ? q.alternativas
+      : (Array.isArray(q.options) ? q.options : (Array.isArray(q.opcoes) ? q.opcoes : []));
+
+    const respostaCorretaIdx = (q.respostaCorreta !== undefined)
+      ? Number(q.respostaCorreta)
+      : ((q.answer !== undefined) ? Number(q.answer) : Number(q.correta || 0));
+
+    const explicacaoTexto = q.explicacao || q.explanation || q.justificativa || '';
+
+    return {
+      numero: q.numero || (idx + 1),
+      question: perguntaTexto,
+      pergunta: perguntaTexto,
+      options: opcoesBrutas,
+      alternativas: opcoesBrutas,
+      answer: respostaCorretaIdx,
+      respostaCorreta: respostaCorretaIdx,
+      respostaCorretaTexto: q.respostaCorretaTexto || opcoesBrutas[respostaCorretaIdx] || '',
+      explanation: explicacaoTexto,
+      explicacao: explicacaoTexto
+    };
+  });
+}
+
 function renderizarQuizInterativoAula(quizJson) {
   const container = document.getElementById('aula-quiz-questions-container');
-  const tituloQuizEl = document.getElementById('aula-quiz-titulo');
-  const badgeStatus = document.getElementById('aula-quiz-status-badge');
+  const counterEl = document.getElementById('aula-quiz-counter');
   const resultadoBox = document.getElementById('aula-quiz-resultado-box');
-  const btnSubmeter = document.getElementById('btn-submeter-quiz-aula');
+  const btnSubmeter = document.getElementById('btn-finalizar-quiz') || document.getElementById('btn-submeter-quiz-aula');
+  const btnReiniciar = document.getElementById('btn-reiniciar-quiz');
 
   if (!container) return;
 
-  const perguntas = (quizJson && Array.isArray(quizJson.questions))
-    ? quizJson.questions
-    : (Array.isArray(quizJson) ? quizJson : []);
+  const perguntas = normalizarQuestoesQuiz(quizJson);
 
   AppState.aulaContexto.quizAtual = {
-    title: (quizJson && quizJson.title) ? quizJson.title : `Quiz da Aula ${AppState.aulaContexto.aulaAtualNumero}`,
+    title: (quizJson && (quizJson.title || quizJson.titulo))
+      ? (quizJson.title || quizJson.titulo)
+      : `Quiz da Aula ${AppState.aulaContexto.aulaAtualNumero}`,
     questions: perguntas
   };
 
-  if (tituloQuizEl) {
-    tituloQuizEl.textContent = AppState.aulaContexto.quizAtual.title;
-  }
-  if (badgeStatus) {
-    badgeStatus.textContent = `${perguntas.length} Questões`;
-    badgeStatus.style.background = 'rgba(16, 185, 129, 0.15)';
-    badgeStatus.style.color = 'var(--accent-emerald)';
+  if (counterEl) {
+    counterEl.textContent = `0 / ${perguntas.length} respondidas`;
   }
   if (resultadoBox) {
     resultadoBox.style.display = 'none';
     resultadoBox.innerHTML = '';
   }
+  if (btnReiniciar) {
+    btnReiniciar.style.display = 'none';
+  }
   if (btnSubmeter) {
     btnSubmeter.disabled = false;
-    btnSubmeter.innerHTML = `<i class="fa-solid fa-check-double"></i> <span>Finalizar Quiz e Salvar Nota</span>`;
+    btnSubmeter.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Finalizar e Salvar Resultado do Quiz`;
   }
 
   container.innerHTML = '';
@@ -3364,17 +3585,18 @@ function renderizarQuizInterativoAula(quizJson) {
 
     const opcoesHtml = (q.options || []).map((optTexto, optIdx) => {
       const letra = String.fromCharCode(65 + optIdx);
+      const textoLimpo = String(optTexto || '').replace(/^[A-Za-z][\)\.\-]\s*/, '');
       return `
         <label id="quiz-label-${qIdx}-${optIdx}" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); cursor: pointer; transition: all 0.15s; font-size: 0.9rem; color: var(--text-primary);">
-          <input type="radio" name="quiz_aula_q_${qIdx}" value="${optIdx}" style="margin-top: 0.25rem; accent-color: var(--accent-cyan);" />
-          <span><strong>${letra})</strong> ${optTexto}</span>
+          <input type="radio" name="quiz_aula_q_${qIdx}" value="${optIdx}" onchange="atualizarContadorQuizRespondidas()" style="margin-top: 0.25rem; accent-color: var(--accent-cyan);" />
+          <span><strong>${letra})</strong> ${textoLimpo}</span>
         </label>
       `;
     }).join('');
 
     card.innerHTML = `
       <div style="font-weight: 700; font-size: 0.98rem; color: var(--text-primary); margin-bottom: 0.9rem; display: flex; gap: 0.5rem;">
-        <span style="color: var(--accent-cyan);">${qIdx + 1}.</span>
+        <span style="color: var(--accent-cyan);">${q.numero || (qIdx + 1)}.</span>
         <span>${q.question}</span>
       </div>
       <div style="display: flex; flex-direction: column; gap: 0.55rem;">
@@ -3458,8 +3680,10 @@ async function submeterQuizAulaAtual() {
   const ctx = AppState.aulaContexto;
   const info = ctx.dadosAulaAtual;
 
-  const btnSubmeter = document.getElementById('btn-submeter-quiz-aula');
+  const btnSubmeter = document.getElementById('btn-finalizar-quiz') || document.getElementById('btn-submeter-quiz-aula');
+  const btnReiniciar = document.getElementById('btn-reiniciar-quiz');
   if (btnSubmeter) btnSubmeter.disabled = true;
+  if (btnReiniciar) btnReiniciar.style.display = 'inline-flex';
 
   const registroQuiz = {
     aluno_nome: AppState.alunoNomeCompleto,
@@ -3498,7 +3722,7 @@ async function submeterQuizAulaAtual() {
       resultadoBox.style.border = `2px solid ${corNota}`;
       resultadoBox.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-          <div>
+          <div style="text-align: left;">
             <h4 style="font-size: 1.15rem; color: ${corNota}; margin-bottom: 0.25rem;">
               <i class="fa-solid fa-trophy"></i> Resultado do Quiz: ${acertos} de ${totalQuestoes} acertos (${percentual}%)
             </h4>
@@ -3506,7 +3730,7 @@ async function submeterQuizAulaAtual() {
               Nota registrada no Firebase para <strong>${registroQuiz.aluno_nome}</strong> • Turma <strong>${registroQuiz.turma_nome}</strong> • Prof. <strong>${registroQuiz.professor_nome}</strong>.
             </p>
           </div>
-          <button class="btn btn-secondary" onclick="renderizarQuizInterativoAula(AppState.aulaContexto.dadosAulaAtual.files.quizJson.jsonContent)">
+          <button class="btn btn-secondary" onclick="reiniciarQuizAulaAtual()">
             <i class="fa-solid fa-rotate-right"></i> Refazer Quiz
           </button>
         </div>
@@ -3525,30 +3749,35 @@ async function submeterQuizAulaAtual() {
 // ENVIO DE ARQUIVOS PELOS ALUNOS PARA O GOOGLE DRIVE (PASTA DO CURSO/TURMA)
 // Exemplo: Aula Flux/Aulas/Marketing Digital com IA/envios/ABC
 // ============================================================================
-function selecionarArquivosUploadAula(event) {
-  const files = event && event.target && event.target.files ? Array.from(event.target.files) : [];
-  if (files.length === 0) return;
+function selecionarArquivosUploadAula(inputOrEvent) {
+  let fileList = [];
+  if (inputOrEvent && inputOrEvent.target && inputOrEvent.target.files) {
+    fileList = Array.from(inputOrEvent.target.files);
+  } else if (inputOrEvent && typeof inputOrEvent.length === 'number') {
+    fileList = Array.from(inputOrEvent);
+  }
+  if (fileList.length === 0) return;
 
-  AppState.aulaContexto.arquivosSelecionadosUpload = files;
+  AppState.aulaContexto.arquivosSelecionadosUpload = fileList;
   renderizarListaArquivosSelecionadosUpload();
 }
 
 function renderizarListaArquivosSelecionadosUpload() {
   const files = AppState.aulaContexto.arquivosSelecionadosUpload || [];
-  const listContainer = document.getElementById('aula-upload-selected-files');
-  const actionsBar = document.getElementById('aula-upload-actions-bar');
+  const listContainer = document.getElementById('aula-upload-selected-list') || document.getElementById('aula-upload-selected-files');
+  const btnEnviar = document.getElementById('btn-enviar-arquivos-drive');
 
-  if (!listContainer || !actionsBar) return;
+  if (!listContainer) return;
 
   if (files.length === 0) {
     listContainer.style.display = 'none';
     listContainer.innerHTML = '';
-    actionsBar.style.display = 'none';
+    if (btnEnviar) btnEnviar.disabled = true;
     return;
   }
 
   listContainer.style.display = 'flex';
-  actionsBar.style.display = 'flex';
+  if (btnEnviar) btnEnviar.disabled = false;
   listContainer.innerHTML = '';
 
   files.forEach((f, idx) => {
@@ -3611,11 +3840,9 @@ async function enviarArquivosAlunoDrive() {
   if (btnEnviar) btnEnviar.disabled = true;
 
   if (statusMsg) {
-    statusMsg.style.display = 'block';
-    statusMsg.style.background = 'rgba(6, 182, 212, 0.1)';
-    statusMsg.style.border = '1px solid rgba(6, 182, 212, 0.3)';
-    statusMsg.style.color = 'var(--text-primary)';
-    statusMsg.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-cyan"></i> Enviando ${files.length} arquivo(s) para <strong>${caminhoDestinoDrive}</strong>...`;
+    statusMsg.style.display = 'inline-block';
+    statusMsg.style.color = 'var(--accent-cyan)';
+    statusMsg.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando ${files.length} arquivo(s) para <strong>${caminhoDestinoDrive}</strong>...`;
   }
 
   const gasUrl = obterUrlGasAtiva();
@@ -3642,17 +3869,11 @@ async function enviarArquivosAlunoDrive() {
             base64Data: base64Data
           };
 
-          const resp = await fetch(gasUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payloadDrive)
-          });
-
-          const respJson = await resp.json().catch(() => null);
+          const respJson = await chamarGasPost(gasUrl, payloadDrive);
           if (respJson && respJson.ok) {
             driveFileUrl = respJson.fileUrl || respJson.downloadUrl || '';
             driveFileId = respJson.fileId || '';
-            driveSavedPath = respJson.folderPath || caminhoDestinoDrive;
+            driveSavedPath = respJson.folderPath || respJson.caminho || caminhoDestinoDrive;
           }
         } catch (gasErr) {
           console.warn("Aviso no upload direto para GAS:", gasErr);
@@ -3698,26 +3919,20 @@ async function enviarArquivosAlunoDrive() {
     renderizarListaArquivosSelecionadosUpload();
 
     if (statusMsg) {
-      statusMsg.style.background = 'rgba(16, 185, 129, 0.14)';
-      statusMsg.style.border = '1px solid rgba(16, 185, 129, 0.35)';
-      statusMsg.innerHTML = `
-        <i class="fa-solid fa-circle-check text-emerald"></i>
-        <strong>${enviadosComSucesso} arquivo(s) enviado(s) com sucesso!</strong><br/>
-        Aluno(a): <strong>${AppState.alunoNomeCompleto}</strong> • Destino: <code>${caminhoDestinoDrive}</code>
-      `;
+      statusMsg.style.color = 'var(--accent-emerald)';
+      statusMsg.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>${enviadosComSucesso} arquivo(s) enviado(s) com sucesso!</strong> Destino: <code>${caminhoDestinoDrive}</code>`;
     }
 
     mostrarToast(`Arquivos enviados com sucesso para ${caminhoDestinoDrive}!`, "success");
   } catch (err) {
     console.error("Erro ao enviar arquivos:", err);
     if (statusMsg) {
-      statusMsg.style.background = 'rgba(244, 63, 94, 0.14)';
-      statusMsg.style.border = '1px solid rgba(244, 63, 94, 0.35)';
-      statusMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose"></i> Erro ao enviar arquivo: ${err.message}`;
+      statusMsg.style.color = 'var(--accent-rose)';
+      statusMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Erro ao enviar arquivo: ${err.message}`;
     }
     mostrarToast("Erro ao enviar arquivo: " + err.message, "error");
   } finally {
-    if (btnEnviar) btnEnviar.disabled = false;
+    if (btnEnviar) btnEnviar.disabled = (AppState.aulaContexto.arquivosSelecionadosUpload || []).length === 0;
   }
 }
 
@@ -3730,89 +3945,96 @@ function carregarResultadosFirebase() {
 }
 
 function renderizarTabelasResultados() {
-  const tbodyQuiz = document.getElementById('table-resultados-quiz-tbody');
-  const tbodyGames = document.getElementById('table-resultados-games-tbody');
-  const tbodyEnvios = document.getElementById('table-resultados-envios-tbody');
+  const tbodyUnificado = document.getElementById('table-resultados-tbody');
+  if (!tbodyUnificado) return;
 
   const isProf = AppState.currentUserProfile && AppState.currentUserProfile.role === 'professor';
   const profIdLogado = isProf ? AppState.currentUserProfile.professor_id : null;
 
-  // 1. Tabela de Quiz
-  if (tbodyQuiz) {
-    let listaQuiz = [...(AppState.quizRespostas || [])];
-    if (profIdLogado) {
-      listaQuiz = listaQuiz.filter(q => q.professor_id === profIdLogado);
-    }
+  const buscaInput = document.getElementById('filtro-resultados-aluno');
+  const tipoSelect = document.getElementById('filtro-resultados-tipo');
+  const termo = buscaInput ? buscaInput.value.trim().toLowerCase() : '';
+  const tipoFiltro = tipoSelect ? tipoSelect.value : 'todos';
 
-    if (listaQuiz.length === 0) {
-      tbodyQuiz.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum resultado de Quiz registrado ainda.</td></tr>`;
-    } else {
-      tbodyQuiz.innerHTML = listaQuiz.map(q => `
-        <tr>
-          <td><strong>${q.aluno_nome || '-'}</strong></td>
-          <td>${q.curso_nome || '-'}</td>
-          <td><span class="badge-tag">${q.turma_nome || '-'}</span></td>
-          <td>${q.professor_nome || '-'}</td>
-          <td>Aula ${q.aula_numero || 1}</td>
-          <td><strong style="color: var(--accent-emerald);">${q.acertos ?? 0}/${q.total_questoes ?? 0} (${q.percentual ?? 0}%)</strong></td>
-          <td style="font-size: 0.78rem; color: var(--text-muted);">${q.data_hora || '-'}</td>
-        </tr>
-      `).join('');
-    }
+  const itens = [];
+
+  if (tipoFiltro === 'todos' || tipoFiltro === 'quiz') {
+    (AppState.quizRespostas || []).forEach(q => {
+      if (profIdLogado && q.professor_id !== profIdLogado) return;
+      itens.push({
+        tipoBadge: `<span class="badge-tag" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);"><i class="fa-solid fa-clipboard-question"></i> Quiz</span>`,
+        aluno: q.aluno_nome || '-',
+        curso: q.curso_nome || '-',
+        turma: q.turma_nome || '-',
+        professor: q.professor_nome || '-',
+        aula: `Aula ${q.aula_numero || 1}`,
+        detalhe: `<strong style="color: var(--accent-emerald);">${q.acertos ?? 0}/${q.total_questoes ?? 0} (${q.percentual ?? 0}%)</strong>`,
+        dataHora: q.data_hora || '-'
+      });
+    });
   }
 
-  // 2. Tabela de Games
-  if (tbodyGames) {
-    let listaGames = [...(AppState.gameResultados || [])];
-    if (profIdLogado) {
-      listaGames = listaGames.filter(g => g.professor_id === profIdLogado);
-    }
-
-    if (listaGames.length === 0) {
-      tbodyGames.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum resultado de Game registrado ainda.</td></tr>`;
-    } else {
-      tbodyGames.innerHTML = listaGames.map(g => `
-        <tr>
-          <td><strong>${g.aluno_nome || '-'}</strong></td>
-          <td>${g.curso_nome || '-'}</td>
-          <td><span class="badge-tag">${g.turma_nome || '-'}</span></td>
-          <td>${g.professor_nome || '-'}</td>
-          <td>Aula ${g.aula_numero || 1}</td>
-          <td><strong style="color: var(--accent-amber);">${g.pontuacao ?? 0}% (${g.acertos ?? 0}/${g.total_desafios ?? 3})</strong></td>
-          <td style="font-size: 0.78rem; color: var(--text-muted);">${g.data_hora || '-'}</td>
-        </tr>
-      `).join('');
-    }
+  if (tipoFiltro === 'todos' || tipoFiltro === 'game') {
+    (AppState.gameResultados || []).forEach(g => {
+      if (profIdLogado && g.professor_id !== profIdLogado) return;
+      itens.push({
+        tipoBadge: `<span class="badge-tag" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);"><i class="fa-solid fa-gamepad"></i> Game</span>`,
+        aluno: g.aluno_nome || '-',
+        curso: g.curso_nome || '-',
+        turma: g.turma_nome || '-',
+        professor: g.professor_nome || '-',
+        aula: `Aula ${g.aula_numero || 1}`,
+        detalhe: `<strong style="color: var(--accent-amber);">${g.pontuacao ?? 0}% (${g.acertos ?? 0}/${g.total_desafios ?? 3})</strong>`,
+        dataHora: g.data_hora || '-'
+      });
+    });
   }
 
-  // 3. Tabela de Envios para o Google Drive
-  if (tbodyEnvios) {
-    let listaEnvios = [...(AppState.tarefasEntregas || [])];
-    if (profIdLogado) {
-      listaEnvios = listaEnvios.filter(e => e.professor_id === profIdLogado);
-    }
-
-    if (listaEnvios.length === 0) {
-      tbodyEnvios.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum envio de arquivo registrado ainda.</td></tr>`;
-    } else {
-      tbodyEnvios.innerHTML = listaEnvios.map(e => {
-        const linkHtml = e.drive_file_url
-          ? `<a href="${e.drive_file_url}" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-weight: 600;"><i class="fa-solid fa-up-right-from-square"></i> ${e.arquivo_nome}</a>`
-          : `<strong>${e.arquivo_nome || 'Arquivo'}</strong>`;
-        return `
-          <tr>
-            <td><strong>${e.aluno_nome || '-'}</strong></td>
-            <td>${e.curso_nome || '-'}</td>
-            <td><span class="badge-tag">${e.turma_nome || '-'}</span></td>
-            <td>Aula ${e.aula_numero || 1}</td>
-            <td>${linkHtml}</td>
-            <td><code style="font-size: 0.75rem; color: var(--accent-cyan);">${e.pasta_destino_drive || `Aula Flux/Aulas/${e.curso_nome}/envios/${e.turma_nome}`}</code></td>
-            <td style="font-size: 0.78rem; color: var(--text-muted);">${e.data_hora || '-'}</td>
-          </tr>
-        `;
-      }).join('');
-    }
+  if (tipoFiltro === 'todos' || tipoFiltro === 'envio') {
+    (AppState.tarefasEntregas || []).forEach(e => {
+      if (profIdLogado && e.professor_id !== profIdLogado) return;
+      const linkHtml = e.drive_file_url
+        ? `<a href="${e.drive_file_url}" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-weight: 600;"><i class="fa-solid fa-up-right-from-square"></i> ${e.arquivo_nome}</a>`
+        : `<strong>${e.arquivo_nome || 'Arquivo'}</strong>`;
+      itens.push({
+        tipoBadge: `<span class="badge-tag" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber);"><i class="fa-brands fa-google-drive"></i> Envio Drive</span>`,
+        aluno: e.aluno_nome || '-',
+        curso: e.curso_nome || '-',
+        turma: e.turma_nome || '-',
+        professor: e.professor_nome || '-',
+        aula: `Aula ${e.aula_numero || 1}`,
+        detalhe: `${linkHtml} <div style="font-size:0.72rem; color:var(--text-muted);">${e.pasta_destino_drive || ''}</div>`,
+        dataHora: e.data_hora || '-'
+      });
+    });
   }
+
+  const filtrados = termo
+    ? itens.filter(i =>
+        i.aluno.toLowerCase().includes(termo) ||
+        i.turma.toLowerCase().includes(termo) ||
+        i.curso.toLowerCase().includes(termo) ||
+        i.professor.toLowerCase().includes(termo)
+      )
+    : itens;
+
+  if (filtrados.length === 0) {
+    tbodyUnificado.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum resultado registrado ainda.</td></tr>`;
+    return;
+  }
+
+  tbodyUnificado.innerHTML = filtrados.map(item => `
+    <tr>
+      <td>${item.tipoBadge}</td>
+      <td><strong>${item.aluno}</strong></td>
+      <td>${item.curso}</td>
+      <td><span class="badge-tag">${item.turma}</span></td>
+      <td>${item.professor}</td>
+      <td>${item.aula}</td>
+      <td>${item.detalhe}</td>
+      <td style="font-size: 0.78rem; color: var(--text-muted);">${item.dataHora}</td>
+    </tr>
+  `).join('');
 }
 
 // ============================================================================
@@ -3867,6 +4089,9 @@ window.abrirPaginaAula = abrirPaginaAula;
 window.abrirMapaMentalFlutuante = abrirMapaMentalFlutuante;
 window.ampliarInfograficoAula = ampliarInfograficoAula;
 window.abrirPdfFlutuante = abrirPdfFlutuante;
+window.alternarTelaCheiaGame = alternarTelaCheiaGame;
+window.atualizarContadorQuizRespondidas = atualizarContadorQuizRespondidas;
+window.reiniciarQuizAulaAtual = reiniciarQuizAulaAtual;
 window.submeterQuizAulaAtual = submeterQuizAulaAtual;
 window.renderizarQuizInterativoAula = renderizarQuizInterativoAula;
 window.selecionarArquivosUploadAula = selecionarArquivosUploadAula;
@@ -3875,3 +4100,4 @@ window.enviarArquivosAlunoDrive = enviarArquivosAlunoDrive;
 window.salvarUrlGasWebApp = salvarUrlGasWebApp;
 window.testarConexaoGasDrive = testarConexaoGasDrive;
 window.carregarResultadosFirebase = carregarResultadosFirebase;
+window.renderizarTabelasResultados = renderizarTabelasResultados;
