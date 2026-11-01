@@ -5,9 +5,16 @@
  * ============================================================================
  */
 
-// Dados Iniciais Padrão (Apenas Superusuário e Professores cadastrados)
+// Dados Iniciais Padrão (Apenas Superusuário, Professores e Curso Inicial)
 const DEFAULT_LEGACY_DATA = {
-  cursos: [],
+  cursos: [
+    {
+      id: "curso-mkt-digital-ia",
+      nome: "Marketing Digital com IA",
+      duracao_horas: 48,
+      descricao: "Formação prática em Marketing Digital com Inteligência Artificial, Funil Pirata (AARRR), Tráfego Pago, Copywriting e Analytics."
+    }
+  ],
   professores: [
     { id: "d1a8e6e6-eb94-41fa-bb43-a7d389b0d6cb", nome: "Luiz", area: "TI & Analytics" },
     { id: "2b9edee2-6aa0-45b3-99f0-464eb1f4d5a1", nome: "Gilberto", area: "TI & Programação" },
@@ -34,16 +41,38 @@ const AppState = {
   theme: localStorage.getItem('aulaflux_theme') || 'dark',
   currentUser: null,
   currentUserProfile: null, // { uid, nome, email, role, professor_id, professor_nome }
-  modoPainel: 'portal', // 'portal' (Aluno/Público) ou 'admin' (Área Administrativa)
+  modoPainel: 'portal', // 'portal' (Aluno/Público), 'aula' (Página da Aula) ou 'admin' (Área Administrativa)
   visaoPublica: 'professores', // 'professores' ou 'todos-cursos'
   selectedProfessorId: null,
   buscaCatalogoCursos: '',
 
-  cursos: [],
+  cursos: [...DEFAULT_LEGACY_DATA.cursos],
   professores: [...DEFAULT_LEGACY_DATA.professores],
   feriados: [],
   agendamentos: [],
   usuarios: [...DEFAULT_LEGACY_DATA.usuarios],
+
+  quizRespostas: [],
+  gameResultados: [],
+  tarefasEntregas: [],
+
+  alunoNomeCompleto: localStorage.getItem('aulaflux_aluno_nome_completo') || '',
+  gasWebAppUrl: localStorage.getItem('aulaflux_gas_webapp_url') || ((typeof GAS_CONFIG !== 'undefined' && GAS_CONFIG.webAppUrl) ? GAS_CONFIG.webAppUrl : ''),
+
+  aulaContexto: {
+    turmaId: null,
+    turmaNome: '',
+    cursoId: null,
+    cursoNome: '',
+    professorId: null,
+    professorNome: '',
+    totalAulasCronograma: 6,
+    aulaAtualNumero: 1,
+    dadosAulaAtual: null,
+    quizAtual: null,
+    callbackAposIdentificacao: null,
+    arquivosSelecionadosUpload: []
+  },
 
   filtroTexto: '',
   filtroCursoId: '',
@@ -65,12 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
     AppState.selectedProfessorId = AppState.professores[0].id;
   }
 
+  // Inicializar campo de URL do GAS no painel admin se existir
+  const inputGasUrl = document.getElementById('input-gas-webapp-url');
+  if (inputGasUrl && AppState.gasWebAppUrl) {
+    inputGasUrl.value = AppState.gasWebAppUrl;
+  }
+
   // Renderizar interface imediatamente
   renderizarTudo();
 
   // Inicializar Firebase e sincronizar com Firestore
   inicializarFirebase();
   configurarEventosUI();
+  configurarListenerMensagensGame();
 });
 
 function renderizarTudo() {
@@ -82,6 +118,7 @@ function renderizarTudo() {
   renderizarTabelaProfessores();
   renderizarTabelaFeriados();
   renderizarTabelaUsuarios();
+  renderizarTabelasResultados();
 }
 
 // ============================================================================
@@ -137,59 +174,46 @@ function inicializarFirebase() {
   }
 }
 
-async function executarLimpezaReestruturacaoInicial() {
+async function garantirDadosIniciaisPadrao() {
   if (!db) return;
-  if (localStorage.getItem('aulaflux_v3_clean_reset') === '1') return;
 
   try {
-    localStorage.removeItem('aulaflux_courses_wiped');
-
-    // 1. Limpar completamente coleções de cursos, feriados, agendamentos e antigas coleções de aulas
-    const colecoesParaZerar = ['cursos', 'feriados', 'agendamentos', 'quiz_respostas', 'tarefas_entregas'];
-    for (const colName of colecoesParaZerar) {
-      const snap = await db.collection(colName).get().catch(() => null);
-      if (snap && !snap.empty) {
-        for (const doc of snap.docs) {
-          await doc.ref.delete().catch(() => null);
-        }
+    // 1. Garantir que o curso "Marketing Digital com IA" esteja cadastrado no Firestore
+    const snapCursos = await db.collection('cursos').get().catch(() => null);
+    if (snapCursos) {
+      const temCursoMkt = snapCursos.docs.some(d => {
+        const data = d.data() || {};
+        return (data.nome || '').trim().toLowerCase() === 'marketing digital com ia';
+      });
+      if (!temCursoMkt) {
+        const cursoPadrao = DEFAULT_LEGACY_DATA.cursos[0];
+        await db.collection('cursos').doc(cursoPadrao.id).set({
+          nome: cursoPadrao.nome,
+          duracao_horas: cursoPadrao.duracao_horas,
+          descricao: cursoPadrao.descricao
+        }, { merge: true }).catch(() => null);
       }
     }
 
-    // 2. Garantir apenas os professores padrão cadastrados no Firestore
+    // 2. Garantir professores padrão se a coleção estiver vazia
     const snapProfs = await db.collection('professores').get().catch(() => null);
-    if (snapProfs && !snapProfs.empty) {
-      for (const doc of snapProfs.docs) {
-        await doc.ref.delete().catch(() => null);
+    if (snapProfs && snapProfs.empty) {
+      for (const prof of DEFAULT_LEGACY_DATA.professores) {
+        await db.collection('professores').doc(prof.id).set({
+          nome: prof.nome,
+          area: prof.area
+        }).catch(() => null);
       }
-    }
-    for (const prof of DEFAULT_LEGACY_DATA.professores) {
-      await db.collection('professores').doc(prof.id).set({
-        nome: prof.nome,
-        area: prof.area
-      }).catch(() => null);
     }
 
-    // 3. Manter apenas o cadastro do superusuário na coleção usuarios
+    // 3. Garantir superusuário padrão se não houver
     const snapUsers = await db.collection('usuarios').get().catch(() => null);
-    let temSuperAdmin = false;
-    if (snapUsers && !snapUsers.empty) {
-      for (const docU of snapUsers.docs) {
-        const d = docU.data() || {};
-        if (d.role === 'superadmin' || (d.email && d.email.toLowerCase() === 'admin@aulaflux.com')) {
-          temSuperAdmin = true;
-        } else {
-          await docU.ref.delete().catch(() => null);
-        }
-      }
-    }
-    if (!temSuperAdmin) {
+    if (snapUsers && snapUsers.empty) {
       const su = DEFAULT_LEGACY_DATA.usuarios[0];
       await db.collection('usuarios').doc(su.uid).set(su).catch(() => null);
     }
-
-    localStorage.setItem('aulaflux_v3_clean_reset', '1');
   } catch (err) {
-    console.warn("Aviso na limpeza inicial de reestruturação:", err);
+    console.warn("Aviso ao verificar dados iniciais:", err);
   }
 }
 
@@ -197,17 +221,20 @@ async function sincronizarComFirestore() {
   if (!db) return;
 
   try {
-    await executarLimpezaReestruturacaoInicial();
+    await garantirDadosIniciaisPadrao();
 
-    const [snapCursos, snapProfs, snapFeriados, snapAgend, snapUsuarios] = await Promise.all([
+    const [snapCursos, snapProfs, snapFeriados, snapAgend, snapUsuarios, snapQuiz, snapGame, snapEntregas] = await Promise.all([
       db.collection('cursos').get().catch(() => null),
       db.collection('professores').get().catch(() => null),
       db.collection('feriados').get().catch(() => null),
       db.collection('agendamentos').get().catch(() => null),
-      db.collection('usuarios').get().catch(() => null)
+      db.collection('usuarios').get().catch(() => null),
+      db.collection('quiz_respostas').get().catch(() => null),
+      db.collection('game_resultados').get().catch(() => null),
+      db.collection('tarefas_entregas').get().catch(() => null)
     ]);
 
-    if (snapCursos) {
+    if (snapCursos && !snapCursos.empty) {
       AppState.cursos = snapCursos.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
     if (snapProfs) {
@@ -230,6 +257,15 @@ async function sincronizarComFirestore() {
         AppState.usuarios = [...DEFAULT_LEGACY_DATA.usuarios];
       }
     }
+    if (snapQuiz) {
+      AppState.quizRespostas = snapQuiz.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    if (snapGame) {
+      AppState.gameResultados = snapGame.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    if (snapEntregas) {
+      AppState.tarefasEntregas = snapEntregas.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
 
     if (!AppState.selectedProfessorId && AppState.professores.length > 0) {
       AppState.selectedProfessorId = AppState.professores[0].id;
@@ -241,7 +277,9 @@ async function sincronizarComFirestore() {
 
     // Listeners em tempo real
     db.collection('cursos').onSnapshot(snap => {
-      AppState.cursos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (!snap.empty) {
+        AppState.cursos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
       renderizarTabelaCursos();
       popularSelects();
       renderizarCatalogoTodosCursos();
@@ -275,6 +313,21 @@ async function sincronizarComFirestore() {
       }
     });
 
+    db.collection('quiz_respostas').onSnapshot(snap => {
+      AppState.quizRespostas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelasResultados();
+    });
+
+    db.collection('game_resultados').onSnapshot(snap => {
+      AppState.gameResultados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelasResultados();
+    });
+
+    db.collection('tarefas_entregas').onSnapshot(snap => {
+      AppState.tarefasEntregas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarTabelasResultados();
+    });
+
   } catch (err) {
     console.warn("Aviso na sincronização do Firestore:", err);
   }
@@ -286,9 +339,16 @@ function carregarDadosFirestore() {
 }
 
 // ============================================================================
-// CONTROLE DE NAVEGAÇÃO ENTRE PORTAL DO ALUNO E PAINEL ADMINISTRATIVO
+// CONTROLE DE NAVEGAÇÃO ENTRE PORTAL DO ALUNO, PÁGINA DE AULA E PAINEL ADMIN
 // ============================================================================
 function alternarModoPainel(modo) {
+  const secPortal = document.getElementById('secao-portal-aluno');
+  const secAula = document.getElementById('secao-pagina-aula');
+  const secAdmin = document.getElementById('secao-painel-admin');
+  const videoEl = document.getElementById('aula-video-player');
+  if (videoEl && typeof videoEl.pause === 'function') {
+    videoEl.pause();
+  }
 
   if (modo === 'admin') {
     if (!AppState.currentUser) {
@@ -297,8 +357,9 @@ function alternarModoPainel(modo) {
       return;
     }
     AppState.modoPainel = 'admin';
-    document.getElementById('secao-portal-aluno').style.display = 'none';
-    document.getElementById('secao-painel-admin').style.display = 'block';
+    if (secPortal) secPortal.style.display = 'none';
+    if (secAula) secAula.style.display = 'none';
+    if (secAdmin) secAdmin.style.display = 'block';
 
     const btnNavPortal = document.getElementById('btn-nav-portal');
     const btnNavAdmin = document.getElementById('btn-nav-admin');
@@ -306,10 +367,12 @@ function alternarModoPainel(modo) {
     if (btnNavAdmin) btnNavAdmin.classList.add('active');
 
     aplicarPermissoesUsuario();
+    renderizarTabelasResultados();
   } else {
     AppState.modoPainel = 'portal';
-    document.getElementById('secao-portal-aluno').style.display = 'block';
-    document.getElementById('secao-painel-admin').style.display = 'none';
+    if (secPortal) secPortal.style.display = 'block';
+    if (secAula) secAula.style.display = 'none';
+    if (secAdmin) secAdmin.style.display = 'none';
 
     const btnNavPortal = document.getElementById('btn-nav-portal');
     const btnNavAdmin = document.getElementById('btn-nav-admin');
@@ -452,7 +515,11 @@ function renderizarPortalAlunoProfessor() {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.6rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-              <button class="btn btn-primary" style="width: 100%; font-size: 0.825rem;" onclick="abrirCronogramaTurma('${turma.id}')">
+              <button class="btn btn-primary" style="width: 100%; font-size: 0.825rem;" onclick="iniciarAcessoAulasTurma('${turma.id}', 1)">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>Acessar Aulas da Turma</span>
+              </button>
+              <button class="btn btn-secondary" style="width: 100%; font-size: 0.825rem;" onclick="abrirCronogramaTurma('${turma.id}')">
                 <i class="fa-solid fa-calendar-days"></i>
                 <span>Ver Cronograma Completo</span>
               </button>
@@ -524,9 +591,12 @@ function renderizarCatalogoTodosCursos() {
             <i class="fa-solid fa-users"></i> ${turmasDoCurso.length} Turma(s) Ativa(s)
           </span>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.45rem;" onclick="acessarAulasPorCurso('${curso.id}')" title="Acessar Conteúdo e Aulas">
+            <i class="fa-solid fa-graduation-cap"></i> <span>Acessar Aulas</span>
+          </button>
           <button class="btn btn-secondary" style="flex: 1; font-size: 0.8rem; padding: 0.45rem;" onclick="abrirPrimeiraTurmaDoCurso('${curso.id}')" title="Ver Cronograma da Turma">
-            <i class="fa-solid fa-calendar-days"></i> <span>Ver Cronograma da Turma</span>
+            <i class="fa-solid fa-calendar-days"></i> <span>Cronograma</span>
           </button>
         </div>
       </div>
@@ -542,11 +612,13 @@ function filtrarCatalogoCursos() {
 }
 
 function abrirPrimeiraTurmaDoCurso(cursoId) {
-  const turmas = AppState.agendamentos.filter(a => a.curso_id === cursoId);
+  const curso = AppState.cursos.find(c => c.id === cursoId);
+  const turmas = AppState.agendamentos.filter(a => a.curso_id === cursoId || (curso && a.curso_nome === curso.nome));
   if (turmas.length > 0) {
     abrirCronogramaTurma(turmas[0].id);
   } else {
-    mostrarToast("Nenhuma turma com cronograma gerado para este curso no momento.", "info");
+    mostrarToast("Nenhuma turma com cronograma gerado para este curso. Acessando aulas diretamente!", "info");
+    acessarAulasPorCurso(cursoId);
   }
 }
 
@@ -725,13 +797,15 @@ function aplicarPermissoesUsuario() {
 
     // Se estiver em uma aba bloqueada, forçar aba de agendamentos
     const activeTab = document.querySelector('.admin-tab-btn.active');
-    if (activeTab && activeTab.getAttribute('data-tab') !== 'tab-agendamentos') {
+    const tabId = activeTab ? activeTab.getAttribute('data-tab') : '';
+    if (activeTab && tabId !== 'tab-agendamentos' && tabId !== 'tab-resultados') {
       ativarAbaAdmin('tab-agendamentos');
     }
   }
 
   popularSelects();
   renderizarTabelaAgendamentos();
+  renderizarTabelasResultados();
 }
 
 function verificarPermissaoRole(rolesPermitidos) {
@@ -1541,17 +1615,31 @@ function abrirCronogramaTurma(agendamentoId) {
 
   document.getElementById('btn-export-cronograma-turma').onclick = () => exportarTurmaIndividualExcel(ag);
 
+  const btnAcessarAulas = document.getElementById('btn-acessar-aulas-cronograma');
+  if (btnAcessarAulas) {
+    btnAcessarAulas.onclick = () => {
+      fecharModal('cronograma-modal');
+      iniciarAcessoAulasTurma(ag.id, 1);
+    };
+  }
+
   const tbody = document.getElementById('cronograma-aulas-tbody');
   tbody.innerHTML = '';
 
   (ag.aulas_geradas || []).forEach((aula, idx) => {
+    const numAula = aula.numero || (idx + 1);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><strong>#${idx + 1}</strong></td>
+      <td><strong>#${numAula}</strong></td>
       <td>${aula.data}</td>
       <td>${aula.dia_semana || obterDiaSemanaStr(aula.data)}</td>
       <td><span class="badge-periodo ${aula.periodo.toLowerCase()}">${aula.periodo}</span></td>
       <td>${aula.duracao_aula}h</td>
+      <td>
+        <button class="btn btn-primary" style="padding: 0.25rem 0.65rem; font-size: 0.75rem;" onclick="fecharModal('cronograma-modal'); iniciarAcessoAulasTurma('${ag.id}', ${numAula})">
+          <i class="fa-solid fa-play"></i> Acessar Aula ${numAula}
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -2093,6 +2181,9 @@ function renderizarTabelaAgendamentos() {
       </td>
       <td>
         <div style="display: flex; gap: 0.35rem;">
+          <button class="btn btn-primary" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="iniciarAcessoAulasTurma('${ag.id}', 1)" title="Acessar Página de Aulas da Turma">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </button>
           <button class="btn btn-secondary" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="abrirCronogramaTurma('${ag.id}')" title="Ver cronograma detalhado">
             <i class="fa-solid fa-eye"></i>
           </button>
@@ -2377,11 +2468,1351 @@ function configurarEventosUI() {
   const formAuth = document.getElementById('form-auth-exec');
   if (formAuth) formAuth.onsubmit = submeterAuth;
 
+  const formIdentAluno = document.getElementById('form-identificacao-aluno');
+  if (formIdentAluno) formIdentAluno.onsubmit = confirmarIdentificacaoAluno;
+
   document.querySelectorAll('.modal-overlay').forEach(modal => {
     modal.onclick = (e) => {
       if (e.target === modal) fecharModal(modal.id);
     };
   });
+}
+
+// ============================================================================
+// IDENTIFICAÇÃO DO ALUNO (NOME COMPLETO PARA GRAVAÇÃO NO FIREBASE)
+// ============================================================================
+function abrirModalIdentificacaoAluno(apenasAlterar = false, callback = null) {
+  AppState.aulaContexto.callbackAposIdentificacao = callback;
+  const ctx = AppState.aulaContexto;
+  const infoBox = document.getElementById('identificacao-aluno-contexto-info');
+  if (infoBox) {
+    infoBox.innerHTML = `
+      <div><strong>Curso:</strong> ${ctx.cursoNome || 'Marketing Digital com IA'}</div>
+      <div><strong>Turma:</strong> ${ctx.turmaNome || 'Geral'} • <strong>Professor(a):</strong> ${ctx.professorNome || 'Docente'}</div>
+    `;
+  }
+
+  const inputNome = document.getElementById('input-aluno-nome-completo');
+  if (inputNome) {
+    inputNome.value = AppState.alunoNomeCompleto || '';
+    setTimeout(() => inputNome.focus(), 100);
+  }
+
+  abrirModal('aluno-identificacao-modal');
+}
+
+function confirmarIdentificacaoAluno(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const inputNome = document.getElementById('input-aluno-nome-completo');
+  const nome = inputNome ? inputNome.value.trim().replace(/\s+/g, ' ') : '';
+
+  if (!nome || nome.length < 4 || !nome.includes(' ')) {
+    mostrarToast("Por favor, digite seu NOME COMPLETO (nome e sobrenome).", "error");
+    if (inputNome) inputNome.focus();
+    return;
+  }
+
+  AppState.alunoNomeCompleto = nome;
+  localStorage.setItem('aulaflux_aluno_nome_completo', nome);
+  sessionStorage.setItem('aulaflux_aluno_identificado_sessao', '1');
+
+  const displayEl = document.getElementById('aula-aluno-nome-display');
+  if (displayEl) displayEl.textContent = nome;
+
+  fecharModal('aluno-identificacao-modal');
+  mostrarToast(`Bem-vindo(a), ${nome}!`, "success");
+
+  // Enviar contexto atualizado para o iframe do Game se estiver aberto
+  enviarContextoParaGameIframe();
+
+  if (typeof AppState.aulaContexto.callbackAposIdentificacao === 'function') {
+    const cb = AppState.aulaContexto.callbackAposIdentificacao;
+    AppState.aulaContexto.callbackAposIdentificacao = null;
+    cb();
+  }
+}
+
+// ============================================================================
+// ACESSO ÀS AULAS (POR TURMA OU POR CURSO)
+// ============================================================================
+function iniciarAcessoAulasTurma(agendamentoId, numeroAulaInicial = 1) {
+  const ag = AppState.agendamentos.find(a => a.id === agendamentoId);
+  if (!ag) {
+    mostrarToast("Turma não encontrada.", "error");
+    return;
+  }
+
+  const totalAulasCronograma = (ag.aulas_geradas && ag.aulas_geradas.length > 0)
+    ? ag.aulas_geradas.length
+    : 6;
+
+  AppState.aulaContexto = {
+    ...AppState.aulaContexto,
+    turmaId: ag.id,
+    turmaNome: ag.turma_nome || 'Geral',
+    cursoId: ag.curso_id || '',
+    cursoNome: ag.curso_nome || 'Marketing Digital com IA',
+    professorId: ag.professor_id || '',
+    professorNome: ag.professor_nome || 'Professor',
+    totalAulasCronograma: totalAulasCronograma,
+    aulaAtualNumero: numeroAulaInicial || 1
+  };
+
+  const abrirDireto = () => {
+    exibirSecaoPaginaAula();
+    abrirPaginaAula(AppState.aulaContexto.aulaAtualNumero);
+  };
+
+  if (!AppState.alunoNomeCompleto || !sessionStorage.getItem('aulaflux_aluno_identificado_sessao')) {
+    abrirModalIdentificacaoAluno(false, abrirDireto);
+  } else {
+    abrirDireto();
+  }
+}
+
+function acessarAulasPorCurso(cursoId) {
+  const curso = AppState.cursos.find(c => c.id === cursoId) || DEFAULT_LEGACY_DATA.cursos[0];
+  if (!curso) return;
+
+  // Verificar se há alguma turma ativa deste curso (priorizando professor selecionado)
+  let turmasCurso = AppState.agendamentos.filter(a => a.curso_id === curso.id || a.curso_nome === curso.nome);
+  if (AppState.selectedProfessorId) {
+    const turmasProf = turmasCurso.filter(a => a.professor_id === AppState.selectedProfessorId);
+    if (turmasProf.length > 0) turmasCurso = turmasProf;
+  }
+
+  if (turmasCurso.length > 0) {
+    iniciarAcessoAulasTurma(turmasCurso[0].id, 1);
+    return;
+  }
+
+  const profSelecionado = AppState.professores.find(p => p.id === AppState.selectedProfessorId) || AppState.professores[0] || { id: 'prof-padrao', nome: 'Docente' };
+  const totalAulasEstimado = Math.max(6, Math.ceil((curso.duracao_horas || 48) / 8));
+
+  AppState.aulaContexto = {
+    ...AppState.aulaContexto,
+    turmaId: 'turma-geral-' + curso.id,
+    turmaNome: 'Geral',
+    cursoId: curso.id,
+    cursoNome: curso.nome,
+    professorId: profSelecionado.id,
+    professorNome: profSelecionado.nome,
+    totalAulasCronograma: totalAulasEstimado,
+    aulaAtualNumero: 1
+  };
+
+  const abrirDireto = () => {
+    exibirSecaoPaginaAula();
+    abrirPaginaAula(1);
+  };
+
+  if (!AppState.alunoNomeCompleto || !sessionStorage.getItem('aulaflux_aluno_identificado_sessao')) {
+    abrirModalIdentificacaoAluno(false, abrirDireto);
+  } else {
+    abrirDireto();
+  }
+}
+
+function exibirSecaoPaginaAula() {
+  AppState.modoPainel = 'aula';
+  const secPortal = document.getElementById('secao-portal-aluno');
+  const secAula = document.getElementById('secao-pagina-aula');
+  const secAdmin = document.getElementById('secao-painel-admin');
+
+  if (secPortal) secPortal.style.display = 'none';
+  if (secAdmin) secAdmin.style.display = 'none';
+  if (secAula) secAula.style.display = 'block';
+
+  const displayEl = document.getElementById('aula-aluno-nome-display');
+  if (displayEl) displayEl.textContent = AppState.alunoNomeCompleto || 'Não identificado';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function fecharPaginaAula() {
+  const videoEl = document.getElementById('aula-video-player');
+  if (videoEl && typeof videoEl.pause === 'function') {
+    videoEl.pause();
+  }
+  const secPortal = document.getElementById('secao-portal-aluno');
+  const secAula = document.getElementById('secao-pagina-aula');
+  if (secAula) secAula.style.display = 'none';
+  if (secPortal) secPortal.style.display = 'block';
+  AppState.modoPainel = 'portal';
+}
+
+// ============================================================================
+// CONEXÃO GOOGLE APPS SCRIPT + VERIFICAÇÃO DE ARQUIVOS DA AULA
+// Projeto GAS: 1e5YFYxP8hzvWt5ZkJ-Ia9st8DVjowKFJp0aJIuIsY2kAOgJo7EiIKyPb
+// ============================================================================
+function obterUrlGasAtiva() {
+  return AppState.gasWebAppUrl || ((typeof GAS_CONFIG !== 'undefined' && GAS_CONFIG.webAppUrl) ? GAS_CONFIG.webAppUrl : '');
+}
+
+function salvarUrlGasWebApp() {
+  const input = document.getElementById('input-gas-webapp-url');
+  const url = input ? input.value.trim() : '';
+  if (!url) {
+    mostrarToast("Informe a URL do Web App do Google Apps Script.", "error");
+    return;
+  }
+  AppState.gasWebAppUrl = url;
+  localStorage.setItem('aulaflux_gas_webapp_url', url);
+  if (typeof GAS_CONFIG !== 'undefined') {
+    GAS_CONFIG.webAppUrl = url;
+  }
+  mostrarToast("URL do Google Apps Script salva com sucesso!", "success");
+}
+
+async function testarConexaoGasDrive() {
+  const statusBox = document.getElementById('gas-connection-status-msg');
+  const gasUrl = obterUrlGasAtiva();
+  if (!gasUrl) {
+    if (statusBox) {
+      statusBox.style.display = 'block';
+      statusBox.innerHTML = `<span style="color: var(--accent-rose);"><i class="fa-solid fa-triangle-exclamation"></i> URL do Web App não configurada.</span>`;
+    }
+    return;
+  }
+
+  if (statusBox) {
+    statusBox.style.display = 'block';
+    statusBox.innerHTML = `<span style="color: var(--accent-cyan);"><i class="fa-solid fa-spinner fa-spin"></i> Testando conexão com o projeto Google Apps Script...</span>`;
+  }
+
+  try {
+    const res = await fetch(`${gasUrl}?action=verificarCurso&curso=${encodeURIComponent('Marketing Digital com IA')}`);
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch (_) {}
+
+    if (json && json.ok) {
+      if (statusBox) {
+        statusBox.innerHTML = `<span style="color: var(--accent-emerald);"><i class="fa-solid fa-circle-check"></i> Conectado com sucesso ao Google Drive! Curso "${json.courseName}" localizado (${json.totalLessonFolders || 0} pastas de aulas numeradas).</span>`;
+      }
+      mostrarToast("Conexão com Google Apps Script / Drive validada com sucesso!", "success");
+    } else if (text.includes(' DriveApp') || text.includes('permiss') || text.includes('autoriz')) {
+      if (statusBox) {
+        statusBox.innerHTML = `<span style="color: var(--accent-amber);"><i class="fa-solid fa-key"></i> O script respondeu, mas requer autorização OAuth única do proprietário no editor do Apps Script (Executar -> autorizarDrive). Fallback local ativo!</span>`;
+      }
+      mostrarToast("Autorize a permissão do DriveApp no editor do Google Apps Script (função autorizarDrive).", "info");
+    } else {
+      if (statusBox) {
+        statusBox.innerHTML = `<span style="color: var(--accent-amber);"><i class="fa-solid fa-circle-info"></i> Resposta recebida do Apps Script. Modo híbrido (Drive + Local) ativo.</span>`;
+      }
+    }
+  } catch (err) {
+    if (statusBox) {
+      statusBox.innerHTML = `<span style="color: var(--accent-amber);"><i class="fa-solid fa-circle-exclamation"></i> Não foi possível contatar o endpoint remoto (${err.message}). O carregamento local está ativo.</span>`;
+    }
+  }
+}
+
+async function verificarArquivoLocalExiste(url, tipoEsperado) {
+  try {
+    if (tipoEsperado === 'text' || tipoEsperado === 'json' || tipoEsperado === 'html') {
+      const r = await fetch(url, { cache: 'no-cache' });
+      if (!r.ok) return { exists: false };
+      const txt = await r.text();
+      // Evitar falso positivo caso servidor retorne index.html em rota inexistente
+      if (tipoEsperado !== 'html' && (txt.trim().startsWith('<!DOCTYPE html') || txt.includes('id="secao-portal-aluno"'))) {
+        return { exists: false };
+      }
+      if (tipoEsperado === 'html' && txt.includes('id="secao-portal-aluno"')) {
+        return { exists: false };
+      }
+      if (tipoEsperado === 'json') {
+        try {
+          const parsed = JSON.parse(txt);
+          return { exists: true, url, jsonContent: parsed };
+        } catch (_) {
+          return { exists: false };
+        }
+      }
+      return { exists: true, url, textContent: txt };
+    } else {
+      const r = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+      if (!r.ok) return { exists: false };
+      const ct = (r.headers.get('content-type') || '').toLowerCase();
+      if (ct.includes('text/html')) return { exists: false };
+      return { exists: true, url };
+    }
+  } catch (_) {
+    return { exists: false };
+  }
+}
+
+async function verificarArquivosAula(cursoNome, numeroAula) {
+  const basePathLocal = `Aulas/${encodeURIComponent(cursoNome)}/${encodeURIComponent(numeroAula)}`;
+  const resultado = {
+    folderExists: false,
+    totalFolders: 6,
+    origem: 'local',
+    header: {
+      aulaLabel: `Aula ${numeroAula}`,
+      titulo: `Aula ${numeroAula}`
+    },
+    files: {
+      dadosTxt: { exists: false },
+      mapaPng: { exists: false },
+      aulaPdf: { exists: false },
+      apresentacaoPdf: { exists: false },
+      videoMp4: { exists: false },
+      gameHtml: { exists: false },
+      infograficoPng: { exists: false },
+      quizJson: { exists: false }
+    }
+  };
+
+  // 1. Consultar conexão Google Apps Script (Drive) e arquivos locais em paralelo
+  const gasUrl = obterUrlGasAtiva();
+  const promessaGas = gasUrl
+    ? fetch(`${gasUrl}?action=obterAula&curso=${encodeURIComponent(cursoNome)}&aula=${encodeURIComponent(numeroAula)}`)
+        .then(r => r.json())
+        .catch(() => null)
+    : Promise.resolve(null);
+
+  const [
+    dadosGas,
+    locDados,
+    locMapa,
+    locAulaPdf,
+    locApresPdf,
+    locVideo,
+    locGame,
+    locInfo1,
+    locInfo2,
+    locQuiz
+  ] = await Promise.all([
+    promessaGas,
+    verificarArquivoLocalExiste(`${basePathLocal}/Dados.txt`, 'text'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Mapa.png`, 'image'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Aula.pdf`, 'pdf'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Apresentação.pdf`, 'pdf'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Vídeo.mp4`, 'video'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Game.html`, 'html'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Infográfico.png`, 'image'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Inforgráfico.png`, 'image'),
+    verificarArquivoLocalExiste(`${basePathLocal}/Quiz.json`, 'json')
+  ]);
+
+  const locInfo = locInfo1.exists ? locInfo1 : locInfo2;
+
+  // 2. Se o Google Apps Script retornou dados válidos do Google Drive, mesclar
+  if (dadosGas && dadosGas.ok) {
+    resultado.origem = 'drive';
+    if (typeof dadosGas.totalFolders === 'number' && dadosGas.totalFolders > 0) {
+      resultado.totalFolders = dadosGas.totalFolders;
+    }
+    if (dadosGas.folderExists) {
+      resultado.folderExists = true;
+      if (dadosGas.header) {
+        resultado.header.aulaLabel = dadosGas.header.aulaLabel || resultado.header.aulaLabel;
+        resultado.header.titulo = dadosGas.header.titulo || resultado.header.titulo;
+      }
+      const gf = dadosGas.files || {};
+      if (gf.dadosTxt && gf.dadosTxt.exists) {
+        resultado.files.dadosTxt = { ...gf.dadosTxt };
+      }
+      if (gf.mapaPng && gf.mapaPng.exists) {
+        resultado.files.mapaPng = {
+          exists: true,
+          url: locMapa.exists ? locMapa.url : `https://drive.google.com/thumbnail?id=${gf.mapaPng.id}&sz=w2000`,
+          driveViewUrl: gf.mapaPng.viewUrl,
+          driveDownloadUrl: gf.mapaPng.downloadUrl
+        };
+      }
+      if (gf.aulaPdf && gf.aulaPdf.exists) {
+        resultado.files.aulaPdf = {
+          exists: true,
+          url: locAulaPdf.exists ? locAulaPdf.url : gf.aulaPdf.downloadUrl,
+          previewUrl: locAulaPdf.exists ? locAulaPdf.url : gf.aulaPdf.previewUrl,
+          driveViewUrl: gf.aulaPdf.viewUrl
+        };
+      }
+      if (gf.apresentacaoPdf && gf.apresentacaoPdf.exists) {
+        resultado.files.apresentacaoPdf = {
+          exists: true,
+          url: locApresPdf.exists ? locApresPdf.url : gf.apresentacaoPdf.downloadUrl,
+          previewUrl: locApresPdf.exists ? locApresPdf.url : gf.apresentacaoPdf.previewUrl,
+          driveViewUrl: gf.apresentacaoPdf.viewUrl
+        };
+      }
+      if (gf.videoMp4 && gf.videoMp4.exists) {
+        resultado.files.videoMp4 = {
+          exists: true,
+          localUrl: locVideo.exists ? locVideo.url : null,
+          drivePreviewUrl: gf.videoMp4.previewUrl,
+          driveDownloadUrl: gf.videoMp4.downloadUrl
+        };
+      }
+      if (gf.gameHtml && gf.gameHtml.exists) {
+        resultado.files.gameHtml = {
+          exists: true,
+          url: locGame.exists ? locGame.url : null,
+          htmlContent: gf.gameHtml.htmlContent || null
+        };
+      }
+      if (gf.infograficoPng && gf.infograficoPng.exists) {
+        resultado.files.infograficoPng = {
+          exists: true,
+          url: locInfo.exists ? locInfo.url : `https://drive.google.com/thumbnail?id=${gf.infograficoPng.id}&sz=w2000`,
+          driveViewUrl: gf.infograficoPng.viewUrl
+        };
+      }
+      if (gf.quizJson && gf.quizJson.exists) {
+        resultado.files.quizJson = {
+          exists: true,
+          jsonContent: gf.quizJson.jsonContent || (locQuiz.exists ? locQuiz.jsonContent : null)
+        };
+      }
+    }
+  }
+
+  // 3. Complementar com verificação dos arquivos locais (garante funcionamento 100% imediato)
+  const algumArquivoLocalExiste =
+    locDados.exists || locMapa.exists || locAulaPdf.exists || locApresPdf.exists ||
+    locVideo.exists || locGame.exists || locInfo.exists || locQuiz.exists;
+
+  if (algumArquivoLocalExiste) {
+    resultado.folderExists = true;
+
+    if (locDados.exists && !resultado.files.dadosTxt.exists) {
+      resultado.files.dadosTxt = { exists: true, textContent: locDados.textContent };
+      const linhas = (locDados.textContent || '')
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(Boolean);
+      if (linhas.length >= 1) resultado.header.aulaLabel = linhas[0];
+      if (linhas.length >= 2) resultado.header.titulo = linhas.slice(1).join(' - ');
+    }
+
+    if (locMapa.exists && !resultado.files.mapaPng.exists) {
+      resultado.files.mapaPng = { exists: true, url: locMapa.url };
+    }
+    if (locAulaPdf.exists && !resultado.files.aulaPdf.exists) {
+      resultado.files.aulaPdf = { exists: true, url: locAulaPdf.url, previewUrl: locAulaPdf.url };
+    }
+    if (locApresPdf.exists && !resultado.files.apresentacaoPdf.exists) {
+      resultado.files.apresentacaoPdf = { exists: true, url: locApresPdf.url, previewUrl: locApresPdf.url };
+    }
+    if (locVideo.exists && !resultado.files.videoMp4.exists) {
+      resultado.files.videoMp4 = { exists: true, localUrl: locVideo.url };
+    }
+    if (locGame.exists && !resultado.files.gameHtml.exists) {
+      resultado.files.gameHtml = { exists: true, url: locGame.url };
+    }
+    if (locInfo.exists && !resultado.files.infograficoPng.exists) {
+      resultado.files.infograficoPng = { exists: true, url: locInfo.url };
+    }
+    if (locQuiz.exists && !resultado.files.quizJson.exists) {
+      resultado.files.quizJson = { exists: true, jsonContent: locQuiz.jsonContent };
+    }
+  }
+
+  return resultado;
+}
+
+// ============================================================================
+// RENDERIZAÇÃO DA PÁGINA DA AULA (ORDEM EXATA E OCULTAÇÃO DINÂMICA)
+// ============================================================================
+function renderizarBotoesNavegacaoAulas(totalAulas, aulaAtiva, totalPastasExistentes) {
+  const navBar = document.getElementById('aula-lessons-nav-bar');
+  if (!navBar) return;
+
+  navBar.innerHTML = '';
+  const qtdBotoes = Math.max(totalAulas || 6, totalPastasExistentes || 6);
+
+  for (let i = 1; i <= qtdBotoes; i++) {
+    const btn = document.createElement('button');
+    const isAtiva = i === Number(aulaAtiva);
+    const isSomenteEnvio = i > (totalPastasExistentes || 6);
+
+    btn.className = isAtiva ? 'btn btn-primary' : 'btn btn-secondary';
+    btn.style.cssText = 'padding: 0.4rem 0.85rem; font-size: 0.8rem;';
+    btn.innerHTML = isSomenteEnvio
+      ? `<i class="fa-solid fa-cloud-arrow-up"></i> <span>Aula ${i} (Envio)</span>`
+      : `<i class="fa-solid fa-book-open"></i> <span>Aula ${i}</span>`;
+    btn.onclick = () => abrirPaginaAula(i);
+    navBar.appendChild(btn);
+  }
+}
+
+async function abrirPaginaAula(numeroAula) {
+  const ctx = AppState.aulaContexto;
+  ctx.aulaAtualNumero = Number(numeroAula) || 1;
+
+  // Pausar vídeo anterior se estiver tocando
+  const videoEl = document.getElementById('aula-video-player');
+  if (videoEl && typeof videoEl.pause === 'function') {
+    videoEl.pause();
+  }
+
+  // Exibir loading e ocultar seções enquanto verifica os arquivos da pasta da aula
+  const loadingBox = document.getElementById('aula-loading-state');
+  const secCabecalho = document.getElementById('aula-sec-cabecalho');
+  const secPdfs = document.getElementById('aula-sec-pdfs');
+  const secVideo = document.getElementById('aula-sec-video');
+  const secGame = document.getElementById('aula-sec-game');
+  const secInfografico = document.getElementById('aula-sec-infografico');
+  const secQuiz = document.getElementById('aula-sec-quiz');
+  const secUpload = document.getElementById('aula-sec-upload');
+  const avisoSomenteEnvio = document.getElementById('aula-aviso-somente-envio');
+
+  if (loadingBox) loadingBox.style.display = 'block';
+  if (secCabecalho) secCabecalho.style.display = 'none';
+  if (secPdfs) secPdfs.style.display = 'none';
+  if (secVideo) secVideo.style.display = 'none';
+  if (secGame) secGame.style.display = 'none';
+  if (secInfografico) secInfografico.style.display = 'none';
+  if (secQuiz) secQuiz.style.display = 'none';
+  if (secUpload) secUpload.style.display = 'none';
+
+  // Atualizar caminho da pasta de envio para a turma atual
+  const caminhoDriveStr = `Aula Flux/Aulas/${ctx.cursoNome || 'Marketing Digital com IA'}/envios/${ctx.turmaNome || 'Geral'}`;
+  const pathDisplay = document.getElementById('aula-upload-drive-path-display');
+  if (pathDisplay) pathDisplay.textContent = caminhoDriveStr;
+
+  // Limpar seleção de arquivos de envio anterior ao trocar de aula
+  ctx.arquivosSelecionadosUpload = [];
+  const inputUpload = document.getElementById('aula-upload-file-input');
+  if (inputUpload) inputUpload.value = '';
+  renderizarListaArquivosSelecionadosUpload();
+  const statusUpload = document.getElementById('aula-upload-status-msg');
+  if (statusUpload) statusUpload.style.display = 'none';
+
+  // Verificar existência dos arquivos via Google Apps Script + pasta local
+  const infoAula = await verificarArquivosAula(ctx.cursoNome || 'Marketing Digital com IA', ctx.aulaAtualNumero);
+  ctx.dadosAulaAtual = infoAula;
+
+  if (loadingBox) loadingBox.style.display = 'none';
+
+  // Renderizar barra de botões de aulas (Aula 1, Aula 2, ...)
+  renderizarBotoesNavegacaoAulas(ctx.totalAulasCronograma, ctx.aulaAtualNumero, infoAula.totalFolders);
+
+  // Configurar Cabeçalho (Dados.txt + Mapa.png)
+  if (secCabecalho) secCabecalho.style.display = 'block';
+  const badgeCurso = document.getElementById('aula-header-curso-badge');
+  const badgeTurma = document.getElementById('aula-header-turma-badge');
+  const badgeProf = document.getElementById('aula-header-prof-badge');
+  const numLabelEl = document.getElementById('aula-header-numero-label');
+  const tituloEl = document.getElementById('aula-header-titulo');
+  const btnMapa = document.getElementById('btn-aula-mapa-mental');
+
+  if (badgeCurso) badgeCurso.innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${ctx.cursoNome}`;
+  if (badgeTurma) badgeTurma.innerHTML = `<i class="fa-solid fa-users"></i> Turma: ${ctx.turmaNome}`;
+  if (badgeProf) badgeProf.innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> Prof. ${ctx.professorNome}`;
+
+  // CASO HAJA MAIS AULAS QUE AS PASTAS NUMERADAS:
+  // "No caso de haver mais aulas que as pastas, estas aulas devem apenas exibir a caixa para envio dos arquivos."
+  if (!infoAula.folderExists) {
+    if (numLabelEl) numLabelEl.textContent = `Aula ${ctx.aulaAtualNumero}`;
+    if (tituloEl) tituloEl.textContent = `Aula ${ctx.aulaAtualNumero} — Entrega de Atividades e Projeto Prático`;
+    if (btnMapa) btnMapa.style.display = 'none';
+    if (avisoSomenteEnvio) avisoSomenteEnvio.style.display = 'flex';
+    if (secUpload) secUpload.style.display = 'block';
+    return;
+  }
+
+  if (avisoSomenteEnvio) avisoSomenteEnvio.style.display = 'none';
+
+  // 1. Dados.txt (Cabeçalho)
+  if (numLabelEl) numLabelEl.textContent = infoAula.header.aulaLabel || `Aula ${ctx.aulaAtualNumero}`;
+  if (tituloEl) tituloEl.textContent = infoAula.header.titulo || `Conteúdo da Aula ${ctx.aulaAtualNumero}`;
+
+  // 2. Mapa.png (Ícone do Mapa Mental no cabeçalho -> abre em janela flutuante)
+  if (btnMapa) {
+    btnMapa.style.display = infoAula.files.mapaPng.exists ? 'inline-flex' : 'none';
+  }
+
+  // 3. Aula.pdf & 4. Apresentação.pdf
+  const temAulaPdf = infoAula.files.aulaPdf.exists;
+  const temApresPdf = infoAula.files.apresentacaoPdf.exists;
+  const cardAulaPdf = document.getElementById('card-arquivo-aula-pdf');
+  const cardApresPdf = document.getElementById('card-arquivo-apresentacao-pdf');
+
+  if (temAulaPdf || temApresPdf) {
+    if (secPdfs) secPdfs.style.display = 'grid';
+
+    if (cardAulaPdf) {
+      cardAulaPdf.style.display = temAulaPdf ? 'flex' : 'none';
+      if (temAulaPdf) {
+        const linkDown = document.getElementById('link-download-aula-pdf');
+        const btnLer = document.getElementById('btn-ler-aula-pdf');
+        if (linkDown) {
+          linkDown.href = infoAula.files.aulaPdf.url;
+          linkDown.setAttribute('download', `Aula_${ctx.aulaAtualNumero}_${ctx.cursoNome}.pdf`);
+        }
+        if (btnLer) {
+          btnLer.onclick = () => abrirPdfFlutuante(
+            `Apostila da Aula (${infoAula.header.aulaLabel}) — ${infoAula.header.titulo}`,
+            infoAula.files.aulaPdf.previewUrl || infoAula.files.aulaPdf.url,
+            infoAula.files.aulaPdf.url
+          );
+        }
+      }
+    }
+
+    if (cardApresPdf) {
+      cardApresPdf.style.display = temApresPdf ? 'flex' : 'none';
+      if (temApresPdf) {
+        const linkDownAp = document.getElementById('link-download-apresentacao-pdf');
+        const btnVerAp = document.getElementById('btn-ver-apresentacao-pdf');
+        if (linkDownAp) {
+          linkDownAp.href = infoAula.files.apresentacaoPdf.url;
+          linkDownAp.setAttribute('download', `Apresentacao_Aula_${ctx.aulaAtualNumero}.pdf`);
+        }
+        if (btnVerAp) {
+          btnVerAp.onclick = () => abrirPdfFlutuante(
+            `Apresentação de Slides (${infoAula.header.aulaLabel}) — ${infoAula.header.titulo}`,
+            infoAula.files.apresentacaoPdf.previewUrl || infoAula.files.apresentacaoPdf.url,
+            infoAula.files.apresentacaoPdf.url
+          );
+        }
+      }
+    }
+  } else {
+    if (secPdfs) secPdfs.style.display = 'none';
+  }
+
+  // 5. Vídeo.mp4 (Expandido na horizontal e proporcional 16:9)
+  if (infoAula.files.videoMp4.exists) {
+    if (secVideo) secVideo.style.display = 'block';
+    const videoPlayer = document.getElementById('aula-video-player');
+    const videoSource = document.getElementById('aula-video-source');
+    const videoDriveIframe = document.getElementById('aula-video-drive-iframe');
+
+    if (infoAula.files.videoMp4.localUrl) {
+      if (videoDriveIframe) {
+        videoDriveIframe.style.display = 'none';
+        videoDriveIframe.src = 'about:blank';
+      }
+      if (videoPlayer && videoSource) {
+        videoPlayer.style.display = 'block';
+        videoSource.src = infoAula.files.videoMp4.localUrl;
+        videoPlayer.load();
+      }
+    } else if (infoAula.files.videoMp4.drivePreviewUrl) {
+      if (videoPlayer) videoPlayer.style.display = 'none';
+      if (videoDriveIframe) {
+        videoDriveIframe.style.display = 'block';
+        videoDriveIframe.src = infoAula.files.videoMp4.drivePreviewUrl;
+      }
+    }
+  } else {
+    if (secVideo) secVideo.style.display = 'none';
+  }
+
+  // 6. Game.html (Aula gamificada exibida abaixo do vídeo para interação com o aluno)
+  if (infoAula.files.gameHtml.exists) {
+    if (secGame) secGame.style.display = 'block';
+    const gameIframe = document.getElementById('aula-game-iframe');
+    if (gameIframe) {
+      gameIframe.style.height = '850px';
+      if (infoAula.files.gameHtml.url) {
+        gameIframe.removeAttribute('srcdoc');
+        gameIframe.src = infoAula.files.gameHtml.url;
+      } else if (infoAula.files.gameHtml.htmlContent) {
+        gameIframe.srcdoc = infoAula.files.gameHtml.htmlContent;
+      }
+      gameIframe.onload = () => {
+        enviarContextoParaGameIframe();
+      };
+    }
+  } else {
+    if (secGame) secGame.style.display = 'none';
+  }
+
+  // 7. Infográfico.png (Exibido abaixo do game)
+  if (infoAula.files.infograficoPng.exists) {
+    if (secInfografico) secInfografico.style.display = 'block';
+    const imgInfo = document.getElementById('aula-infografico-img');
+    if (imgInfo) {
+      imgInfo.src = infoAula.files.infograficoPng.url;
+    }
+  } else {
+    if (secInfografico) secInfografico.style.display = 'none';
+  }
+
+  // 8. Quiz.json (Quiz interativo exibido abaixo do infográfico)
+  if (infoAula.files.quizJson.exists && infoAula.files.quizJson.jsonContent) {
+    if (secQuiz) secQuiz.style.display = 'block';
+    renderizarQuizInterativoAula(infoAula.files.quizJson.jsonContent);
+  } else {
+    if (secQuiz) secQuiz.style.display = 'none';
+  }
+
+  // 9. Caixa de envio de arquivos pelos alunos no fim de todas as aulas
+  if (secUpload) secUpload.style.display = 'block';
+}
+
+// ============================================================================
+// JANELA FLUTUANTE (MODAL) PARA MAPA.PNG, INFOGRÁFICO.PNG E PDFS
+// ============================================================================
+function abrirMapaMentalFlutuante() {
+  const info = AppState.aulaContexto.dadosAulaAtual;
+  if (!info || !info.files || !info.files.mapaPng || !info.files.mapaPng.exists) {
+    mostrarToast("Mapa mental não disponível para esta aula.", "info");
+    return;
+  }
+
+  const tituloModal = document.getElementById('modal-flutuante-titulo');
+  const bodyModal = document.getElementById('modal-flutuante-body');
+  const linkDown = document.getElementById('modal-flutuante-download-link');
+
+  if (tituloModal) {
+    tituloModal.innerHTML = `<i class="fa-solid fa-diagram-project text-amber"></i> <span>Mapa Mental — ${info.header.aulaLabel}: ${info.header.titulo}</span>`;
+  }
+  if (bodyModal) {
+    bodyModal.innerHTML = `
+      <img src="${info.files.mapaPng.url}" alt="Mapa Mental da Aula" style="max-width: 100%; max-height: 75vh; height: auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
+    `;
+  }
+  if (linkDown) {
+    linkDown.href = info.files.mapaPng.driveDownloadUrl || info.files.mapaPng.url;
+    linkDown.setAttribute('download', `Mapa_Mental_Aula_${AppState.aulaContexto.aulaAtualNumero}.png`);
+    linkDown.style.display = 'inline-flex';
+  }
+
+  abrirModal('modal-janela-flutuante');
+}
+
+function ampliarInfograficoAula() {
+  const info = AppState.aulaContexto.dadosAulaAtual;
+  if (!info || !info.files || !info.files.infograficoPng || !info.files.infograficoPng.exists) return;
+
+  const tituloModal = document.getElementById('modal-flutuante-titulo');
+  const bodyModal = document.getElementById('modal-flutuante-body');
+  const linkDown = document.getElementById('modal-flutuante-download-link');
+
+  if (tituloModal) {
+    tituloModal.innerHTML = `<i class="fa-solid fa-chart-pie text-cyan"></i> <span>Infográfico — ${info.header.aulaLabel}: ${info.header.titulo}</span>`;
+  }
+  if (bodyModal) {
+    bodyModal.innerHTML = `
+      <img src="${info.files.infograficoPng.url}" alt="Infográfico da Aula" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
+    `;
+  }
+  if (linkDown) {
+    linkDown.href = info.files.infograficoPng.url;
+    linkDown.setAttribute('download', `Infografico_Aula_${AppState.aulaContexto.aulaAtualNumero}.png`);
+    linkDown.style.display = 'inline-flex';
+  }
+
+  abrirModal('modal-janela-flutuante');
+}
+
+function abrirPdfFlutuante(titulo, previewUrl, downloadUrl) {
+  const tituloModal = document.getElementById('modal-flutuante-titulo');
+  const bodyModal = document.getElementById('modal-flutuante-body');
+  const linkDown = document.getElementById('modal-flutuante-download-link');
+
+  if (tituloModal) {
+    tituloModal.innerHTML = `<i class="fa-solid fa-file-pdf text-rose"></i> <span>${titulo}</span>`;
+  }
+  if (bodyModal) {
+    bodyModal.innerHTML = `
+      <iframe src="${previewUrl}" style="width: 100%; height: 75vh; border: none; border-radius: 8px; background: #fff;"></iframe>
+    `;
+  }
+  if (linkDown) {
+    linkDown.href = downloadUrl || previewUrl;
+    linkDown.setAttribute('download', '');
+    linkDown.style.display = 'inline-flex';
+  }
+
+  abrirModal('modal-janela-flutuante');
+}
+
+// ============================================================================
+// COMUNICAÇÃO COM GAME.HTML E GRAVAÇÃO DE RESULTADOS DO GAME NO FIREBASE
+// ============================================================================
+function enviarContextoParaGameIframe() {
+  const gameIframe = document.getElementById('aula-game-iframe');
+  if (!gameIframe || !gameIframe.contentWindow) return;
+
+  const ctx = AppState.aulaContexto;
+  gameIframe.contentWindow.postMessage({
+    type: 'AULAFLUX_CONTEXT',
+    aluno_nome: AppState.alunoNomeCompleto || '',
+    professor_id: ctx.professorId || '',
+    professor_nome: ctx.professorNome || '',
+    turma_id: ctx.turmaId || '',
+    turma_nome: ctx.turmaNome || '',
+    curso_id: ctx.cursoId || '',
+    curso_nome: ctx.cursoNome || '',
+    aula_numero: ctx.aulaAtualNumero || 1
+  }, '*');
+}
+
+function configurarListenerMensagensGame() {
+  window.addEventListener('message', async (event) => {
+    const data = event.data;
+    if (!data || typeof data !== 'object') return;
+
+    // Ajuste dinâmico de altura do iframe do Game.html
+    if (data.type === 'AULAFLUX_GAME_RESIZE' && data.height) {
+      const gameIframe = document.getElementById('aula-game-iframe');
+      if (gameIframe) {
+        gameIframe.style.height = Math.max(650, Number(data.height) + 30) + 'px';
+      }
+    }
+
+    // Recebimento do resultado do Game.html para gravação no Firebase
+    if (data.type === 'AULAFLUX_GAME_RESULT' && data.payload) {
+      await salvarResultadoGameFirebase(data.payload);
+    }
+  });
+}
+
+async function salvarResultadoGameFirebase(payload) {
+  if (!AppState.alunoNomeCompleto) {
+    abrirModalIdentificacaoAluno(false, () => salvarResultadoGameFirebase(payload));
+    return;
+  }
+
+  const ctx = AppState.aulaContexto;
+  const info = ctx.dadosAulaAtual;
+
+  const registroGame = {
+    aluno_nome: AppState.alunoNomeCompleto,
+    professor_id: ctx.professorId || '',
+    professor_nome: ctx.professorNome || 'Professor',
+    turma_id: ctx.turmaId || '',
+    turma_nome: ctx.turmaNome || 'Geral',
+    curso_id: ctx.cursoId || '',
+    curso_nome: ctx.cursoNome || 'Marketing Digital com IA',
+    aula_numero: Number(payload.aula_numero || ctx.aulaAtualNumero || 1),
+    aula_titulo: payload.aula_titulo || (info && info.header ? info.header.titulo : `Aula ${ctx.aulaAtualNumero}`),
+    pontuacao: Number(payload.pontuacao ?? 100),
+    acertos: Number(payload.acertos ?? 3),
+    total_desafios: Number(payload.total_desafios ?? 3),
+    detalhes: payload.detalhes || [],
+    data_hora: new Date().toLocaleString('pt-BR'),
+    criado_em: (typeof firebase !== 'undefined' && firebase.firestore)
+      ? firebase.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString()
+  };
+
+  try {
+    if (db) {
+      await db.collection('game_resultados').add(registroGame);
+    } else {
+      AppState.gameResultados.unshift({ id: 'game-' + Date.now(), ...registroGame });
+      renderizarTabelasResultados();
+    }
+
+    const badgeStatus = document.getElementById('aula-game-status-badge');
+    if (badgeStatus) {
+      badgeStatus.style.background = 'rgba(16, 185, 129, 0.18)';
+      badgeStatus.style.color = 'var(--accent-emerald)';
+      badgeStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Pontuação (${registroGame.pontuacao}%) salva para ${registroGame.aluno_nome}!`;
+    }
+
+    mostrarToast(`Resultado do Game (${registroGame.pontuacao}%) gravado no Firebase para ${registroGame.aluno_nome}!`, "success");
+  } catch (err) {
+    console.error("Erro ao gravar resultado do game no Firebase:", err);
+    mostrarToast("Erro ao salvar resultado do game: " + err.message, "error");
+  }
+}
+
+// ============================================================================
+// QUIZ INTERATIVO (QUIZ.JSON) E GRAVAÇÃO NO FIREBASE (QUIZ_RESPOSTAS)
+// ============================================================================
+function renderizarQuizInterativoAula(quizJson) {
+  const container = document.getElementById('aula-quiz-questions-container');
+  const tituloQuizEl = document.getElementById('aula-quiz-titulo');
+  const badgeStatus = document.getElementById('aula-quiz-status-badge');
+  const resultadoBox = document.getElementById('aula-quiz-resultado-box');
+  const btnSubmeter = document.getElementById('btn-submeter-quiz-aula');
+
+  if (!container) return;
+
+  const perguntas = (quizJson && Array.isArray(quizJson.questions))
+    ? quizJson.questions
+    : (Array.isArray(quizJson) ? quizJson : []);
+
+  AppState.aulaContexto.quizAtual = {
+    title: (quizJson && quizJson.title) ? quizJson.title : `Quiz da Aula ${AppState.aulaContexto.aulaAtualNumero}`,
+    questions: perguntas
+  };
+
+  if (tituloQuizEl) {
+    tituloQuizEl.textContent = AppState.aulaContexto.quizAtual.title;
+  }
+  if (badgeStatus) {
+    badgeStatus.textContent = `${perguntas.length} Questões`;
+    badgeStatus.style.background = 'rgba(16, 185, 129, 0.15)';
+    badgeStatus.style.color = 'var(--accent-emerald)';
+  }
+  if (resultadoBox) {
+    resultadoBox.style.display = 'none';
+    resultadoBox.innerHTML = '';
+  }
+  if (btnSubmeter) {
+    btnSubmeter.disabled = false;
+    btnSubmeter.innerHTML = `<i class="fa-solid fa-check-double"></i> <span>Finalizar Quiz e Salvar Nota</span>`;
+  }
+
+  container.innerHTML = '';
+
+  perguntas.forEach((q, qIdx) => {
+    const card = document.createElement('div');
+    card.className = 'quiz-question-card';
+    card.id = `quiz-q-card-${qIdx}`;
+    card.style.cssText = 'padding: 1.25rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); transition: all 0.2s;';
+
+    const opcoesHtml = (q.options || []).map((optTexto, optIdx) => {
+      const letra = String.fromCharCode(65 + optIdx);
+      return `
+        <label id="quiz-label-${qIdx}-${optIdx}" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); cursor: pointer; transition: all 0.15s; font-size: 0.9rem; color: var(--text-primary);">
+          <input type="radio" name="quiz_aula_q_${qIdx}" value="${optIdx}" style="margin-top: 0.25rem; accent-color: var(--accent-cyan);" />
+          <span><strong>${letra})</strong> ${optTexto}</span>
+        </label>
+      `;
+    }).join('');
+
+    card.innerHTML = `
+      <div style="font-weight: 700; font-size: 0.98rem; color: var(--text-primary); margin-bottom: 0.9rem; display: flex; gap: 0.5rem;">
+        <span style="color: var(--accent-cyan);">${qIdx + 1}.</span>
+        <span>${q.question}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.55rem;">
+        ${opcoesHtml}
+      </div>
+      <div id="quiz-exp-${qIdx}" style="display: none; margin-top: 0.85rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; line-height: 1.5;"></div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+async function submeterQuizAulaAtual() {
+  if (!AppState.alunoNomeCompleto) {
+    abrirModalIdentificacaoAluno(false, () => submeterQuizAulaAtual());
+    return;
+  }
+
+  const quiz = AppState.aulaContexto.quizAtual;
+  if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) return;
+
+  const perguntas = quiz.questions;
+  const respostasAluno = [];
+
+  for (let i = 0; i < perguntas.length; i++) {
+    const marcado = document.querySelector(`input[name="quiz_aula_q_${i}"]:checked`);
+    if (!marcado) {
+      mostrarToast(`Responda a questão ${i + 1} antes de finalizar o Quiz.`, "error");
+      const cardEl = document.getElementById(`quiz-q-card-${i}`);
+      if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    respostasAluno.push(parseInt(marcado.value, 10));
+  }
+
+  let acertos = 0;
+  const detalhesRespostas = [];
+
+  perguntas.forEach((q, i) => {
+    const escolhida = respostasAluno[i];
+    const correta = Number(q.answer);
+    const acertou = escolhida === correta;
+    if (acertou) acertos++;
+
+    detalhesRespostas.push({
+      questao_numero: i + 1,
+      pergunta: q.question,
+      resposta_aluno: escolhida,
+      resposta_correta: correta,
+      acertou: acertou
+    });
+
+    // Destacar visualmente alternativa correta e escolhida
+    (q.options || []).forEach((_, optIdx) => {
+      const lbl = document.getElementById(`quiz-label-${i}-${optIdx}`);
+      if (!lbl) return;
+      if (optIdx === correta) {
+        lbl.style.borderColor = 'var(--accent-emerald)';
+        lbl.style.background = 'rgba(16, 185, 129, 0.14)';
+      } else if (optIdx === escolhida && !acertou) {
+        lbl.style.borderColor = 'var(--accent-rose)';
+        lbl.style.background = 'rgba(244, 63, 94, 0.14)';
+      }
+    });
+
+    // Exibir explicação se houver no Quiz.json
+    const expEl = document.getElementById(`quiz-exp-${i}`);
+    if (expEl) {
+      expEl.style.display = 'block';
+      expEl.style.background = acertou ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)';
+      expEl.style.border = `1px solid ${acertou ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`;
+      expEl.style.color = 'var(--text-primary)';
+      expEl.innerHTML = acertou
+        ? `<strong style="color: var(--accent-emerald);"><i class="fa-solid fa-check"></i> Correto!</strong> ${q.explanation || ''}`
+        : `<strong style="color: var(--accent-rose);"><i class="fa-solid fa-xmark"></i> Incorreto.</strong> ${q.explanation || ''}`;
+    }
+  });
+
+  const totalQuestoes = perguntas.length;
+  const percentual = Math.round((acertos / totalQuestoes) * 100);
+  const ctx = AppState.aulaContexto;
+  const info = ctx.dadosAulaAtual;
+
+  const btnSubmeter = document.getElementById('btn-submeter-quiz-aula');
+  if (btnSubmeter) btnSubmeter.disabled = true;
+
+  const registroQuiz = {
+    aluno_nome: AppState.alunoNomeCompleto,
+    professor_id: ctx.professorId || '',
+    professor_nome: ctx.professorNome || 'Professor',
+    turma_id: ctx.turmaId || '',
+    turma_nome: ctx.turmaNome || 'Geral',
+    curso_id: ctx.cursoId || '',
+    curso_nome: ctx.cursoNome || 'Marketing Digital com IA',
+    aula_numero: Number(ctx.aulaAtualNumero || 1),
+    aula_titulo: (info && info.header) ? info.header.titulo : `Aula ${ctx.aulaAtualNumero}`,
+    quiz_titulo: quiz.title || `Quiz Aula ${ctx.aulaAtualNumero}`,
+    acertos: acertos,
+    total_questoes: totalQuestoes,
+    percentual: percentual,
+    respostas: detalhesRespostas,
+    data_hora: new Date().toLocaleString('pt-BR'),
+    criado_em: (typeof firebase !== 'undefined' && firebase.firestore)
+      ? firebase.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString()
+  };
+
+  try {
+    if (db) {
+      await db.collection('quiz_respostas').add(registroQuiz);
+    } else {
+      AppState.quizRespostas.unshift({ id: 'quiz-' + Date.now(), ...registroQuiz });
+      renderizarTabelasResultados();
+    }
+
+    const resultadoBox = document.getElementById('aula-quiz-resultado-box');
+    if (resultadoBox) {
+      resultadoBox.style.display = 'block';
+      const corNota = percentual >= 70 ? 'var(--accent-emerald)' : (percentual >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)');
+      resultadoBox.style.background = 'var(--bg-surface)';
+      resultadoBox.style.border = `2px solid ${corNota}`;
+      resultadoBox.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h4 style="font-size: 1.15rem; color: ${corNota}; margin-bottom: 0.25rem;">
+              <i class="fa-solid fa-trophy"></i> Resultado do Quiz: ${acertos} de ${totalQuestoes} acertos (${percentual}%)
+            </h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+              Nota registrada no Firebase para <strong>${registroQuiz.aluno_nome}</strong> • Turma <strong>${registroQuiz.turma_nome}</strong> • Prof. <strong>${registroQuiz.professor_nome}</strong>.
+            </p>
+          </div>
+          <button class="btn btn-secondary" onclick="renderizarQuizInterativoAula(AppState.aulaContexto.dadosAulaAtual.files.quizJson.jsonContent)">
+            <i class="fa-solid fa-rotate-right"></i> Refazer Quiz
+          </button>
+        </div>
+      `;
+    }
+
+    mostrarToast(`Quiz finalizado! Você acertou ${acertos}/${totalQuestoes} (${percentual}%). Nota salva no Firebase!`, "success");
+  } catch (err) {
+    console.error("Erro ao gravar quiz no Firebase:", err);
+    mostrarToast("Erro ao salvar nota do Quiz no Firebase: " + err.message, "error");
+    if (btnSubmeter) btnSubmeter.disabled = false;
+  }
+}
+
+// ============================================================================
+// ENVIO DE ARQUIVOS PELOS ALUNOS PARA O GOOGLE DRIVE (PASTA DO CURSO/TURMA)
+// Exemplo: Aula Flux/Aulas/Marketing Digital com IA/envios/ABC
+// ============================================================================
+function selecionarArquivosUploadAula(event) {
+  const files = event && event.target && event.target.files ? Array.from(event.target.files) : [];
+  if (files.length === 0) return;
+
+  AppState.aulaContexto.arquivosSelecionadosUpload = files;
+  renderizarListaArquivosSelecionadosUpload();
+}
+
+function renderizarListaArquivosSelecionadosUpload() {
+  const files = AppState.aulaContexto.arquivosSelecionadosUpload || [];
+  const listContainer = document.getElementById('aula-upload-selected-files');
+  const actionsBar = document.getElementById('aula-upload-actions-bar');
+
+  if (!listContainer || !actionsBar) return;
+
+  if (files.length === 0) {
+    listContainer.style.display = 'none';
+    listContainer.innerHTML = '';
+    actionsBar.style.display = 'none';
+    return;
+  }
+
+  listContainer.style.display = 'flex';
+  actionsBar.style.display = 'flex';
+  listContainer.innerHTML = '';
+
+  files.forEach((f, idx) => {
+    const tamanhoKb = (f.size / 1024).toFixed(1);
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.9rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.85rem;';
+    row.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <i class="fa-solid fa-file-arrow-up text-cyan"></i>
+        <strong>${f.name}</strong>
+        <span style="color: var(--text-muted); font-size: 0.78rem;">(${tamanhoKb} KB)</span>
+      </div>
+      <button type="button" class="btn btn-danger" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="removerArquivoUploadLista(${idx})">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    `;
+    listContainer.appendChild(row);
+  });
+}
+
+function removerArquivoUploadLista(index) {
+  const arr = AppState.aulaContexto.arquivosSelecionadosUpload || [];
+  arr.splice(index, 1);
+  AppState.aulaContexto.arquivosSelecionadosUpload = arr;
+  renderizarListaArquivosSelecionadosUpload();
+}
+
+function converterArquivoParaBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      const base64Clean = result.includes(',') ? result.split(',')[1] : result;
+      resolve(base64Clean);
+    };
+    reader.onerror = err => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function enviarArquivosAlunoDrive() {
+  if (!AppState.alunoNomeCompleto) {
+    abrirModalIdentificacaoAluno(false, () => enviarArquivosAlunoDrive());
+    return;
+  }
+
+  const files = AppState.aulaContexto.arquivosSelecionadosUpload || [];
+  if (files.length === 0) {
+    mostrarToast("Selecione ao menos um arquivo para enviar.", "error");
+    return;
+  }
+
+  const ctx = AppState.aulaContexto;
+  const cursoNome = ctx.cursoNome || 'Marketing Digital com IA';
+  const turmaNome = ctx.turmaNome || 'Geral';
+  const caminhoDestinoDrive = `Aula Flux/Aulas/${cursoNome}/envios/${turmaNome}`;
+
+  const btnEnviar = document.getElementById('btn-enviar-arquivos-drive');
+  const statusMsg = document.getElementById('aula-upload-status-msg');
+  if (btnEnviar) btnEnviar.disabled = true;
+
+  if (statusMsg) {
+    statusMsg.style.display = 'block';
+    statusMsg.style.background = 'rgba(6, 182, 212, 0.1)';
+    statusMsg.style.border = '1px solid rgba(6, 182, 212, 0.3)';
+    statusMsg.style.color = 'var(--text-primary)';
+    statusMsg.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-cyan"></i> Enviando ${files.length} arquivo(s) para <strong>${caminhoDestinoDrive}</strong>...`;
+  }
+
+  const gasUrl = obterUrlGasAtiva();
+  let enviadosComSucesso = 0;
+
+  try {
+    for (const file of files) {
+      const base64Data = await converterArquivoParaBase64(file);
+      let driveFileUrl = '';
+      let driveFileId = '';
+      let driveSavedPath = caminhoDestinoDrive;
+
+      // 1. Enviar para o Google Drive via Google Apps Script (doPost -> action: uploadArquivo)
+      if (gasUrl) {
+        try {
+          const payloadDrive = {
+            action: 'uploadArquivo',
+            curso: cursoNome,
+            turma: turmaNome,
+            aula: String(ctx.aulaAtualNumero || 1),
+            alunoNome: AppState.alunoNomeCompleto,
+            fileName: file.name,
+            mimeType: file.type || 'application/octet-stream',
+            base64Data: base64Data
+          };
+
+          const resp = await fetch(gasUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payloadDrive)
+          });
+
+          const respJson = await resp.json().catch(() => null);
+          if (respJson && respJson.ok) {
+            driveFileUrl = respJson.fileUrl || respJson.downloadUrl || '';
+            driveFileId = respJson.fileId || '';
+            driveSavedPath = respJson.folderPath || caminhoDestinoDrive;
+          }
+        } catch (gasErr) {
+          console.warn("Aviso no upload direto para GAS:", gasErr);
+        }
+      }
+
+      // 2. Registrar a entrega no Firebase Firestore (tarefas_entregas) vinculada ao aluno, professor, turma e aula
+      const registroEntrega = {
+        aluno_nome: AppState.alunoNomeCompleto,
+        professor_id: ctx.professorId || '',
+        professor_nome: ctx.professorNome || 'Professor',
+        turma_id: ctx.turmaId || '',
+        turma_nome: turmaNome,
+        curso_id: ctx.cursoId || '',
+        curso_nome: cursoNome,
+        aula_numero: Number(ctx.aulaAtualNumero || 1),
+        arquivo_nome: file.name,
+        arquivo_tamanho: file.size,
+        arquivo_tipo: file.type || 'application/octet-stream',
+        pasta_destino_drive: driveSavedPath,
+        drive_file_id: driveFileId,
+        drive_file_url: driveFileUrl,
+        data_hora: new Date().toLocaleString('pt-BR'),
+        criado_em: (typeof firebase !== 'undefined' && firebase.firestore)
+          ? firebase.firestore.FieldValue.serverTimestamp()
+          : new Date().toISOString()
+      };
+
+      if (db) {
+        await db.collection('tarefas_entregas').add(registroEntrega);
+      } else {
+        AppState.tarefasEntregas.unshift({ id: 'entrega-' + Date.now(), ...registroEntrega });
+      }
+
+      enviadosComSucesso++;
+    }
+
+    renderizarTabelasResultados();
+
+    AppState.aulaContexto.arquivosSelecionadosUpload = [];
+    const inputUpload = document.getElementById('aula-upload-file-input');
+    if (inputUpload) inputUpload.value = '';
+    renderizarListaArquivosSelecionadosUpload();
+
+    if (statusMsg) {
+      statusMsg.style.background = 'rgba(16, 185, 129, 0.14)';
+      statusMsg.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+      statusMsg.innerHTML = `
+        <i class="fa-solid fa-circle-check text-emerald"></i>
+        <strong>${enviadosComSucesso} arquivo(s) enviado(s) com sucesso!</strong><br/>
+        Aluno(a): <strong>${AppState.alunoNomeCompleto}</strong> • Destino: <code>${caminhoDestinoDrive}</code>
+      `;
+    }
+
+    mostrarToast(`Arquivos enviados com sucesso para ${caminhoDestinoDrive}!`, "success");
+  } catch (err) {
+    console.error("Erro ao enviar arquivos:", err);
+    if (statusMsg) {
+      statusMsg.style.background = 'rgba(244, 63, 94, 0.14)';
+      statusMsg.style.border = '1px solid rgba(244, 63, 94, 0.35)';
+      statusMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose"></i> Erro ao enviar arquivo: ${err.message}`;
+    }
+    mostrarToast("Erro ao enviar arquivo: " + err.message, "error");
+  } finally {
+    if (btnEnviar) btnEnviar.disabled = false;
+  }
+}
+
+// ============================================================================
+// PAINEL ADMINISTRATIVO: TABELAS DE RESULTADOS (QUIZ, GAMES E ENVIOS DRIVE)
+// ============================================================================
+function carregarResultadosFirebase() {
+  sincronizarComFirestore();
+  mostrarToast("Resultados de Quiz, Games e Envios atualizados.", "info");
+}
+
+function renderizarTabelasResultados() {
+  const tbodyQuiz = document.getElementById('table-resultados-quiz-tbody');
+  const tbodyGames = document.getElementById('table-resultados-games-tbody');
+  const tbodyEnvios = document.getElementById('table-resultados-envios-tbody');
+
+  const isProf = AppState.currentUserProfile && AppState.currentUserProfile.role === 'professor';
+  const profIdLogado = isProf ? AppState.currentUserProfile.professor_id : null;
+
+  // 1. Tabela de Quiz
+  if (tbodyQuiz) {
+    let listaQuiz = [...(AppState.quizRespostas || [])];
+    if (profIdLogado) {
+      listaQuiz = listaQuiz.filter(q => q.professor_id === profIdLogado);
+    }
+
+    if (listaQuiz.length === 0) {
+      tbodyQuiz.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum resultado de Quiz registrado ainda.</td></tr>`;
+    } else {
+      tbodyQuiz.innerHTML = listaQuiz.map(q => `
+        <tr>
+          <td><strong>${q.aluno_nome || '-'}</strong></td>
+          <td>${q.curso_nome || '-'}</td>
+          <td><span class="badge-tag">${q.turma_nome || '-'}</span></td>
+          <td>${q.professor_nome || '-'}</td>
+          <td>Aula ${q.aula_numero || 1}</td>
+          <td><strong style="color: var(--accent-emerald);">${q.acertos ?? 0}/${q.total_questoes ?? 0} (${q.percentual ?? 0}%)</strong></td>
+          <td style="font-size: 0.78rem; color: var(--text-muted);">${q.data_hora || '-'}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // 2. Tabela de Games
+  if (tbodyGames) {
+    let listaGames = [...(AppState.gameResultados || [])];
+    if (profIdLogado) {
+      listaGames = listaGames.filter(g => g.professor_id === profIdLogado);
+    }
+
+    if (listaGames.length === 0) {
+      tbodyGames.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum resultado de Game registrado ainda.</td></tr>`;
+    } else {
+      tbodyGames.innerHTML = listaGames.map(g => `
+        <tr>
+          <td><strong>${g.aluno_nome || '-'}</strong></td>
+          <td>${g.curso_nome || '-'}</td>
+          <td><span class="badge-tag">${g.turma_nome || '-'}</span></td>
+          <td>${g.professor_nome || '-'}</td>
+          <td>Aula ${g.aula_numero || 1}</td>
+          <td><strong style="color: var(--accent-amber);">${g.pontuacao ?? 0}% (${g.acertos ?? 0}/${g.total_desafios ?? 3})</strong></td>
+          <td style="font-size: 0.78rem; color: var(--text-muted);">${g.data_hora || '-'}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // 3. Tabela de Envios para o Google Drive
+  if (tbodyEnvios) {
+    let listaEnvios = [...(AppState.tarefasEntregas || [])];
+    if (profIdLogado) {
+      listaEnvios = listaEnvios.filter(e => e.professor_id === profIdLogado);
+    }
+
+    if (listaEnvios.length === 0) {
+      tbodyEnvios.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum envio de arquivo registrado ainda.</td></tr>`;
+    } else {
+      tbodyEnvios.innerHTML = listaEnvios.map(e => {
+        const linkHtml = e.drive_file_url
+          ? `<a href="${e.drive_file_url}" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-weight: 600;"><i class="fa-solid fa-up-right-from-square"></i> ${e.arquivo_nome}</a>`
+          : `<strong>${e.arquivo_nome || 'Arquivo'}</strong>`;
+        return `
+          <tr>
+            <td><strong>${e.aluno_nome || '-'}</strong></td>
+            <td>${e.curso_nome || '-'}</td>
+            <td><span class="badge-tag">${e.turma_nome || '-'}</span></td>
+            <td>Aula ${e.aula_numero || 1}</td>
+            <td>${linkHtml}</td>
+            <td><code style="font-size: 0.75rem; color: var(--accent-cyan);">${e.pasta_destino_drive || `Aula Flux/Aulas/${e.curso_nome}/envios/${e.turma_nome}`}</code></td>
+            <td style="font-size: 0.78rem; color: var(--text-muted);">${e.data_hora || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
 }
 
 // ============================================================================
@@ -2427,3 +3858,20 @@ window.mostrarToast = mostrarToast;
 window.enviarRecuperacaoSenha = enviarRecuperacaoSenha;
 window.preencherLoginSuperadmin = preencherLoginSuperadmin;
 window.entrarComoAdminDireto = entrarComoAdminDireto;
+window.abrirModalIdentificacaoAluno = abrirModalIdentificacaoAluno;
+window.confirmarIdentificacaoAluno = confirmarIdentificacaoAluno;
+window.iniciarAcessoAulasTurma = iniciarAcessoAulasTurma;
+window.acessarAulasPorCurso = acessarAulasPorCurso;
+window.fecharPaginaAula = fecharPaginaAula;
+window.abrirPaginaAula = abrirPaginaAula;
+window.abrirMapaMentalFlutuante = abrirMapaMentalFlutuante;
+window.ampliarInfograficoAula = ampliarInfograficoAula;
+window.abrirPdfFlutuante = abrirPdfFlutuante;
+window.submeterQuizAulaAtual = submeterQuizAulaAtual;
+window.renderizarQuizInterativoAula = renderizarQuizInterativoAula;
+window.selecionarArquivosUploadAula = selecionarArquivosUploadAula;
+window.removerArquivoUploadLista = removerArquivoUploadLista;
+window.enviarArquivosAlunoDrive = enviarArquivosAlunoDrive;
+window.salvarUrlGasWebApp = salvarUrlGasWebApp;
+window.testarConexaoGasDrive = testarConexaoGasDrive;
+window.carregarResultadosFirebase = carregarResultadosFirebase;

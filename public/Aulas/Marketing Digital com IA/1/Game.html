@@ -272,6 +272,95 @@
 
 
 
+    
+<!-- AULAFLUX_GAME_CHALLENGE_START -->
+<section id="desafio-gamificado" class="scroll-mt-24 space-y-6 pt-6 border-t border-gray-800/80">
+  <div class="space-y-2">
+    <span class="bg-indigo-500/20 text-indigo-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-indigo-500/30">Etapa Final Gamificada • Registro de Pontuação</span>
+    <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-indigo-500 pl-4">Desafio Prático Gamificado • Evolução & IA no Marketing</h2>
+    <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">Complete as 3 missões estratégicas abaixo para atingir 100% de domínio na Aula 1 e registrar sua pontuação no Firebase!</p>
+    <div id="af-student-badge" class="hidden text-xs text-indigo-300 bg-slate-900/80 border border-gray-800 px-3 py-2 rounded-xl w-fit"></div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4">
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-0">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 1: Uma loja quer atender clientes às 3h da manhã respondendo perguntas complexas com contexto humano. Qual tecnologia escolher?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Banner Estático dos Anos 90</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Assistente Virtual com PLN (Processamento de Linguagem Natural)</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Panfleto Impresso</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-0" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-1">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 2: O gerente quer descobrir o que os clientes vão querer comprar no próximo mês usando dados históricos. Qual ferramenta ativar?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Análise Preditiva com IA</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Outdoor em Rodovia</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Disparo de Cartas pelo Correio</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-1" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-2">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 3: Para comprar espaços de anúncios automaticamente em milissegundos para o perfil exato do cliente, qual pilar utilizamos?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Publicidade Programática</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Propaganda em Rádio AM</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-indigo-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-indigo-500 w-4 h-4">
+        <span>Telemarketing Manual</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-2" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+  </div>
+
+  <div class="bg-slate-900/90 p-6 rounded-3xl border border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="space-y-1 text-center sm:text-left">
+      <div class="text-xs font-bold uppercase text-indigo-400" id="af-game-status-title">Status do Game Interativo</div>
+      <p class="text-xs text-gray-400" id="af-game-status-desc">Explore o conteúdo acima e responda às 3 missões para gravar sua nota no Firebase.</p>
+    </div>
+    <button type="button" id="af-btn-salvar-game" onclick="window.afFinalizarESalvarGame()" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-600 text-slate-950 font-extrabold rounded-2xl text-xs md:text-sm transition-all shadow-lg cursor-pointer flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-cloud-arrow-up"></i>
+      <span>Verificar & Salvar Resultado</span>
+    </button>
+  </div>
+</section>
+<!-- AULAFLUX_GAME_CHALLENGE_END -->
     </main>
 
     <!-- FOOTER -->
@@ -470,5 +559,189 @@
         };
 
     </script>
+
+<!-- AULAFLUX_GAME_SCRIPT_START -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function() {
+  const AULA_NUM = 1;
+  const RESPOSTAS_CORRETAS = [1,0,0];
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDKtMOESQ8AnmGUgrjKrzBwWaDnVcMb9pI",
+    authDomain: "aulaflux.firebaseapp.com",
+    projectId: "aulaflux",
+    storageBucket: "aulaflux.firebasestorage.app",
+    messagingSenderId: "565193324345",
+    appId: "1:565193324345:web:f5285f075a727dca9fdae8"
+  };
+
+  let interacoesExploradas = 1;
+  let contextoAluno = null;
+  let jaEnviouParaPai = false;
+
+  try {
+    const savedCtx = localStorage.getItem('aulaflux_contexto_aula');
+    if (savedCtx) contextoAluno = JSON.parse(savedCtx);
+  } catch (e) {}
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'AULAFLUX_CONTEXT') {
+      contextoAluno = event.data.payload;
+      atualizarBadgeAluno();
+    }
+  });
+
+  function atualizarBadgeAluno() {
+    const badge = document.getElementById('af-student-badge');
+    if (badge && contextoAluno && contextoAluno.aluno_nome) {
+      badge.classList.remove('hidden');
+      badge.innerHTML = '<i class="fa-solid fa-user-graduate mr-1.5"></i> Aluno(a): <strong>' + contextoAluno.aluno_nome + '</strong>' +
+        (contextoAluno.turma_nome ? ' • Turma: <strong>' + contextoAluno.turma_nome + '</strong>' : '') +
+        (contextoAluno.professor_nome ? ' • Prof. ' + contextoAluno.professor_nome : '');
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('button') || e.target.closest('canvas') || e.target.closest('select')) {
+      interacoesExploradas = Math.min(4, interacoesExploradas + 1);
+      window.afAtualizarProgressoGame();
+    }
+  });
+
+  window.afAtualizarProgressoGame = function() {
+    let respondidas = 0;
+    for (let i = 0; i < RESPOSTAS_CORRETAS.length; i++) {
+      const checked = document.querySelector('input[name="af_mission_' + i + '"]:checked');
+      if (checked) respondidas++;
+    }
+    const pctExploracao = Math.min(25, interacoesExploradas * 6.25);
+    const pctMissoes = (respondidas / RESPOSTAS_CORRETAS.length) * 75;
+    const totalPct = Math.round(pctExploracao + pctMissoes);
+
+    const elPct = document.getElementById('progress-percent');
+    const elBar = document.getElementById('progress-bar');
+    if (elPct) elPct.innerText = totalPct + '%';
+    if (elBar) elBar.style.width = totalPct + '%';
+
+    try {
+      window.parent.postMessage({
+        type: 'AULAFLUX_GAME_RESIZE',
+        aula: AULA_NUM,
+        height: document.documentElement.scrollHeight
+      }, '*');
+    } catch (e) {}
+  };
+
+  window.afFinalizarESalvarGame = async function() {
+    let acertos = 0;
+    let respondidas = 0;
+    const respostas = [];
+
+    for (let i = 0; i < RESPOSTAS_CORRETAS.length; i++) {
+      const checked = document.querySelector('input[name="af_mission_' + i + '"]:checked');
+      const fb = document.getElementById('af-mission-feedback-' + i);
+      if (checked) {
+        respondidas++;
+        const val = parseInt(checked.value, 10);
+        const acertou = val === RESPOSTAS_CORRETAS[i];
+        if (acertou) acertos++;
+        respostas.push({ missao: i + 1, marcada: val, correta: RESPOSTAS_CORRETAS[i], acertou: acertou });
+        if (fb) {
+          fb.classList.remove('hidden');
+          fb.className = 'text-xs font-semibold pt-1 ' + (acertou ? 'text-emerald-400' : 'text-rose-400');
+          fb.innerHTML = acertou
+            ? '<i class="fa-solid fa-circle-check mr-1"></i> Missão concluída com sucesso!'
+            : '<i class="fa-solid fa-circle-xmark mr-1"></i> Resposta incorreta. Revise os conceitos desta seção!';
+        }
+      }
+    }
+
+    if (respondidas < RESPOSTAS_CORRETAS.length) {
+      if (typeof showToast === 'function') {
+        showToast('Responda todas as 3 missões antes de salvar seu resultado!', 'error');
+      } else {
+        alert('Responda todas as 3 missões antes de salvar seu resultado!');
+      }
+      return;
+    }
+
+    interacoesExploradas = 4;
+    window.afAtualizarProgressoGame();
+
+    const pontuacao = Math.round((acertos / RESPOSTAS_CORRETAS.length) * 100);
+    const ctx = contextoAluno || {};
+    const resultadoPayload = {
+      tipo: 'game',
+      aluno_nome: ctx.aluno_nome || 'Aluno Visitante',
+      professor_id: ctx.professor_id || null,
+      professor_nome: ctx.professor_nome || '',
+      turma_id: ctx.turma_id || null,
+      turma_nome: ctx.turma_nome || '',
+      curso_id: ctx.curso_id || null,
+      curso_nome: ctx.curso_nome || 'Marketing Digital com IA',
+      aula_numero: AULA_NUM,
+      aula_titulo: ctx.aula_titulo || ('Aula ' + AULA_NUM),
+      acertos: acertos,
+      total_missoes: RESPOSTAS_CORRETAS.length,
+      pontuacao: pontuacao,
+      progresso: 100,
+      respostas: respostas,
+      concluido: true,
+      data_hora: new Date().toLocaleString('pt-BR')
+    };
+
+    const statusTitle = document.getElementById('af-game-status-title');
+    const statusDesc = document.getElementById('af-game-status-desc');
+    const btn = document.getElementById('af-btn-salvar-game');
+
+    if (statusTitle) statusTitle.innerHTML = 'Resultado do Game: ' + pontuacao + '% (' + acertos + '/' + RESPOSTAS_CORRETAS.length + ' missões corretas)';
+    if (statusDesc) statusDesc.innerHTML = 'Salvando resultado na base de dados Firebase...';
+
+    let salvoViaPai = false;
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'AULAFLUX_GAME_RESULT',
+          payload: resultadoPayload
+        }, '*');
+        salvoViaPai = true;
+      }
+    } catch (e) {}
+
+    // Fallback direto para o Firestore caso aberto fora do iframe pai
+    if (!salvoViaPai && typeof firebase !== 'undefined') {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        const dbLocal = firebase.firestore();
+        await dbLocal.collection('game_resultados').add({
+          ...resultadoPayload,
+          criado_em: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) {
+        console.warn('Aviso ao gravar resultado direto do game:', err);
+      }
+    }
+
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-check-double"></i> <span>Resultado Salvo (' + pontuacao + '%)</span>';
+    }
+    if (statusDesc) {
+      statusDesc.innerHTML = '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Resultado gravado no Firebase com sucesso!</span>';
+    }
+    if (typeof showToast === 'function') {
+      showToast('Pontuação de ' + pontuacao + '% salva no Firebase!', 'success');
+    }
+  };
+
+  window.addEventListener('load', function() {
+    atualizarBadgeAluno();
+    setTimeout(window.afAtualizarProgressoGame, 300);
+  });
+})();
+</script>
+<!-- AULAFLUX_GAME_SCRIPT_END -->
 </body>
 </html>

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Digital • Aula 4: Experiência do Cliente, Personalização & Neuromarketing</title>
+    <!-- Tailwind CSS para design responsivo e moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos interativos de Neuromarketing -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font-Awesome para ícones expressivos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fontes Inter e Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 320px; }
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(244, 63, 94, 0.3);
+            box-shadow: 0 12px 30px rgba(244, 63, 94, 0.08);
+        }
+        .tab-active {
+            background-color: rgba(244, 63, 94, 0.2);
+            border-color: #f43f5e;
+            color: #fb7185;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(244, 63, 94, 0.5); }
+        }
+        .glow-effect {
+            animation: pulse-glow 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-rose-500/30 selection:text-white">
+
+    <nav class="sticky top-0 z-50 glass-card border-b border-gray-800 shadow-lg">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 gap-4">
+                <div class="font-black text-xs md:text-sm tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-purple-400 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-heart-pulse text-rose-400"></i> Marketing Digital • Aula 4
+                </div>
+                <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold text-gray-400">
+                    <a href="#recomendacao" class="hover:text-rose-400 transition-colors">1. Recomendações & CX</a>
+                    <a href="#vendas" class="hover:text-rose-400 transition-colors">2. Cross & Up-selling</a>
+                    <a href="#neuromarketing" class="hover:text-rose-400 transition-colors">3. Neuromarketing</a>
+                    <a href="#simulador" class="hover:text-rose-400 transition-colors">4. Laboratório CX</a>
+                </div>
+                <!-- Indicador de progresso global -->
+                <div class="bg-gray-900/60 px-4 py-2 rounded-xl border border-gray-800 text-center min-w-[130px] sm:min-w-[180px]">
+                    <div class="text-[9px] uppercase text-rose-300 font-bold tracking-wider mb-1">Seu Progresso</div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-white" id="progress-percent">0%</span>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="toast" class="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl border border-white/10 flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-12 opacity-0 pointer-events-none">
+        <span class="text-rose-400 text-lg" id="toast-icon"><i class="fa-solid fa-circle-info"></i></span>
+        <span class="text-xs font-semibold" id="toast-message">Mensagem do Sistema</span>
+    </div>
+
+    <header id="recomendacao" class="relative overflow-hidden bg-slate-950 py-16 px-6 border-b border-gray-900">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-rose-900/30 via-transparent to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-4 text-center lg:text-left">
+                <span class="bg-rose-500/20 text-rose-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-rose-500/30">Módulo 4 • Experiência do Consumidor e Neurociência</span>
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">Experiência do Cliente & <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-purple-400">Neuromarketing</span></h1>
+                <p class="text-gray-400 text-sm md:text-base font-light leading-relaxed">
+                    A IA revolucionou a forma como as marcas conversam conosco! Ela combina **Algoritmos de Recomendação** para criar jornadas personalizadas e utiliza **Neuromarketing** para entender os estímulos emocionais e cerebrais do consumidor.
+                </p>
+                <div class="p-4 bg-slate-900/80 rounded-2xl border border-gray-800 text-xs text-rose-300 space-y-1">
+                    <strong class="text-white block"><i class="fa-solid fa-lightbulb text-rose-400 mr-1.5"></i> Qual a mágica da Recomendação?</strong>
+                    Plataformas como Netflix, TikTok e Spotify usam IA para analisar cada clique seu e indicar o próximo vídeo ou música antes mesmo de você pedir!
+                </div>
+            </div>
+
+            <!-- Card Comparativo Experiência Genérica vs Personalizada -->
+            <div class="glass-card p-6 rounded-3xl space-y-4">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-rose-400"></i> Jornada do Cliente: Antes vs. Hoje
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-amber-400 block"><i class="fa-solid fa-store mr-1"></i> Experiência Genérica</span>
+                        <p class="text-[11px] text-gray-400">Todo mundo vê a mesma vitrine e as mesmas ofertas na loja, sem levar em conta os gostos individuais.</p>
+                    </div>
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-rose-400 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Experiência Sob Medida (IA)</span>
+                        <p class="text-[11px] text-gray-400">A vitrine do site muda em tempo real para cada pessoa, mostrando exatamente o que ela ama!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-12 space-y-24">
+
+        <section class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-rose-500 pl-4">1. Algoritmos de Recomendação & Personalização de CX</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    O **CX (Customer Experience ou Experiência do Cliente)** é o sentimento total que o consumidor tem ao interagir com uma marca. A IA mapeia esse caminho em 4 passos automatizados:
+                </p>
+            </div>
+
+            <!-- Pipeline de Recomendação em 4 Passos -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-rose-500">
+                    <span class="text-xs font-mono font-bold text-rose-400">PASSO 01</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-database text-rose-400"></i> Coleta de Dados</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">A IA registra os produtos pesquisados, tempo de visualização e itens salvos no carrinho.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-purple-500">
+                    <span class="text-xs font-mono font-bold text-purple-400">PASSO 02</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-brain text-purple-400"></i> Mapeamento de Perfil</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Identifica os gostos e preferências únicas daquele consumidor usando Machine Learning.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-cyan-500">
+                    <span class="text-xs font-mono font-bold text-cyan-400">PASSO 03</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-bolt text-cyan-400"></i> Ajuste em Tempo Real</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Adapta o layout do site, a vitrine e as mensagens na tela no momento exato em que ele navega.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-emerald-500">
+                    <span class="text-xs font-mono font-bold text-emerald-400">PASSO 04</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-gift text-emerald-400"></i> Oferta Perfeita</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Apresenta o produto certo com a oferta ideal, aumentando o engajamento e a satisfação.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="vendas" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-rose-500 pl-4">2. Estratégias Comerciais com IA: Cross-selling & Up-selling</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Os motores de recomendação impulsionam o faturamento das empresas oferecendo produtos complementares ou superiores na hora certa. Veja a diferença na prática:
+                </p>
+            </div>
+
+            <!-- Widget Comparativo de Cross-selling e Up-selling -->
+            <div class="bg-gray-950/80 p-6 md:p-8 rounded-3xl border border-gray-800 space-y-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Card Up-selling -->
+                    <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-purple-500">
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl text-purple-400"><i class="fa-solid fa-circle-arrow-up"></i></span>
+                            <span class="text-[9px] bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded font-bold uppercase">Venda Superior</span>
+                        </div>
+                        <h3 class="font-bold text-base text-white">Up-selling (Upgrade de Produto)</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Incentiva o cliente a levar uma versão **melhor, maior ou mais avançada** do produto que ele já escolheu.
+                        </p>
+                        <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-xs space-y-1">
+                            <span class="text-purple-300 font-bold block"><i class="fa-solid fa-mobile-screen mr-1"></i> Exemplo do Celular:</span>
+                            <p class="text-gray-400 text-[11px]">O cliente escolheu um celular de 64GB, e a IA sugere levar a versão Pro com 128GB por uma pequena diferença no valor!</p>
+                        </div>
+                    </div>
+
+                    <!-- Card Cross-selling -->
+                    <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-cyan-500">
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl text-cyan-400"><i class="fa-solid fa-boxes-packing"></i></span>
+                            <span class="text-[9px] bg-cyan-500/10 text-cyan-300 px-2 py-0.5 rounded font-bold uppercase">Venda Cruzada</span>
+                        </div>
+                        <h3 class="font-bold text-base text-white">Cross-selling (Produtos Complementares)</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Oferece itens **adicionais que combinam** com o produto principal para completar a experiência do consumidor.
+                        </p>
+                        <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-xs space-y-1">
+                            <span class="text-cyan-300 font-bold block"><i class="fa-solid fa-headphones mr-1"></i> Exemplo do Celular:</span>
+                            <p class="text-gray-400 text-[11px]">Enquanto o cliente adiciona o celular ao carrinho, a IA sugere colocar uma capinha de proteção e fones sem fio!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="neuromarketing" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-rose-500 pl-4">3. Neuromarketing: A Ciência das Decisões Emocionais</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    O **Neuromarketing** une a neurociência ao marketing digital para entender as reações inconscientes do cérebro humano diante de estímulos visuais, textos e cores. <strong class="text-rose-400">Clique nas fatias do gráfico para explorar os gatilhos emocionais!</strong>
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-center bg-gray-950/60 p-6 md:p-8 rounded-3xl border border-gray-800">
+                <!-- Gráfico Chart.js de Neuromarketing -->
+                <div class="lg:col-span-6 flex flex-col items-center">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Estimuladores Emocionais de Decisão</h4>
+                    <div class="chart-container">
+                        <canvas id="neuroChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Painel Explicativo do Estímulo Clicado -->
+                <div id="neuro-detail-box" class="lg:col-span-6 glass-card p-6 rounded-2xl min-h-[240px] flex flex-col justify-center space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400">Toque em uma fatia do gráfico</span>
+                    <h3 class="text-base font-bold text-white">Como o Cérebro Toma Decisões de Compra?</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Mais de 90% das decisões de compra são emocionais e rápidas. A IA analisa milhares de testes visuais para descobrir quais cores, imagens e botões despertam mais atenção no público!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="simulador" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-rose-500 pl-4">4. Laboratório Prático: Simulador de Recomendação e Estímulos</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Selecione o perfil do consumidor e a meta da marca abaixo para ver como a Inteligência Artificial gera combinações de recomendações e gatilhos de Neuromarketing na tela!
+                </p>
+            </div>
+
+            <div class="bg-gray-950 p-6 md:p-8 rounded-3xl border border-gray-800 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Perfil do Cliente -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-gray-300 uppercase">1. Perfil do Consumidor</label>
+                        <select id="sim-profile" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-rose-500">
+                            <option value="gamer">Gamer de 14 Anos (Foco em tecnologia e jogos)</option>
+                            <option value="atleta">Atleta Estudantil (Foco em esportes e treino)</option>
+                            <option value="pop">Fã de Música & Pop (Foco em estilo e shows)</option>
+                        </select>
+                    </div>
+
+                    <!-- Meta da Marca (Cross vs Up) -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-gray-300 uppercase">2. Estratégia Comercial</label>
+                        <select id="sim-strategy" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-rose-500">
+                            <option value="cross">Cross-selling (Adicionar acessórios complementares)</option>
+                            <option value="up">Up-selling (Oferecer versão Pro superior)</option>
+                        </select>
+                    </div>
+
+                    <!-- Botão de Simular -->
+                    <div class="flex items-end">
+                        <button onclick="runCXSimulator()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-slate-950 font-bold rounded-xl text-xs md:text-sm transition-all cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Gerar Experiência Personalizada
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultado da Oferta Gerada -->
+                <div id="sim-cx-result" class="p-6 bg-slate-900 rounded-2xl border border-gray-800 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400" id="res-badge">Recomendação de IA Pronta</span>
+                        <span class="text-xs text-emerald-400 font-bold" id="res-conversion">Taxa de Conversão Estimada: 88%</span>
+                    </div>
+                    <h3 class="text-base font-bold text-white" id="res-title">Sua Oferta Personalizada</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed" id="res-desc">
+                        Selecione as opções acima e clique no botão para calcular a experiência do cliente!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+
+
+
+    
+<!-- AULAFLUX_GAME_CHALLENGE_START -->
+<section id="desafio-gamificado" class="scroll-mt-24 space-y-6 pt-6 border-t border-gray-800/80">
+  <div class="space-y-2">
+    <span class="bg-rose-500/20 text-rose-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-rose-500/30">Etapa Final Gamificada • Registro de Pontuação</span>
+    <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-rose-500 pl-4">Desafio Prático Gamificado • CX, Recomendação & Neuromarketing</h2>
+    <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">Aplique estratégias de Experiência do Cliente e Neurociência nos 3 cenários abaixo para salvar sua pontuação no Firebase!</p>
+    <div id="af-student-badge" class="hidden text-xs text-rose-300 bg-slate-900/80 border border-gray-800 px-3 py-2 rounded-xl w-fit"></div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4">
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-0">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 1: O cliente escolheu um smartphone de 128GB e a IA oferece o modelo Pro de 256GB mais avançado. Qual estratégia é essa?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Up-selling (Upgrade de Produto)</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Cross-selling (Venda Cruzada)</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Cancelamento de Compra</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-0" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-1">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 2: O cliente colocou um tênis no carrinho e a IA sugere meias esportivas que combinam com o item. Qual estratégia foi usada?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Cross-selling (Venda Complementar)</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Up-selling</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Descarte de Carrinho</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-1" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-2">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 3: Exibir o aviso verdadeiro "Restam apenas 2 unidades em estoque" ativa qual gatilho emocional do Neuromarketing?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Escassez e Urgência (FOMO)</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Indiferença Visual</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-rose-500 w-4 h-4">
+        <span>Lentidão de Decisão</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-2" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+  </div>
+
+  <div class="bg-slate-900/90 p-6 rounded-3xl border border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="space-y-1 text-center sm:text-left">
+      <div class="text-xs font-bold uppercase text-rose-400" id="af-game-status-title">Status do Game Interativo</div>
+      <p class="text-xs text-gray-400" id="af-game-status-desc">Explore o conteúdo acima e responda às 3 missões para gravar sua nota no Firebase.</p>
+    </div>
+    <button type="button" id="af-btn-salvar-game" onclick="window.afFinalizarESalvarGame()" class="px-6 py-3.5 bg-rose-500 hover:bg-rose-600 text-slate-950 font-extrabold rounded-2xl text-xs md:text-sm transition-all shadow-lg cursor-pointer flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-cloud-arrow-up"></i>
+      <span>Verificar & Salvar Resultado</span>
+    </button>
+  </div>
+</section>
+<!-- AULAFLUX_GAME_CHALLENGE_END -->
+    </main>
+
+    <footer class="bg-slate-950 py-12 px-6 border-t border-gray-900 mt-20 text-center text-slate-500 text-xs">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div class="space-y-1">
+                <p class="text-sm font-bold text-slate-400">Marketing Digital: Experiência do Cliente & Neuromarketing • Aula 4</p>
+                <p class="text-xs text-slate-600">Material interativo adaptado para estudantes da Jornada Maker.</p>
+            </div>
+            <div class="text-xs md:text-sm bg-slate-900 text-rose-400 border border-rose-500/10 px-4 py-2 rounded-xl font-medium">
+                Prof. Luiz Roberto Nogueira Junior
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- DADOS DO NEUROMARKETING (SEÇÃO 3) ---
+        const neuroDetails = {
+            0: {
+                title: "1. Estímulos Visuais & Cores",
+                desc: "O cérebro processa imagens 60.000 vezes mais rápido que textos. Cores como vermelho despertam urgência, enquanto azul transmite segurança e confiança no site."
+            },
+            1: {
+                title: "2. Conexão Emocional & Storytelling",
+                desc: "Histórias envolventes ativam neurônios-espelho no cérebro. O consumidor não compra apenas o produto, mas o sentimento e o estilo de vida associados a ele!"
+            },
+            2: {
+                title: "3. Gatilhos de Escassez & Urgência",
+                desc: "Avisos como 'Restam apenas 2 unidades' ou 'Oferta válida por 10 minutos' ativam o receio de perder uma oportunidade (FOMO - Fear of Missing Out)."
+            },
+            3: {
+                title: "4. Relevância & Prova Social",
+                desc: "Ver avaliações positivas de outros clientes e recomendações feitas sob medida dá ao cérebro a segurança necessária para confirmar a compra."
+            }
+        };
+
+        // --- SISTEMA DE TOAST (NOTIFICAÇÃO) ---
+        function showToast(message, type = "info") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+
+            if (type === "error") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500"></i>`;
+            } else if (type === "success") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-rose-400"></i>`;
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        // --- SIMULADOR DE CX E RECOMENDAÇÕES (SEÇÃO 4) ---
+        function runCXSimulator() {
+            const profile = document.getElementById('sim-profile').value;
+            const strategy = document.getElementById('sim-strategy').value;
+
+            const title = document.getElementById('res-title');
+            const desc = document.getElementById('res-desc');
+            const badge = document.getElementById('res-badge');
+            const conv = document.getElementById('res-conversion');
+
+            if (profile === 'gamer') {
+                if (strategy === 'cross') {
+                    badge.innerText = "Estratégia: Cross-selling Gamer";
+                    title.innerText = "Oferta: Headset 7.1 + Teclado Mecânico RGB";
+                    desc.innerText = "Enquanto o jogador adiciona o mouse ao carrinho, a IA sugere o fone e o teclado combinando com desconto especial no combo!";
+                    conv.innerText = "Taxa de Conversão Estimada: 85%";
+                } else {
+                    badge.innerText = "Estratégia: Up-selling Gamer";
+                    title.innerText = "Oferta: Upgrade para Monitor 240Hz Ultrawide";
+                    desc.innerText = "A IA percebe o interesse em monitores e sugere levar o modelo Pro de 240Hz com taxa de atualização superior por apenas mais R$ 15/mês.";
+                    conv.innerText = "Taxa de Conversão Estimada: 91%";
+                }
+            } else if (profile === 'atleta') {
+                if (strategy === 'cross') {
+                    badge.innerText = "Estratégia: Cross-selling Atleta";
+                    title.innerText = "Oferta: Garrafa Térmica + Meias de Alta Performance";
+                    desc.innerText = "Na compra do tênis de corrida, a IA sugere levar a garrafa e as meias especiais para completar o kit do treino.";
+                    conv.innerText = "Taxa de Conversão Estimada: 82%";
+                } else {
+                    badge.innerText = "Estratégia: Up-selling Atleta";
+                    title.innerText = "Oferta: Upgrade para Tênis Pro com Amortecimento a Vácuo";
+                    desc.innerText = "A IA sugere trocar o tênis básico pela versão de maratona com placa de carbono usada por atletas profissionais.";
+                    conv.innerText = "Taxa de Conversão Estimada: 89%";
+                }
+            } else {
+                if (strategy === 'cross') {
+                    badge.innerText = "Estratégia: Cross-selling Pop & Estilo";
+                    title.innerText = "Oferta: Ingresso VIP + Camiseta Exclusiva do Show";
+                    desc.innerText = "Na compra do ingresso normal, a IA sugere adicionar a camiseta oficial da turnê para o fã vestir no dia!";
+                    conv.innerText = "Taxa de Conversão Estimada: 87%";
+                } else {
+                    badge.innerText = "Estratégia: Up-selling Pop & Estilo";
+                    title.innerText = "Oferta: Upgrade para Pacote Soundcheck + Meet & Greet";
+                    desc.innerText = "A IA oferece o passe VIP para assistir à passagem de som da banda antes da abertura dos portões.";
+                    conv.innerText = "Taxa de Conversão Estimada: 94%";
+                }
+            }
+
+            const resultBox = document.getElementById('sim-cx-result');
+            resultBox.classList.remove('fade-in');
+            void resultBox.offsetWidth;
+            resultBox.classList.add('fade-in');
+
+            showToast("Experiência do cliente simulada com sucesso!", "success");
+        }
+
+
+        // --- INICIALIZAÇÃO DA PÁGINA ---
+        window.onload = function() {
+            runCXSimulator();
+
+            // Configuração do Gráfico de Neuromarketing (Chart.js)
+            const ctx = document.getElementById('neuroChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Estímulos Visuais & Cores', 'Conexão Emocional', 'Escassez & Urgência', 'Prova Social'],
+                    datasets: [{
+                        data: [35, 25, 20, 20],
+                        backgroundColor: [
+                            '#f43f5e',
+                            '#a855f7',
+                            '#f59e0b',
+                            '#06b6d4'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0b0f19',
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Estímulo: ${context.label}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%',
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const detailBox = document.getElementById('neuro-detail-box');
+                            const detail = neuroDetails[dataIndex];
+
+                            detailBox.classList.remove('fade-in');
+                            void detailBox.offsetWidth; // Re-render
+
+                            detailBox.innerHTML = `
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400">Gatilho Emocional Selecionado</span>
+                                <h3 class="text-base font-bold text-white mt-1 mb-2">${detail.title}</h3>
+                                <p class="text-xs text-gray-300 leading-relaxed">${detail.desc}</p>
+                            `;
+                            detailBox.classList.add('fade-in');
+                            showToast("Gatilho detalhado!", "success");
+                        }
+                    }
+                }
+            });
+        };
+
+    </script>
+
+<!-- AULAFLUX_GAME_SCRIPT_START -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function() {
+  const AULA_NUM = 4;
+  const RESPOSTAS_CORRETAS = [0,0,0];
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDKtMOESQ8AnmGUgrjKrzBwWaDnVcMb9pI",
+    authDomain: "aulaflux.firebaseapp.com",
+    projectId: "aulaflux",
+    storageBucket: "aulaflux.firebasestorage.app",
+    messagingSenderId: "565193324345",
+    appId: "1:565193324345:web:f5285f075a727dca9fdae8"
+  };
+
+  let interacoesExploradas = 1;
+  let contextoAluno = null;
+  let jaEnviouParaPai = false;
+
+  try {
+    const savedCtx = localStorage.getItem('aulaflux_contexto_aula');
+    if (savedCtx) contextoAluno = JSON.parse(savedCtx);
+  } catch (e) {}
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'AULAFLUX_CONTEXT') {
+      contextoAluno = event.data.payload;
+      atualizarBadgeAluno();
+    }
+  });
+
+  function atualizarBadgeAluno() {
+    const badge = document.getElementById('af-student-badge');
+    if (badge && contextoAluno && contextoAluno.aluno_nome) {
+      badge.classList.remove('hidden');
+      badge.innerHTML = '<i class="fa-solid fa-user-graduate mr-1.5"></i> Aluno(a): <strong>' + contextoAluno.aluno_nome + '</strong>' +
+        (contextoAluno.turma_nome ? ' • Turma: <strong>' + contextoAluno.turma_nome + '</strong>' : '') +
+        (contextoAluno.professor_nome ? ' • Prof. ' + contextoAluno.professor_nome : '');
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('button') || e.target.closest('canvas') || e.target.closest('select')) {
+      interacoesExploradas = Math.min(4, interacoesExploradas + 1);
+      window.afAtualizarProgressoGame();
+    }
+  });
+
+  window.afAtualizarProgressoGame = function() {
+    let respondidas = 0;
+    for (let i = 0; i < RESPOSTAS_CORRETAS.length; i++) {
+      const checked = document.querySelector('input[name="af_mission_' + i + '"]:checked');
+      if (checked) respondidas++;
+    }
+    const pctExploracao = Math.min(25, interacoesExploradas * 6.25);
+    const pctMissoes = (respondidas / RESPOSTAS_CORRETAS.length) * 75;
+    const totalPct = Math.round(pctExploracao + pctMissoes);
+
+    const elPct = document.getElementById('progress-percent');
+    const elBar = document.getElementById('progress-bar');
+    if (elPct) elPct.innerText = totalPct + '%';
+    if (elBar) elBar.style.width = totalPct + '%';
+
+    try {
+      window.parent.postMessage({
+        type: 'AULAFLUX_GAME_RESIZE',
+        aula: AULA_NUM,
+        height: document.documentElement.scrollHeight
+      }, '*');
+    } catch (e) {}
+  };
+
+  window.afFinalizarESalvarGame = async function() {
+    let acertos = 0;
+    let respondidas = 0;
+    const respostas = [];
+
+    for (let i = 0; i < RESPOSTAS_CORRETAS.length; i++) {
+      const checked = document.querySelector('input[name="af_mission_' + i + '"]:checked');
+      const fb = document.getElementById('af-mission-feedback-' + i);
+      if (checked) {
+        respondidas++;
+        const val = parseInt(checked.value, 10);
+        const acertou = val === RESPOSTAS_CORRETAS[i];
+        if (acertou) acertos++;
+        respostas.push({ missao: i + 1, marcada: val, correta: RESPOSTAS_CORRETAS[i], acertou: acertou });
+        if (fb) {
+          fb.classList.remove('hidden');
+          fb.className = 'text-xs font-semibold pt-1 ' + (acertou ? 'text-emerald-400' : 'text-rose-400');
+          fb.innerHTML = acertou
+            ? '<i class="fa-solid fa-circle-check mr-1"></i> Missão concluída com sucesso!'
+            : '<i class="fa-solid fa-circle-xmark mr-1"></i> Resposta incorreta. Revise os conceitos desta seção!';
+        }
+      }
+    }
+
+    if (respondidas < RESPOSTAS_CORRETAS.length) {
+      if (typeof showToast === 'function') {
+        showToast('Responda todas as 3 missões antes de salvar seu resultado!', 'error');
+      } else {
+        alert('Responda todas as 3 missões antes de salvar seu resultado!');
+      }
+      return;
+    }
+
+    interacoesExploradas = 4;
+    window.afAtualizarProgressoGame();
+
+    const pontuacao = Math.round((acertos / RESPOSTAS_CORRETAS.length) * 100);
+    const ctx = contextoAluno || {};
+    const resultadoPayload = {
+      tipo: 'game',
+      aluno_nome: ctx.aluno_nome || 'Aluno Visitante',
+      professor_id: ctx.professor_id || null,
+      professor_nome: ctx.professor_nome || '',
+      turma_id: ctx.turma_id || null,
+      turma_nome: ctx.turma_nome || '',
+      curso_id: ctx.curso_id || null,
+      curso_nome: ctx.curso_nome || 'Marketing Digital com IA',
+      aula_numero: AULA_NUM,
+      aula_titulo: ctx.aula_titulo || ('Aula ' + AULA_NUM),
+      acertos: acertos,
+      total_missoes: RESPOSTAS_CORRETAS.length,
+      pontuacao: pontuacao,
+      progresso: 100,
+      respostas: respostas,
+      concluido: true,
+      data_hora: new Date().toLocaleString('pt-BR')
+    };
+
+    const statusTitle = document.getElementById('af-game-status-title');
+    const statusDesc = document.getElementById('af-game-status-desc');
+    const btn = document.getElementById('af-btn-salvar-game');
+
+    if (statusTitle) statusTitle.innerHTML = 'Resultado do Game: ' + pontuacao + '% (' + acertos + '/' + RESPOSTAS_CORRETAS.length + ' missões corretas)';
+    if (statusDesc) statusDesc.innerHTML = 'Salvando resultado na base de dados Firebase...';
+
+    let salvoViaPai = false;
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'AULAFLUX_GAME_RESULT',
+          payload: resultadoPayload
+        }, '*');
+        salvoViaPai = true;
+      }
+    } catch (e) {}
+
+    // Fallback direto para o Firestore caso aberto fora do iframe pai
+    if (!salvoViaPai && typeof firebase !== 'undefined') {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        const dbLocal = firebase.firestore();
+        await dbLocal.collection('game_resultados').add({
+          ...resultadoPayload,
+          criado_em: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) {
+        console.warn('Aviso ao gravar resultado direto do game:', err);
+      }
+    }
+
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-check-double"></i> <span>Resultado Salvo (' + pontuacao + '%)</span>';
+    }
+    if (statusDesc) {
+      statusDesc.innerHTML = '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Resultado gravado no Firebase com sucesso!</span>';
+    }
+    if (typeof showToast === 'function') {
+      showToast('Pontuação de ' + pontuacao + '% salva no Firebase!', 'success');
+    }
+  };
+
+  window.addEventListener('load', function() {
+    atualizarBadgeAluno();
+    setTimeout(window.afAtualizarProgressoGame, 300);
+  });
+})();
+</script>
+<!-- AULAFLUX_GAME_SCRIPT_END -->
+</body>
+</html>

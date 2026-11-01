@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Digital â¢ Aula 5: Criação de Conteúdo, Visual & Copywriting com IA</title>
+    <!-- Tailwind CSS para design responsivo e visual moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos interativos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font-Awesome para ícones expressivos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fontes Inter e Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 320px; }
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.08);
+        }
+        .tab-active {
+            background-color: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #fbbf24;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-amber-500/30 selection:text-white">
+
+    <!-- NAVIGATION_BAR -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-gray-800 shadow-lg">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 gap-4">
+                <div class="font-black text-xs md:text-sm tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-400 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib text-amber-400"></i> Marketing Digital â¢ Aula 5
+                </div>
+                <div class="hidden lg:flex items-center space-x-6 text-xs font-semibold text-gray-400">
+                    <a href="#visual" class="hover:text-amber-400 transition-colors">1. Criação Visual</a>
+                    <a href="#copywriting" class="hover:text-amber-400 transition-colors">2. Copywriting & AIDA</a>
+                    <a href="#automacao" class="hover:text-amber-400 transition-colors">3. Automação de Posts</a>
+                    <a href="#etica" class="hover:text-amber-400 transition-colors">4. Ãtica & Transparência</a>
+                </div>
+                <!-- Indicador de progresso global -->
+                <div class="bg-gray-900/60 px-4 py-2 rounded-xl border border-gray-800 text-center min-w-[130px] sm:min-w-[180px]">
+                    <div class="text-[9px] uppercase text-amber-300 font-bold tracking-wider mb-1">Seu Progresso</div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-white" id="progress-percent">0%</span>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TOAST_NOTIFICATION_SYSTEM -->
+    <div id="toast" class="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl border border-white/10 flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-12 opacity-0 pointer-events-none">
+        <span class="text-amber-400 text-lg" id="toast-icon"><i class="fa-solid fa-circle-info"></i></span>
+        <span class="text-xs font-semibold" id="toast-message">Mensagem do Sistema</span>
+    </div>
+
+    <!-- MAIN_HEADER -->
+    <header id="visual" class="relative overflow-hidden bg-slate-950 py-16 px-6 border-b border-gray-900">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-900/30 via-transparent to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-4 text-center lg:text-left">
+                <span class="bg-amber-500/20 text-amber-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-amber-500/30">Módulo 5 â¢ Produção de Conteúdo e Automação</span>
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">Criação de Conteúdo, <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-400">Copywriting & IA</span></h1>
+                <p class="text-gray-400 text-sm md:text-base font-light leading-relaxed">
+                    A Inteligência Artificial revolucionou a produção de conteúdo! Agora podemos gerar **artes visuais de alta qualidade**, escrever **textos altamente persuasivos (Copywriting)** e agendar postagens automaticamente em redes sociais.
+                </p>
+                <div class="p-4 bg-slate-900/80 rounded-2xl border border-gray-800 text-xs text-amber-300 space-y-1">
+                    <strong class="text-white block"><i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> O Poder da Escala com Qualidade</strong>
+                    Ferramentas generativas permitem criar dezenas de variações de posts, vídeos com avatares virtuais e textos em minutos, mantendo a voz única da marca!
+                </div>
+            </div>
+
+            <!-- Card Comparativo Criação Tradicional vs Criação com IA -->
+            <div class="glass-card p-6 rounded-3xl space-y-4">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-amber-400"></i> Produção de Conteúdo: Antes vs. Hoje
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-rose-400 block"><i class="fa-solid fa-clock mr-1"></i> Processo Tradicional</span>
+                        <p class="text-[11px] text-gray-400">Horas para desenhar uma arte, redigir textos do zero e publicar manualmente rede por rede.</p>
+                    </div>
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1">
+                        <span class="font-bold text-amber-400 block"><i class="fa-solid fa-bolt mr-1"></i> Produção Acelerada por IA</span>
+                        <p class="text-[11px] text-gray-400">Imagens geradas por prompts, textos otimizados e postagens programadas para horários de pico.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-12 space-y-24">
+
+        <!-- SECTION 1: CRIAÃÃO VISUAL E FERRAMENTAS DE DESIGN -->
+        <section class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold border-l-4 border-amber-500 pl-4">1. Criação Visual & Ferramentas de IA Generativa</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Modelos de difusão e redes generativas transformaram o design. Conheça o ecossistema das principais ferramentas usadas por marcas modernas no mundo todo:
+                </p>
+            </div>
+
+            <!-- Matrix de Ferramentas Visuais -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Midjourney -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-purple-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-purple-400"><i class="fa-solid fa-image"></i></span>
+                        <span class="text-[9px] bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded font-bold uppercase">Geração Artística</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">Midjourney</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Referência mundial na geração de imagens ultrarrealistas e artes conceituais de alta fidelidade visual por meio de prompts.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-purple-300">
+                        <strong>Uso Prático:</strong> Campanhas publicitárias impactantes, capas e materiais conceituais.
+                    </div>
+                </div>
+
+                <!-- Adobe Firefly -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-rose-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-rose-400"><i class="fa-solid fa-brush"></i></span>
+                        <span class="text-[9px] bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded font-bold uppercase">Uso Comercial Seguro</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">Adobe Firefly</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Integrado ao Photoshop, oferece preenchimento generativo seguro para uso comercial, respeitando direitos autorais de imagem.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-rose-300">
+                        <strong>Uso Prático:</strong> Expansão de fotos de produtos e remoção rápida de objetos indesejados.
+                    </div>
+                </div>
+
+                <!-- Canva IA -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-cyan-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-cyan-400"><i class="fa-solid fa-object-group"></i></span>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-300 px-2 py-0.5 rounded font-bold uppercase">Design & Diagramação</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">Canva (com Magic Studio)</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Interface fácil com IA para redimensionar artes para formatos do Instagram, TikTok e YouTube em um clique.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-cyan-300">
+                        <strong>Uso Prático:</strong> Criação rápida de carrosséis e banners promocionais sem complicação.
+                    </div>
+                </div>
+
+                <!-- HeyGen / Synthesia -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-amber-500">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-amber-400"><i class="fa-solid fa-user-astronaut"></i></span>
+                        <span class="text-[9px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded font-bold uppercase">Avatares Virtuais</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">HeyGen / Synthesia</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Criam apresentadores virtuais realistas que narram seus roteiros em dezenas de idiomas com sincronia labial.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-amber-300">
+                        <strong>Uso Prático:</strong> Vídeos educativos, treinamentos corporativos e anúncios rápidos.
+                    </div>
+                </div>
+
+                <!-- CapCut IA -->
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-4 border-t-emerald-500 md:col-span-2 lg:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl text-emerald-400"><i class="fa-solid fa-video"></i></span>
+                        <span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-bold uppercase">Edição de Vídeo Mobile</span>
+                    </div>
+                    <h3 class="font-bold text-base text-white">CapCut (Recursos Inteligentes)</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Gera legendas dinâmicas automáticas em português, aplica cortes inteligentes em silêncios e insere trilhas sonoras adequadas ao ritmo do vídeo.
+                    </p>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-gray-800 text-[11px] text-emerald-300">
+                        <strong>Uso Prático:</strong> Edição de Reels, TikToks e Shorts de alta retenção para o público jovem.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: COPYWRITING PERSUASIVO E MODELO AIDA -->
+        <section id="copywriting" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-amber-500 pl-4">2. Copywriting Persuasivo & Modelo AIDA</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    **Copywriting** é a arte de escrever textos pensados para convencer o leitor a tomar uma ação (como clicar, cadastrar ou comprar). A IA aplica o consagrado modelo **AIDA**:
+                </p>
+            </div>
+
+            <!-- Visualizador do Modelo AIDA -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-rose-500">
+                    <span class="text-xs font-mono font-bold text-rose-400">PASSO 1</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-bullhorn text-rose-400"></i> A - Atenção</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Captura a curiosidade no primeiro segundo com um título forte ou pergunta provocativa.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-amber-500">
+                    <span class="text-xs font-mono font-bold text-amber-400">PASSO 2</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-lightbulb text-amber-400"></i> I - Interesse</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Apresenta dados curiosos, histórias ou problemas que conectam diretamente com o leitor.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-purple-500">
+                    <span class="text-xs font-mono font-bold text-purple-400">PASSO 3</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-heart text-purple-400"></i> D - Desejo</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Mostra os benefícios transformação prática do produto, despertando vontade de ter aquilo.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-4 border-t-emerald-500">
+                    <span class="text-xs font-mono font-bold text-emerald-400">PASSO 4</span>
+                    <h4 class="font-bold text-sm text-white flex items-center gap-1.5"><i class="fa-solid fa-circle-play text-emerald-400"></i> A - Ação (CTA)</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Instrui exatamente o que fazer a seguir (ex: "Clique aqui e garanta sua vaga agora!").</p>
+                </div>
+            </div>
+
+            <!-- Laboratório de Gerador de Copy com AIDA -->
+            <div class="bg-gray-950 p-6 md:p-8 rounded-3xl border border-gray-800 space-y-6">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-robot text-amber-400"></i> Laboratório Prático: Simulador de Copywriting com IA
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Escolha do Produto -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-gray-300 uppercase">1. Produto / Serviço</label>
+                        <select id="copy-product" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500">
+                            <option value="curso">Curso de Criação de Jogos 3D</option>
+                            <option value="fone">Fone de Ouvido Sem Fio Pro</option>
+                            <option value="tenis">Tênis de Corrida de Alta Performance</option>
+                        </select>
+                    </div>
+
+                    <!-- Gatilho Mental Principal -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-gray-300 uppercase">2. Gatilho Mental</label>
+                        <select id="copy-trigger" class="w-full p-3 bg-slate-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500">
+                            <option value="urgencia">Urgência ("Oferta termina hoje!")</option>
+                            <option value="escassez">Escassez ("Restam apenas 5 unidades")</option>
+                            <option value="prova">Prova Social ("Mais de 10.000 alunos aprovaram")</option>
+                        </select>
+                    </div>
+
+                    <!-- Botão de Gerar -->
+                    <div class="flex items-end">
+                        <button onclick="generateCopyAIDA()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs md:text-sm transition-all cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Escrever Copy AIDA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultado da Copy Gerada -->
+                <div id="copy-result-box" class="p-6 bg-slate-900 rounded-2xl border border-gray-800 space-y-3 font-sans text-xs md:text-sm leading-relaxed">
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-800">
+                        <span class="text-[10px] font-bold uppercase text-amber-400"><i class="fa-solid fa-align-left mr-1"></i> Copy AIDA Gerada pela IA</span>
+                        <span class="text-[10px] text-gray-500 font-mono">Pronto para Redes Sociais</span>
+                    </div>
+                    <div id="copy-text-area" class="space-y-2 text-gray-300">
+                        <p><strong class="text-rose-400">[Atenção]</strong> Cansado de jogar e querer criar seus próprios mundos 3D?</p>
+                        <p><strong class="text-amber-400">[Interesse]</strong> A maioria acha que programar jogos é impossível, mas com as ferramentas certas você cria seu primeiro mapa em 7 dias.</p>
+                        <p><strong class="text-purple-400">[Desejo]</strong> Mais de 10.000 alunos já criaram seus primeiros games e estão impressionando seus amigos!</p>
+                        <p><strong class="text-emerald-400">[Ação]</strong> Clique no link da bio e garanta sua vaga com 30% OFF só hoje!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: AUTOMAÃÃO DE POSTAGENS E REDES SOCIAIS -->
+        <section id="automacao" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-amber-500 pl-4">3. Automação de Postagens & Ferramentas de Gestão</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Publicar manualmente todo dia consome tempo. Softwares de automação agendam conteúdos nos horários de maior engajamento do público. <strong class="text-amber-400">Clique nas fatias do gráfico para explorar as plataformas!</strong>
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-center bg-gray-950/60 p-6 md:p-8 rounded-3xl border border-gray-800">
+                <!-- Gráfico Chart.js de Plataformas de Automação -->
+                <div class="lg:col-span-6 flex flex-col items-center">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Aplicações da Automação de Redes</h4>
+                    <div class="chart-container">
+                        <canvas id="automacaoChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Painel Explicativo Clicável -->
+                <div id="autom-detail-box" class="lg:col-span-6 glass-card p-6 rounded-2xl min-h-[240px] flex flex-col justify-center space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Toque em uma fatia do gráfico ao lado</span>
+                    <h3 class="text-base font-bold text-white">Por que Agendar Postagens com IA?</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        A IA analisa quando seus seguidores estão online, recomenda os melhores horários para postar e distribui os conteúdos automaticamente no Instagram, Facebook, TikTok e YouTube sem você precisar parar o que está fazendo!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Cards de Ferramentas de Gestão de Mídia -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-2 border-t-blue-500">
+                    <span class="text-lg text-blue-400"><i class="fa-brands fa-meta"></i></span>
+                    <h4 class="font-bold text-xs text-white">Meta Business Suite</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Nativo do Facebook e Instagram. Permite agendar posts, Stories e Reels gratuitamente.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-2 border-t-amber-500">
+                    <span class="text-lg text-amber-400"><i class="fa-solid fa-feather"></i></span>
+                    <h4 class="font-bold text-xs text-white">Buffer / Hootsuite</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Plataformas globais que centralizam agendamentos do X (Twitter), LinkedIn, TikTok e Instagram.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-2 border-t-emerald-500">
+                    <span class="text-lg text-emerald-400"><i class="fa-solid fa-flag"></i></span>
+                    <h4 class="font-bold text-xs text-white">mLabs</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Ferramenta brasileira líder para gestão de redes sociais, geração de relatórios e fluxo de aprovação.</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl space-y-2 border-t-2 border-t-cyan-500">
+                    <span class="text-lg text-cyan-400"><i class="fa-solid fa-calendar-days"></i></span>
+                    <h4 class="font-bold text-xs text-white">Canva Scheduler</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Permite criar o design e agendar a publicação direto na mesma tela sem exportar arquivos.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: ÃTICA, TRANSPARÃNCIA E AUTENTICIDADE -->
+        <section id="etica" class="scroll-mt-24 space-y-8">
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-amber-500 pl-4">4. Ãtica, Autenticidade & Uso Responsável de IA</h2>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">
+                    Criar conteúdo com IA exige responsabilidade. Ser transparente fortalece a confiança do público na marca:
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-amber-500">
+                    <div class="text-2xl text-amber-400"><i class="fa-solid fa-eye"></i></div>
+                    <h4 class="font-bold text-sm text-white">1. Transparência</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Sempre avise quando uma imagem, vídeo ou texto foi gerado por IA. Marcas honestas ganham o respeito dos clientes.
+                    </p>
+                    <span class="text-[9px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded font-bold uppercase">Sinalização Clara</span>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-rose-500">
+                    <div class="text-2xl text-rose-400"><i class="fa-solid fa-copyright"></i></div>
+                    <h4 class="font-bold text-sm text-white">2. Respeito aos Direitos</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Utilize ferramentas comerciais seguras (como Adobe Firefly) que respeitam os direitos autorais dos artistas originais.
+                    </p>
+                    <span class="text-[9px] bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded font-bold uppercase">Proteção de Autoria</span>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl space-y-3 border-l-4 border-l-emerald-500">
+                    <div class="text-2xl text-emerald-400"><i class="fa-solid fa-handshake"></i></div>
+                    <h4 class="font-bold text-sm text-white">3. Promessa Real</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        A oferta escrita no copywriting deve ser 100% verdadeira. Nunca use gatilhos de urgência ou escassez falsos para enganar o leitor.
+                    </p>
+                    <span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-bold uppercase">Integridade de Marca</span>
+                </div>
+            </div>
+        </section>
+
+
+
+
+    
+<!-- AULAFLUX_GAME_CHALLENGE_START -->
+<section id="desafio-gamificado" class="scroll-mt-24 space-y-6 pt-6 border-t border-gray-800/80">
+  <div class="space-y-2">
+    <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-amber-500/30">Etapa Final Gamificada • Registro de Pontuação</span>
+    <h2 class="text-2xl md:text-3xl font-extrabold border-l-4 border-amber-500 pl-4">Desafio Prático Gamificado • Copywriting AIDA & IA Generativa</h2>
+    <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-3xl">Complete os 3 desafios de Criação de Conteúdo e Copywriting Ético para concluir o Game da Aula 5!</p>
+    <div id="af-student-badge" class="hidden text-xs text-amber-300 bg-slate-900/80 border border-gray-800 px-3 py-2 rounded-xl w-fit"></div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4">
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-0">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 1: No método clássico de Copywriting AIDA, o que significam as 4 etapas em ordem?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Atenção, Interesse, Desejo e Ação</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Anúncio, Imagem, Dados e Arquivo</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_0" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Abertura, Início, Dúvida e Fim</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-0" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-1">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 2: Qual ferramenta da Adobe foi treinada em banco licenciado para gerar imagens comerciais seguras sem violar direitos autorais?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Adobe Firefly</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Bloco de Notas</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_1" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Planilha de Cálculos</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-1" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+      <div class="glass-card p-5 rounded-2xl space-y-3 border border-gray-800" id="af-mission-card-2">
+        <p class="text-xs md:text-sm font-bold text-white">Missão 3: Qual é a regra ética fundamental ao publicar conteúdos e campanhas gerados com auxílio de IA?</p>
+        <div class="space-y-2">
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="0" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Transparência com o público e promessas 100% reais</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="1" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Criar promoções falsas para atrair cliques</span>
+      </label>
+    
+      <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-gray-800 hover:border-amber-500/50 cursor-pointer transition-all text-xs text-gray-200">
+        <input type="radio" name="af_mission_2" value="2" onchange="window.afAtualizarProgressoGame()" class="accent-amber-500 w-4 h-4">
+        <span>Ocultar informações do produto</span>
+      </label>
+    </div>
+        <div id="af-mission-feedback-2" class="hidden text-xs font-semibold pt-1"></div>
+      </div>
+    
+  </div>
+
+  <div class="bg-slate-900/90 p-6 rounded-3xl border border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="space-y-1 text-center sm:text-left">
+      <div class="text-xs font-bold uppercase text-amber-400" id="af-game-status-title">Status do Game Interativo</div>
+      <p class="text-xs text-gray-400" id="af-game-status-desc">Explore o conteúdo acima e responda às 3 missões para gravar sua nota no Firebase.</p>
+    </div>
+    <button type="button" id="af-btn-salvar-game" onclick="window.afFinalizarESalvarGame()" class="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-2xl text-xs md:text-sm transition-all shadow-lg cursor-pointer flex items-center gap-2 shrink-0">
+      <i class="fa-solid fa-cloud-arrow-up"></i>
+      <span>Verificar & Salvar Resultado</span>
+    </button>
+  </div>
+</section>
+<!-- AULAFLUX_GAME_CHALLENGE_END -->
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 py-12 px-6 border-t border-gray-900 mt-20 text-center text-slate-500 text-xs">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div class="space-y-1">
+                <p class="text-sm font-bold text-slate-400">Marketing Digital: Criação de Conteúdo, Copywriting & IA â¢ Aula 5</p>
+                <p class="text-xs text-slate-600">Material interativo adaptado para estudantes da Jornada Maker.</p>
+            </div>
+            <div class="text-xs md:text-sm bg-slate-900 text-amber-400 border border-amber-500/10 px-4 py-2 rounded-xl font-medium">
+                Prof. Luiz Roberto Nogueira Junior
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS DE LÃGICA E INTERATIVIDADE -->
+    <script>
+        // --- DADOS DA AUTOMAÃÃO (SEÃÃO 3) ---
+        const automDetails = {
+            0: {
+                title: "1. Agendamento Inteligente nos Horários de Pico",
+                desc: "A IA identifica quando seus seguidores estão navegando e programa a postagem para esse minuto exato, garantindo maior alcance inicial!"
+            },
+            1: {
+                title: "2. Consistência e Presença Digital",
+                desc: "Manter redes sociais ativas diariamente sem precisar parar suas atividades. O agendamento garante postagens em dia mesmo nos fins de semana!"
+            },
+            2: {
+                title: "3. Redimensionamento e Formatação Multicanal",
+                desc: "Ferramentas como o Canva adaptam a mesma arte para os tamanhos ideais do Instagram (quadrado/Stories), TikTok (vertical) e YouTube (horizontal)."
+            },
+            3: {
+                title: "4. Análise de Métricas de Engajamento",
+                desc: "Softwares de gestão coletam curtidas, comentários e compartilhamentos em um painel único para indicar quais conteúdos geram mais vendas."
+            }
+        };
+
+        // --- SISTEMA DE TOAST (NOTIFICAÃÃO) ---
+        function showToast(message, type = "info") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+
+            if (type === "error") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500"></i>`;
+            } else if (type === "success") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-amber-400"></i>`;
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        // --- SIMULADOR DE COPYWRITING AIDA (SEÃÃO 2) ---
+        function generateCopyAIDA() {
+            const product = document.getElementById('copy-product').value;
+            const trigger = document.getElementById('copy-trigger').value;
+            const textArea = document.getElementById('copy-text-area');
+
+            let copyHTML = "";
+
+            if (product === 'curso') {
+                if (trigger === 'urgencia') {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> ð¨ ÃLTIMAS HORAS: Quer criar seu próprio jogo 3D ainda este mês?</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> A maioria acha que criar games exige anos de faculdade, mas com a nossa metodologia Maker você monta seu primeiro projeto em 7 dias.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Mais de 10.000 jovens já lançaram seus primeiros jogos e estão impressionando amigos e marcas!</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> A promoção de 40% OFF encerra hoje Ã s 23h59. Clique no botão e garanta sua vaga!</p>
+                    `;
+                } else if (trigger === 'escassez') {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> â ï¸ RESTAM APENAS 5 VAGAS para a Turma Especial de Criação de Games 3D!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> Limitamos o número de alunos para dar suporte individual para cada projeto de código.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Você vai aprender a usar IA para gerar cenários, scripts e personagens incríveis.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Não fique de fora! Toque no link da bio antes que as últimas vagas acabem!</p>
+                    `;
+                } else {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> â­ "Consegui criar meu primeiro jogo aos 14 anos!" - Veja a história do Lucas.</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> Ele começou do zero e hoje tem um portfólio completo de jogos publicados na web.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Você também pode dominar a IA Generativa e transformar suas ideias de jogos em realidade.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Junte-se Ã  maior comunidade Maker jovem do Brasil! Clique no link e comece hoje.</p>
+                    `;
+                }
+            } else if (product === 'fone') {
+                if (trigger === 'urgencia') {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> ð§ O som perfeito para seus treinos e jogos com desconto relâmpago!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> Cansado de fones que descarregam em 2 horas e têm áudio abafado?</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Conheça o Fone Pro com cancelamento de ruído ativo e 30 horas de bateria contínua.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Oferta válida só até meia-noite! Toque aqui e compre o seu com frete grátis.</p>
+                    `;
+                } else if (trigger === 'escassez') {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> ð¥ Estoque quase esgotado da edição especial em Preto Fosco!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> O Fone Pro virou febre entre gamers e criadores de conteúdo pelo som imersivo 7.1.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Garanta um áudio cristalino para suas chamadas, aulas e playlists favoritas.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Restam poucas unidades na loja! Clique em "Comprar Agora".</p>
+                    `;
+                } else {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> ð Avaliado com 5 estrelas por mais de 5.000 clientes satisfeitos!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> Quem experimenta o Fone Pro não consegue mais voltar para fones comuns com fio.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Sinta cada grave da sua música com isolamento acústico profissional.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Veja os depoimentos e peça o seu com garantia de 1 ano clicando aqui!</p>
+                    `;
+                }
+            } else {
+                if (trigger === 'urgencia') {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> ðââï¸ Melhore seu tempo de corrida hoje mesmo com 30% de desconto!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> Dores no joelho após o treino? O segredo está no amortecimento do seu tênis.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Nosso tênis Pro possui placa de carbono que devolve o impulso a cada passada.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> O cupom CORRE30 expira em poucas horas! Garanta o seu no site.</p>
+                    `;
+                } else if (trigger === 'escassez') {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> â ï¸ ÃLTIMOS PARES do Tênis Pro de Alta Performance no seu tamanho!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> A tecnologia de amortecimento a vácuo absorve 98% dos impactos do solo.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> Sinta a leveza de correr como se estivesse flutuando sobre as nuvens.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Clique e garanta o seu par antes que esgoste totalmente!</p>
+                    `;
+                } else {
+                    copyHTML = `
+                        <p><strong class="text-rose-400">[A - Atenção]</strong> ð¥ Escolhido por atletas profissionais para maratonas urbanas!</p>
+                        <p><strong class="text-amber-400">[I - Interesse]</strong> Testado e aprovado em mais de 100.000 quilômetros de corridas intensas.</p>
+                        <p><strong class="text-purple-400">[D - Desejo]</strong> O Tênis Pro une estilo moderno, durabilidade e proteção para suas articulações.</p>
+                        <p><strong class="text-emerald-400">[A - Ação]</strong> Experimente por 30 dias sem compromisso! Clique no link e confira.</p>
+                    `;
+                }
+            }
+
+            textArea.innerHTML = copyHTML;
+
+            const resultBox = document.getElementById('copy-result-box');
+            resultBox.classList.remove('fade-in');
+            void resultBox.offsetWidth;
+            resultBox.classList.add('fade-in');
+
+            showToast("Copy escrita no modelo AIDA com sucesso!", "success");
+        }
+
+
+        // --- INICIALIZAÃÃO DA PÃGINA ---
+        window.onload = function() {
+
+            // Configuração do Gráfico de Automação de Postagens (Chart.js)
+            const ctx = document.getElementById('automacaoChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Agendamento em Horários de Pico', 'Presença Digital Constante', 'Redimensionamento Multicanal', 'Análise de Métricas de Engajamento'],
+                    datasets: [{
+                        data: [35, 25, 20, 20],
+                        backgroundColor: [
+                            '#f59e0b',
+                            '#10b981',
+                            '#06b6d4',
+                            '#a855f7'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0b0f19',
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Aplicação: ${context.label}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%',
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const detailBox = document.getElementById('autom-detail-box');
+                            const detail = automDetails[dataIndex];
+
+                            detailBox.classList.remove('fade-in');
+                            void detailBox.offsetWidth; // Re-render
+
+                            detailBox.innerHTML = `
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Benefício da Automação Selecionado</span>
+                                <h3 class="text-base font-bold text-white mt-1 mb-2">${detail.title}</h3>
+                                <p class="text-xs text-gray-300 leading-relaxed">${detail.desc}</p>
+                            `;
+                            detailBox.classList.add('fade-in');
+                            showToast("Benefício detalhado!", "success");
+                        }
+                    }
+                }
+            });
+        };
+
+    </script>
+
+<!-- AULAFLUX_GAME_SCRIPT_START -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function() {
+  const AULA_NUM = 5;
+  const RESPOSTAS_CORRETAS = [0,0,0];
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDKtMOESQ8AnmGUgrjKrzBwWaDnVcMb9pI",
+    authDomain: "aulaflux.firebaseapp.com",
+    projectId: "aulaflux",
+    storageBucket: "aulaflux.firebasestorage.app",
+    messagingSenderId: "565193324345",
+    appId: "1:565193324345:web:f5285f075a727dca9fdae8"
+  };
+
+  let interacoesExploradas = 1;
+  let contextoAluno = null;
+  let jaEnviouParaPai = false;
+
+  try {
+    const savedCtx = localStorage.getItem('aulaflux_contexto_aula');
+    if (savedCtx) contextoAluno = JSON.parse(savedCtx);
+  } catch (e) {}
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'AULAFLUX_CONTEXT') {
+      contextoAluno = event.data.payload;
+      atualizarBadgeAluno();
+    }
+  });
+
+  function atualizarBadgeAluno() {
+    const badge = document.getElementById('af-student-badge');
+    if (badge && contextoAluno && contextoAluno.aluno_nome) {
+      badge.classList.remove('hidden');
+      badge.innerHTML = '<i class="fa-solid fa-user-graduate mr-1.5"></i> Aluno(a): <strong>' + contextoAluno.aluno_nome + '</strong>' +
+        (contextoAluno.turma_nome ? ' • Turma: <strong>' + contextoAluno.turma_nome + '</strong>' : '') +
+        (contextoAluno.professor_nome ? ' • Prof. ' + contextoAluno.professor_nome : '');
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('button') || e.target.closest('canvas') || e.target.closest('select')) {
+      interacoesExploradas = Math.min(4, interacoesExploradas + 1);
+      window.afAtualizarProgressoGame();
+    }
+  });
+
+  window.afAtualizarProgressoGame = function() {
+    let respondidas = 0;
+    for (let i = 0; i < RESPOSTAS_CORRETAS.length; i++) {
+      const checked = document.querySelector('input[name="af_mission_' + i + '"]:checked');
+      if (checked) respondidas++;
+    }
+    const pctExploracao = Math.min(25, interacoesExploradas * 6.25);
+    const pctMissoes = (respondidas / RESPOSTAS_CORRETAS.length) * 75;
+    const totalPct = Math.round(pctExploracao + pctMissoes);
+
+    const elPct = document.getElementById('progress-percent');
+    const elBar = document.getElementById('progress-bar');
+    if (elPct) elPct.innerText = totalPct + '%';
+    if (elBar) elBar.style.width = totalPct + '%';
+
+    try {
+      window.parent.postMessage({
+        type: 'AULAFLUX_GAME_RESIZE',
+        aula: AULA_NUM,
+        height: document.documentElement.scrollHeight
+      }, '*');
+    } catch (e) {}
+  };
+
+  window.afFinalizarESalvarGame = async function() {
+    let acertos = 0;
+    let respondidas = 0;
+    const respostas = [];
+
+    for (let i = 0; i < RESPOSTAS_CORRETAS.length; i++) {
+      const checked = document.querySelector('input[name="af_mission_' + i + '"]:checked');
+      const fb = document.getElementById('af-mission-feedback-' + i);
+      if (checked) {
+        respondidas++;
+        const val = parseInt(checked.value, 10);
+        const acertou = val === RESPOSTAS_CORRETAS[i];
+        if (acertou) acertos++;
+        respostas.push({ missao: i + 1, marcada: val, correta: RESPOSTAS_CORRETAS[i], acertou: acertou });
+        if (fb) {
+          fb.classList.remove('hidden');
+          fb.className = 'text-xs font-semibold pt-1 ' + (acertou ? 'text-emerald-400' : 'text-rose-400');
+          fb.innerHTML = acertou
+            ? '<i class="fa-solid fa-circle-check mr-1"></i> Missão concluída com sucesso!'
+            : '<i class="fa-solid fa-circle-xmark mr-1"></i> Resposta incorreta. Revise os conceitos desta seção!';
+        }
+      }
+    }
+
+    if (respondidas < RESPOSTAS_CORRETAS.length) {
+      if (typeof showToast === 'function') {
+        showToast('Responda todas as 3 missões antes de salvar seu resultado!', 'error');
+      } else {
+        alert('Responda todas as 3 missões antes de salvar seu resultado!');
+      }
+      return;
+    }
+
+    interacoesExploradas = 4;
+    window.afAtualizarProgressoGame();
+
+    const pontuacao = Math.round((acertos / RESPOSTAS_CORRETAS.length) * 100);
+    const ctx = contextoAluno || {};
+    const resultadoPayload = {
+      tipo: 'game',
+      aluno_nome: ctx.aluno_nome || 'Aluno Visitante',
+      professor_id: ctx.professor_id || null,
+      professor_nome: ctx.professor_nome || '',
+      turma_id: ctx.turma_id || null,
+      turma_nome: ctx.turma_nome || '',
+      curso_id: ctx.curso_id || null,
+      curso_nome: ctx.curso_nome || 'Marketing Digital com IA',
+      aula_numero: AULA_NUM,
+      aula_titulo: ctx.aula_titulo || ('Aula ' + AULA_NUM),
+      acertos: acertos,
+      total_missoes: RESPOSTAS_CORRETAS.length,
+      pontuacao: pontuacao,
+      progresso: 100,
+      respostas: respostas,
+      concluido: true,
+      data_hora: new Date().toLocaleString('pt-BR')
+    };
+
+    const statusTitle = document.getElementById('af-game-status-title');
+    const statusDesc = document.getElementById('af-game-status-desc');
+    const btn = document.getElementById('af-btn-salvar-game');
+
+    if (statusTitle) statusTitle.innerHTML = 'Resultado do Game: ' + pontuacao + '% (' + acertos + '/' + RESPOSTAS_CORRETAS.length + ' missões corretas)';
+    if (statusDesc) statusDesc.innerHTML = 'Salvando resultado na base de dados Firebase...';
+
+    let salvoViaPai = false;
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'AULAFLUX_GAME_RESULT',
+          payload: resultadoPayload
+        }, '*');
+        salvoViaPai = true;
+      }
+    } catch (e) {}
+
+    // Fallback direto para o Firestore caso aberto fora do iframe pai
+    if (!salvoViaPai && typeof firebase !== 'undefined') {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        const dbLocal = firebase.firestore();
+        await dbLocal.collection('game_resultados').add({
+          ...resultadoPayload,
+          criado_em: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) {
+        console.warn('Aviso ao gravar resultado direto do game:', err);
+      }
+    }
+
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-check-double"></i> <span>Resultado Salvo (' + pontuacao + '%)</span>';
+    }
+    if (statusDesc) {
+      statusDesc.innerHTML = '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Resultado gravado no Firebase com sucesso!</span>';
+    }
+    if (typeof showToast === 'function') {
+      showToast('Pontuação de ' + pontuacao + '% salva no Firebase!', 'success');
+    }
+  };
+
+  window.addEventListener('load', function() {
+    atualizarBadgeAluno();
+    setTimeout(window.afAtualizarProgressoGame, 300);
+  });
+})();
+</script>
+<!-- AULAFLUX_GAME_SCRIPT_END -->
+</body>
+</html>
